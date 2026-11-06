@@ -1,0 +1,53 @@
+# MyPdfSearch: compiler and linker outputs
+*.o
+*.d
+/mypdfsearch
+/mypdfsearch.exe
+
+# Diagnostic logs and temporary reports
+*.log
+*.out
+*.dump
+core
+core.*
+vgcore.*
+
+# Local PDF test documents
+*.pdf
+
+# Local text dumps and test reports
+*.txt
+!LICENSES/
+!LICENSES/*.txt
+
+# Backup archives and local copies
+*.bak
+*.backup
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+
+# Editor and operating-system files
+*~
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Autotools: local configuration and build artifacts
+/Makefile
+/config.log
+/config.status
+/config.cache
+/config.status.lineno
+/configure.lineno
+/autom4te.cache/
+/.deps/
+/.libs/
+
+# Additional compiler and linker artifacts
+*.lo
+*.la
+*.Po
+*.Plo

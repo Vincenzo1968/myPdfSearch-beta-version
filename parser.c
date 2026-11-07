@@ -8005,7 +8005,46 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
         }
     }
 
+    // ============================================================
+    // PASSAGGIO 2:
+    // Stampa del testo originale.
+    // Non stampiamo pSearchText perché è normalizzato NFC.
+    // L'estrazione testuale deve conservare il comportamento
+    // precedente.
+    // ============================================================
 
+    if ( bPrint )
+    {
+        for ( k = 0; k < pParams->TextLength; k++ )
+        {
+            c = pParams->pText[k];
+
+            // >>> NUOVA LOGICA: PULIZIA DEI CARATTERI DI CONTROLLO NON STAMPABILI <<<
+            // Esclude tutti i caratteri da 0x00 a 0x1F, MA preserva \t (0x09), \n (0x0A) e \r (0x0D)
+            if (c < 0x0020 && c != 0x0009 && c != 0x000A && c != 0x000D)
+            {
+                continue; // Salta il carattere fantasma (es. \030 o \027)
+            }
+            
+            // Esclude anche il carattere di controllo DEL (127) e i rimpiazzi non validi
+            if (
+                c == 0xFFFD ||
+                (c >= 0xD800 && c <= 0xDFFF) ||
+                c == 0x007F
+            )
+            {
+                continue;
+            }
+            // >>> FINE LOGICA PULIZIA <<<
+
+            if ( NULL != pParams->fpOutput )
+                fwprintf(pParams->fpOutput, L"%lc", c);
+            else
+                wprintf(L"%lc", c);
+        }
+    }
+
+	/*
     // ============================================================
     // PASSAGGIO 2:
     // Stampa del testo originale.
@@ -8035,6 +8074,7 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
                 wprintf(L"%lc", c);
         }
     }
+    */
 
 
     // ============================================================

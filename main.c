@@ -1986,7 +1986,7 @@ void PrintHardwareInfo(void)
 // eventuali worker sono già stati terminati e uniti.
 }
 
-// IMPORTANTE, ATTENZIONE!!!
+// IMPORTANTE,  ATTENZIONE!!!
 // compilare su Windows con MINGW64, richiede di specificare '-liconv' alla fine, dopo '-lz'
 // altrimenti il linker dà errore.
 

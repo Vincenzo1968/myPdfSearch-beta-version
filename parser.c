@@ -8051,6 +8051,22 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
         {
             c = pSearchText[k];
 
+            // >>> NUOVA LOGICA: RICONGIUNGIMENTO SCRITTURA VERTICALE ASIATICA <<<
+            // Se incontriamo un a capo o uno spazio isolato...
+            if ((c == L'\n' || c == L'\r' || c == L' ') && k > 0 && (k + 1) < searchTextLength)
+            {
+                wchar_t cPrev = pSearchText[k - 1];
+                wchar_t cNext = pSearchText[k + 1];
+
+                // ...e sia il carattere prima che quello dopo sono glifi asiatici (CJK/Thai)
+                if (IS_ASIAN_SCRIPT(cPrev) && IS_ASIAN_SCRIPT(cNext))
+                {
+                    // Saltiamo l'a capo/spazio verticale, passando direttamente al glifo successivo
+                    continue; 
+                }
+            }
+            // >>> FINE LOGICA VERTICALE <<<
+
             c = towlower(c);
 
             // Il danda (U+0964) e il double danda (U+0965)

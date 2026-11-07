@@ -3956,6 +3956,20 @@ void IgnoreStreamChars(Params *pParams)
 
 int IsDelimiterChar(unsigned char c)
 {
+    // Mappatura statica pre-calcolata per tutti i 256 possibili byte ASCII.
+    // Sostituisce lo switch riducendo la funzione a un unico accesso istantaneo in memoria O(1).
+    static const uint8_t DelimiterTable[256] = {
+        [' '] = 1, ['\r'] = 1, ['\n'] = 1, ['\f'] = 1, ['\t'] = 1, ['\0'] = 1,
+        ['%'] = 2, ['('] = 2, [')'] = 2, ['<'] = 2, ['>'] = 2, 
+        ['['] = 2, [']'] = 2, ['{'] = 2, ['}'] = 2, ['/'] = 2
+    };
+
+    return DelimiterTable[c];
+}
+
+/*
+int IsDelimiterChar(unsigned char c)
+{
 	switch ( c )
 	{
 		case ' ':
@@ -3985,6 +3999,7 @@ int IsDelimiterChar(unsigned char c)
 
 	return DELIM_FALSE;
 }
+*/
 
 unsigned char ReadNextChar(Params *pParams)
 {
@@ -7590,4 +7605,85 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 	}
 
 	return;
+}
+
+void GetNextTokenFromToUnicodeStreamFast(Params *pParams)
+{
+    unsigned char *buf = pParams->myBlockToUnicode;
+    int max_len = pParams->blockLenToUnicode;
+    int pos = pParams->blockCurPosToUnicode;
+    int k = 0;
+
+    // Salta gli spazi bianchi iniziali direttamente in RAM
+    while (pos < max_len && (buf[pos] == ' ' || buf[pos] == '\r' || buf[pos] == '\n' || buf[pos] == '\t' || buf[pos] == '\f' || buf[pos] == '\0')) {
+        pos++;
+    }
+
+    if (pos >= max_len) {
+        pParams->myToken.Type = T_EOF;
+        pParams->blockCurPosToUnicode = pos;
+        return;
+    }
+
+    unsigned char c = buf[pos++];
+
+    // Identifica i numeri letterali istantaneamente
+    if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
+        pParams->lexeme[k++] = c;
+        while (pos < max_len && ((buf[pos] >= '0' && buf[pos] <= '9') || buf[pos] == '.')) {
+            pParams->lexeme[k++] = buf[pos++];
+        }
+        pParams->lexeme[k] = '\0';
+        if (strchr(pParams->lexeme, '.')) {
+            pParams->myToken.Type = T_REAL_LITERAL;
+            pParams->myToken.vDouble = atof(pParams->lexeme);
+        } else {
+            pParams->myToken.Type = T_INT_LITERAL;
+            pParams->myToken.vInt = atoi(pParams->lexeme);
+        }
+        pParams->blockCurPosToUnicode = pos;
+        return;
+    }
+
+    // Identifica le stringhe esadecimali dei font (<AAAA>) senza cicli di stato
+    if (c == '<') {
+        if (pos < max_len && buf[pos] == '<') {
+            pParams->myToken.Type = T_DICT_BEGIN;
+            pos++;
+        } else {
+            pParams->myToken.Type = T_STRING_HEXADECIMAL;
+            while (pos < max_len && buf[pos] != '>') {
+                if (buf[pos] != ' ' && buf[pos] != '\r' && buf[pos] != '\n' && buf[pos] != '\t') {
+                    pParams->lexeme[k++] = buf[pos];
+                }
+                pos++;
+            }
+            if (pos < max_len && buf[pos] == '>') pos++;
+            pParams->lexeme[k] = '\0';
+            ManageTypeZeroHexString(pParams, k);
+        }
+        pParams->blockCurPosToUnicode = pos;
+        return;
+    }
+
+    // Accumula i nomi delle macro dei font (es. begincodespacerange)
+    pParams->lexeme[k++] = c;
+    while (pos < max_len && buf[pos] != ' ' && buf[pos] != '\r' && buf[pos] != '\n' && buf[pos] != '<' && buf[pos] != '>' && buf[pos] != '[' && buf[pos] != ']') {
+        pParams->lexeme[k++] = buf[pos++];
+    }
+    pParams->lexeme[k] = '\0';
+
+    if (strcmp(pParams->lexeme, "begincodespacerange") == 0) pParams->myToken.Type = T_CONTENT_OP_begincodespacerange;
+    else if (strcmp(pParams->lexeme, "endcodespacerange") == 0) pParams->myToken.Type = T_CONTENT_OP_endcodespacerange;
+    else if (strcmp(pParams->lexeme, "beginbfchar") == 0) pParams->myToken.Type = T_CONTENT_OP_beginbfchar;
+    else if (strcmp(pParams->lexeme, "endbfchar") == 0) pParams->myToken.Type = T_CONTENT_OP_endbfchar;
+    else if (strcmp(pParams->lexeme, "beginbfrange") == 0) pParams->myToken.Type = T_CONTENT_OP_beginbfrange;
+    else if (strcmp(pParams->lexeme, "endbfrange") == 0) pParams->myToken.Type = T_CONTENT_OP_endbfrange;
+    else if (strcmp(pParams->lexeme, "begincidchar") == 0) pParams->myToken.Type = T_CONTENT_OP_begincidchar;
+    else if (strcmp(pParams->lexeme, "endcidchar") == 0) pParams->myToken.Type = T_CONTENT_OP_endcidchar;
+    else if (strcmp(pParams->lexeme, "begincidrange") == 0) pParams->myToken.Type = T_CONTENT_OP_begincidrange;
+    else if (strcmp(pParams->lexeme, "endcidrange") == 0) pParams->myToken.Type = T_CONTENT_OP_endcidrange;
+    else pParams->myToken.Type = T_STRING;
+
+    pParams->blockCurPosToUnicode = pos;
 }

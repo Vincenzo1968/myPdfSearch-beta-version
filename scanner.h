@@ -985,4 +985,6 @@ void GetNextTokenLengthObj(Params *pParams);
 
 void GetNextTokenFromToUnicodeStream(Params *pParams);
 
+void GetNextTokenFromToUnicodeStreamFast(Params *pParams);
+
 #endif // MYSCANNER_INCLUDED

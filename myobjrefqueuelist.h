@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -20,16 +20,16 @@
    along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef	__MYOBJREFQUEUELIST_H
-#define	__MYOBJREFQUEUELIST_H
+#ifndef	MYOBJREFQUEUELIST_INCLUDED
+#define	MYOBJREFQUEUELIST_INCLUDED
 
 #ifdef __cplusplus
 #  define BEGIN_C_DECLS extern "C" {
 #  define END_C_DECLS   }
-#else /* !__cplusplus */
+#else // !__cplusplus 
 #  define BEGIN_C_DECLS
 #  define END_C_DECLS
-#endif /* __cplusplus */
+#endif // __cplusplus 
 
 #ifndef MAX_STRLEN
 #define MAX_STRLEN 4096
@@ -61,4 +61,4 @@ int  myobjreflist_Peek(MyObjRefList_t* p, char *s, int *pNum);
 
 END_C_DECLS
 
-#endif /* __MYOBJREFQUEUELIST_H */
+#endif // MYOBJREFQUEUELIST_INCLUDED

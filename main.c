@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -432,8 +432,7 @@ void PrintHelpCommandLine(void)
 
 void PrintVersionInfo(void)
 {
-	//wprintf(L"\n   mypdfsearch version 3.0.0\n");
-	wprintf(L"\n   mypdfsearch version 0.1.0 beta\n");
+	wprintf(L"\n   mypdfsearch version 0.1.1 beta\n");
 
 	wprintf(L"\n   Copyright (C) 2026 Vincenzo Lo Cicero\n\n");
 
@@ -1750,13 +1749,13 @@ static void PrintLinuxGraphicsInfo(void)
     if (count == 0)
         wprintf(L"  Nessun controller grafico PCI rilevato.\n");
 }
-#endif /* __linux__ */
+#endif // __linux__ 
 
 void PrintHardwareInfo(void)
 {
     wprintf(L"Informazioni hardware e software:\n");
 
-    /* Informazioni sul compilatore e sulla configurazione di build. */
+    // Informazioni sul compilatore e sulla configurazione di build. 
 #if defined(__clang__)
     wprintf(L"  Compilatore        : Clang %hs\n", __VERSION__);
 #elif defined(__GNUC__)
@@ -1817,7 +1816,7 @@ void PrintHardwareInfo(void)
         wprintf(L"Sconosciuta\n");
     wprintf(L"  Architettura build : %ld-bit\n", (long)(sizeof(void *) * 8));
 
-    /* Il nome CPU viene letto dal Registro di sistema. */
+    // Il nome CPU viene letto dal Registro di sistema. 
     {
         HKEY hKey;
         if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -1847,7 +1846,7 @@ void PrintHardwareInfo(void)
 
 
 #else
-    /* Informazioni sul sistema operativo e sul kernel. */
+    // Informazioni sul sistema operativo e sul kernel. 
     struct utsname osInfo;
     if (uname(&osInfo) == 0)
     {
@@ -1857,7 +1856,7 @@ void PrintHardwareInfo(void)
         wprintf(L"  Architettura HW    : %hs\n", osInfo.machine);
     }
 
-    /* CPU logiche visibili al sistema. */
+    // CPU logiche visibili al sistema. 
     {
         long numProcessors = sysconf(_SC_NPROCESSORS_ONLN);
         if (numProcessors > 0)
@@ -1868,7 +1867,7 @@ void PrintHardwareInfo(void)
 
     wprintf(L"  Architettura build : %ld-bit\n", (long)(sizeof(void *) * 8));
 
-    /* CPU logiche consentite al processo secondo la CPU affinity. */
+    // CPU logiche consentite al processo secondo la CPU affinity. 
 #if defined(__linux__)
     {
         cpu_set_t cpuSet;
@@ -1882,7 +1881,7 @@ void PrintHardwareInfo(void)
     }
 #endif
 
-    /* Modello CPU letto da /proc/cpuinfo. */
+    // Modello CPU letto da /proc/cpuinfo. 
     {
         FILE *fpCpu = fopen("/proc/cpuinfo", "r");
         if (fpCpu != NULL)
@@ -1911,7 +1910,7 @@ void PrintHardwareInfo(void)
         }
     }
 
-    /* Frequenza massima dichiarata dal driver cpufreq (non frequenza istantanea). */
+    // Frequenza massima dichiarata dal driver cpufreq (non frequenza istantanea). 
     {
         FILE *fpFreq = fopen("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq", "r");
         if (fpFreq != NULL)
@@ -1924,7 +1923,7 @@ void PrintHardwareInfo(void)
         }
     }
 
-    /* Memoria complessiva del sistema: fotografia al termine del test. */
+    // Memoria complessiva del sistema: fotografia al termine del test. 
     {
         FILE *fpMem = fopen("/proc/meminfo", "r");
         if (fpMem != NULL)
@@ -1960,12 +1959,12 @@ void PrintHardwareInfo(void)
         }
     }
 
-    /* Picco di memoria residente (RSS) del solo processo corrente. */
+    // Picco di memoria residente (RSS) del solo processo corrente. 
     {
         struct rusage processUsage;
         if (getrusage(RUSAGE_SELF, &processUsage) == 0)
         {
-            /* Linux esprime ru_maxrss in KiB; macOS lo esprime in byte. */
+            // Linux esprime ru_maxrss in KiB; macOS lo esprime in byte. 
 #if defined(__APPLE__)
             wprintf(L"  Picco RSS processo : %.2f MiB\n",
                     (double)processUsage.ru_maxrss / (1024.0 * 1024.0));
@@ -1982,18 +1981,14 @@ void PrintHardwareInfo(void)
 #endif
 #endif
 
-    /* I dati sui worker saranno aggiunti quando verrà introdotto il thread pool.
-       Non stampiamo il numero di thread attivi a fine main(): a quel punto
-       eventuali worker sono già stati terminati e uniti. */
+// I dati sui worker saranno aggiunti quando verrà introdotto il thread pool.
+// Non stampiamo il numero di thread attivi a fine main(): a quel punto
+// eventuali worker sono già stati terminati e uniti.
 }
 
-/*
-IMPORTANTE, ATTENZIONE!!! compilare su Windows con MINGW64, richiede di specificare '-liconv' alla fine, dopo '-lz'
-                          altrimenti il linker dà errore.
-*/
-
-
-
+// IMPORTANTE, ATTENZIONE!!!
+// compilare su Windows con MINGW64, richiede di specificare '-liconv' alla fine, dopo '-lz'
+// altrimenti il linker dà errore.
 
 int main(int argc, char **argv)
 {

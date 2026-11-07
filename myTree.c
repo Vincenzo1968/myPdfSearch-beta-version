@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -22,8 +22,6 @@
 
 #include "myTree.h"
 #include <wchar.h>
-
-// -----------------------------------------------------------------------------------------------------------------------
 
 Tree * treeNewNode(int32_t numObjNumber, int32_t numObjParent)
 {

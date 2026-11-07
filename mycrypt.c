@@ -1,3 +1,25 @@
+/*
+   Copyright (C) 2026 Vincenzo Lo Cicero
+
+   Author: Vincenzo Lo Cicero.
+   e-mail: vincenzolocicero68@gmail.com
+
+   This file is part of mypdfsearch.
+
+   mypdfsearch is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   mypdfsearch is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "scanner.h"
 #include "mycrypt_rc4.h"
 #include "mycrypt.h"
@@ -55,13 +77,12 @@ void PdfCryptoParams_FreeOutput(PdfCryptoParams *cp)
     cp->lenStream = &cp->lenStreamValue;
 }
 
-/*
- * Inizializzazione del provider default nel contesto globale.
- *
- * Il riferimento viene conservato per la vita del processo:
- * non deve essere liberato dal cleanup delle singole operazioni,
- * perché altri thread potrebbero utilizzare ancora OpenSSL.
- */
+
+// Inizializzazione del provider default nel contesto globale.
+// Il riferimento viene conservato per la vita del processo:
+// non deve essere liberato dal cleanup delle singole operazioni,
+// perché altri thread potrebbero utilizzare ancora OpenSSL.
+
 static CRYPTO_ONCE crypto_global_once = CRYPTO_ONCE_STATIC_INIT;
 static OSSL_PROVIDER *crypto_global_default_provider = NULL;
 static int crypto_global_ready = 0;
@@ -114,7 +135,7 @@ static int crypto_env_init(CryptoEnv *env)
 
     memset(env, 0, sizeof(*env));
 
-    /* Completa l'inizializzazione globale prima di creare il contesto locale. */
+    // Completa l'inizializzazione globale prima di creare il contesto locale.
     if (!crypto_global_init())
         goto errore;
 
@@ -208,34 +229,6 @@ static int digest_one(CryptoEnv *env, const char *name, const unsigned char *dat
 
     return hash_parts(env, name, parts, lengths, 1, out, out_len);
 }
-
-/*
-static int rc4_crypt(CryptoEnv *env, const unsigned char *key, size_t key_len,
-                     const unsigned char *input, size_t input_len, unsigned char *output)
-{
-    EVP_CIPHER *cipher = NULL;
-    EVP_CIPHER_CTX *ctx = NULL;
-    int out1 = 0, out2 = 0;
-    int ok = 0;
-
-    if (env->legacy_provider == NULL) return 0;
-    if (key == NULL || key_len == 0 || key_len > INT_MAX) return 0;
-    cipher = EVP_CIPHER_fetch(env->libctx, "RC4", "provider=legacy");
-    ctx = EVP_CIPHER_CTX_new();
-    if (cipher == NULL || ctx == NULL) goto done;
-    if (EVP_CipherInit_ex2(ctx, cipher, NULL, NULL, 1, NULL) != 1) goto done;
-    if (EVP_CIPHER_CTX_set_key_length(ctx, (int)key_len) != 1) goto done;
-    if (EVP_CipherInit_ex2(ctx, NULL, key, NULL, 1, NULL) != 1) goto done;
-    if (input_len > INT_MAX) goto done;
-    if (input_len != 0 && EVP_CipherUpdate(ctx, output, &out1, input, (int)input_len) != 1) goto done;
-    if (EVP_CipherFinal_ex(ctx, output + out1, &out2) != 1) goto done;
-    ok = ((size_t)(out1 + out2) == input_len);
-done:
-    EVP_CIPHER_CTX_free(ctx);
-    EVP_CIPHER_free(cipher);
-    return ok;
-}
-*/
 
 static int rc4_crypt(CryptoEnv *env, const unsigned char *key, size_t key_len, const unsigned char *input, size_t input_len, unsigned char *output)
 {
@@ -710,7 +703,7 @@ static int check_perms(CryptoEnv *env, const PdfCryptoParams *cp, const unsigned
     int ok = 0;
     (void)iv_dummy;
 
-    if (cp->pPerms == NULL || cp->lenPerms < 16) return 1; /* permit caller to omit validation bytes */
+    if (cp->pPerms == NULL || cp->lenPerms < 16) return 1; // permit caller to omit validation bytes 
 
     if (!aes_crypt(env, 0, file_key, 32, NULL, cp->pPerms, 16, clear, &clear_len, 0, 1) || clear_len != 16) goto done;
 
@@ -959,36 +952,6 @@ static PdfCryptMethod choose_method(const PdfCryptoParams *cp)
     return method;
 }
 
-/*
-static PdfCryptMethod choose_method(const PdfCryptoParams *cp)
-{
-    PdfCryptMethod method;
-
-    if (cp->method != PDF_CRYPT_AUTO) return cp->method;
-
-    if (cp->V < 4) return PDF_CRYPT_RC4;
-
-    switch (cp->target)
-    {
-		case PDF_CRYPT_TARGET_STRING:
-			method = cp->strMethod;
-			break;
-
-		case PDF_CRYPT_TARGET_EMBEDDED_FILE:
-			method = cp->embeddedFileMethod != PDF_CRYPT_AUTO ? cp->embeddedFileMethod : cp->streamMethod;
-			break;
-
-		case PDF_CRYPT_TARGET_STREAM:
-
-		default:
-			method = cp->streamMethod;
-			break;
-    }
-
-    return method;
-}
-*/
-
 static int derive_object_key(CryptoEnv *env, const PdfCryptoParams *cp,
                              const unsigned char *file_key, size_t file_key_len,
                              PdfCryptMethod method, unsigned char object_key[16], size_t *object_key_len)
@@ -1106,9 +1069,6 @@ static int transform(PdfCryptoParams *cp, int encrypt)
         goto success;
     }
 
-    //if (!get_file_key(&env, cp, file_key, &file_key_len))
-	//	goto done;
-	//wprintf(L"[DEBUG transform] target=%d, method=%d, bUseProvidedFileKey=%d, lenFileKey=%zu, R=%d\n", cp->target, method, cp->bUseProvidedFileKey, cp->lenFileKey, cp->R);
 	if (!get_file_key(&env, cp, file_key, &file_key_len))
 	{
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_Decrypt)
@@ -1116,7 +1076,6 @@ static int transform(PdfCryptoParams *cp, int encrypt)
 		#endif
 		goto done;
 	}
-	//wprintf(L"[DEBUG transform] get_file_key OK, file_key_len=%zu\n", file_key_len);
 
     if (method == PDF_CRYPT_RC4 || method == PDF_CRYPT_AESV2)
     {

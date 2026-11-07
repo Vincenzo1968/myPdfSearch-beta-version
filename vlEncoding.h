@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -20,21 +20,21 @@
    along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef	__MY_ENCODING_H
-#define	__MY_ENCODING_H
+#ifndef	MY_ENCODING_INCLUDED
+#define	MY_ENCODING_INCLUDED
 
 #ifdef __cplusplus
 #  define BEGIN_C_DECLS extern "C" {
 #  define END_C_DECLS   }
-#else /* !__cplusplus */
+#else // !__cplusplus 
 #  define BEGIN_C_DECLS
 #  define END_C_DECLS
-#endif /* __cplusplus */
+#endif // __cplusplus 
 
 #ifdef _MSC_VER
-#define INLINE __forceinline /* use __forceinline (VC++ specific) */
+#define INLINE __forceinline // use __forceinline (VC++ specific) 
 #else
-#define INLINE inline        /* use standard inline */
+#define INLINE inline        // use standard inline 
 #endif
 
 #include <stdint.h>
@@ -131,12 +131,10 @@ typedef struct tag_lzw_dec
 
 BEGIN_C_DECLS
 
-// --------------------------------------------------------------------------------------------------------------------------
+// ----------------------------------------------- Public Interface Functions -------------------------------------------------
 
 int IsLittleEndian(void);
 int IsBigEndian(void);
-
-// ----------------------------------------------- Public Interface Functions -------------------------------------------------
 
 unsigned char * asciiHexEncode(unsigned char * pInputStream, size_t len, size_t *pLenOut, uint32_t *pErrorCode);
 unsigned char * asciiHexDecode(unsigned char * pInputStream, size_t len, size_t *pLenOut, uint32_t *pErrorCode);
@@ -149,4 +147,4 @@ unsigned char * lzwDecode(unsigned char * pInputStream, size_t len, uint32_t Bit
 
 END_C_DECLS
 
-#endif /* __MY_ENCODING_H */
+#endif // MY_ENCODING_INCLUDED

@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -20,14 +20,8 @@
    along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// https://www.adobe.com/content/dam/acom/en/devnet/pdf/pdfs/PDF32000_2008.pdf
-
-// http://www.eprg.org/pdfcorner/text2pdf/
-
-
-
-#ifndef __MYPDFSEARCH__
-#define __MYPDFSEARCH__
+#ifndef MYPDFSEARCH_INCLUDED
+#define MYPDFSEARCH_INCLUDED
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,11 +58,10 @@ typedef struct tagFilesList
 	struct tagFilesList *next;
 } FilesList;
 
-#endif // __MYPDFSEARCH__
+#endif // MYPDFSEARCH_INCLUDED
 
 
 /*
-
 MYDEBUG_PRINT_ON_ReadEncrypt_R
 
 MYDEBUG_PRINT_SINGLE_CHAR_ENCODING
@@ -143,13 +136,3 @@ MYDEBUG_PRINT_ON_ParseStreamObject_FN
 MYDEBUG_PRINT_ON_ParseDictionaryObject_FN
 MYDEBUG_PRINT_ON_ParseLengthObject_FN
 */
-
-
-
-
-
-
-
-
-
-// ***********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************

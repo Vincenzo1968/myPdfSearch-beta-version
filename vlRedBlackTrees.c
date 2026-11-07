@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -26,22 +26,6 @@
 
 #include <wchar.h>
 #include "vlRedBlackTrees.h"
-
-/*
-typedef struct tagKey
-{
-	double row;
-	double col;
-	int32_t ord;
-} myKey;
-
-typedef struct tagData
-{
-	char c;
-	double width;
-	double currFontSpaceWidth;
-} myData;
-*/
 
 int vlrbtInit(vlRedBlackTree* pTree, pfnVlRbtCompareFunc CompareFunc, pfnVlRbtOnTraverse OnTraverseFunc)
 {
@@ -114,7 +98,7 @@ vlrbtTreeNode *vlrbtNewNode(const void* pKey, uint32_t keySize, void* pData, uin
 		r->datasize = 0;
 	}
 
-	r->color = 'b'; /* 'b' = Black; 'r' = Red */
+	r->color = 'b'; // 'b' = Black; 'r' = Red 
 
 	r->father = NULL;
 	r->left = NULL;
@@ -619,7 +603,7 @@ void vlrbtTraverseReverseInOrder(vlRedBlackTree *pTree)
 		{
 			if ( top < VLRBT_MAX_STACK )
 			{
-				stack[++top] = temp; /* Push */
+				stack[++top] = temp; // Push 
 				temp = temp->right;
 			}
 			else
@@ -632,7 +616,7 @@ void vlrbtTraverseReverseInOrder(vlRedBlackTree *pTree)
 		{
 			if ( top >= 0 )
 			{
-				temp = stack[top--]; /* Pop */
+				temp = stack[top--]; // Pop 
 				//printf("%d\n", temp->data);
 				pTree->pOnTraverseFunc((void*)temp);
 				temp = temp->left;
@@ -665,7 +649,7 @@ void vlrbtTraverseInOrder(vlRedBlackTree *pTree)
 		{
 			if ( top < VLRBT_MAX_STACK )
 			{
-				stack[++top] = temp; /* Push */
+				stack[++top] = temp; // Push 
 				temp = temp->left;
 			}
 			else
@@ -678,7 +662,7 @@ void vlrbtTraverseInOrder(vlRedBlackTree *pTree)
 		{
 			if ( top >= 0 )
 			{
-				temp = stack[top--]; /* Pop */
+				temp = stack[top--]; // Pop 
 				//printf("%d\n", temp->data);
 				pTree->pOnTraverseFunc((void*)temp);
 				temp = temp->right;

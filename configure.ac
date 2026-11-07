@@ -3,7 +3,7 @@ cd "$HOME/AAA_DATI_21042026/progetti/myPdfSearch-beta-version" || exit 1
 cat > configure.ac <<'EOF'
 AC_PREREQ([2.69])
 
-AC_INIT([mypdfsearch], [0.1.0], [vincenzolocicero68@gmail.com])
+AC_INIT([mypdfsearch], [0.1.1], [vincenzolocicero68@gmail.com])
 AC_CONFIG_SRCDIR([main.c])
 AC_CONFIG_FILES([Makefile])
 

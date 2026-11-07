@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -20,8 +20,8 @@
    along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __MYPARSER__
-#define __MYPARSER__
+#ifndef MYPARSER_INCLUDED
+#define MYPARSER_INCLUDED
 
 #include "mypdfsearch.h"
 #include "scanner.h"
@@ -127,13 +127,10 @@ wchar_t ConvertCIDToUnicode(Params *pParams, int cid);
 
 int IsUTF16Encoding(const char *szEncoding);
 
-//static unsigned int DecodeUTF16BE(const unsigned char *pBuf, size_t bufLen, size_t *pConsumed);
-
 int VlRbtCompareFuncCol(const void* pKey1, uint32_t keysize1, const void* pKey2, uint32_t keysize2);
 int VlRbtCompareFuncRow(const void* pKey1, uint32_t keysize1, const void* pKey2, uint32_t keysize2);
 int VlRbtCompareFuncOrd(const void* pKey1, uint32_t keysize1, const void* pKey2, uint32_t keysize2);
 int VlRbtOnTraverseFunc(void* pCurrNode);
-//int VlRbtOnTraverseFuncNew(void* pCurrNode);
 
 void MultiplyTransMatrix(TransMatrix *pA, TransMatrix *pB, TransMatrix *pRes);
 
@@ -151,7 +148,6 @@ void set_Times_BoldItalic(Params *pParams);
 void set_Times_Italic(Params *pParams);
 void set_Times_Roman(Params *pParams);
 void set_ZapfDingbats(Params *pParams);
-
 
 unsigned char * getDecodedStream(Params *pParams, unsigned long int *pDecodedStreamSize, MyContent_t *pContent);
 
@@ -172,6 +168,7 @@ void PrintToken(Token *pToken, char cCarattereIniziale, char cCarattereFinale, i
 int PrintThisObject(Params *pParams, int objNum, int bDecodeStream, int nPageNumber, FILE* fpErrors);
 
 int PrintThisObjectFontFile(Params *pParams, int objNum, FILE* fpOutput);
+
 int LoadFirstBlock(Params *pParams, int objNum, const char *pszFunctionName);
 
 void myTreeTraversePostOrderLeafOnly(Tree *head, Params *pParams);
@@ -200,9 +197,9 @@ int ParseLengthObject(Params *pParams, int objNum);
 int ParseIntegerObject(Params *pParams, int objNum);
 
 int PushXObjDecodedContent(Params *pParams, int nPageNumber, int nXObjNumber);
+
 double getCurrCharWidth(Params *pParams, wchar_t c, wchar_t cEncoding);
 
-//int ManageShowTextOperator(Params *pParams, const char *szOpName, wchar_t *pszString, size_t lenString, wchar_t *pszEncodingString);
 int ManageShowTextOperator(Params *pParams, const char *szOpName,
                            wchar_t *pszString, size_t lenString,
                            wchar_t *pszEncodingString,
@@ -220,9 +217,7 @@ int Parse(Params *pParams, FilesList* myFilesList);
 int match(Params *pParams, TokenTypeEnum ExpectedToken, char *pszFunctionName);
 int matchLengthObj(Params *pParams, TokenTypeEnum ExpectedToken, char *pszFunctionName);
 
-
 // void Panic();
-
 
 int pdf(Params *pParams);
 
@@ -329,4 +324,4 @@ int cot(Params *pParams);
 int cot_dictbody(Params *pParams);
 int cot_dictbodyitems(Params *pParams);
 
-#endif /* __MYPARSER__ */
+#endif // MYPARSER_INCLUDED

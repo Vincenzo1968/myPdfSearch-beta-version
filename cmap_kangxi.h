@@ -1,5 +1,13 @@
-/* Generato automaticamente da kangxi_map_to_c.py.
- * Non modificare a mano. */
+/*
+ * Data source: Adobe CMap Resources
+ * Upstream: https://github.com/adobe-type-tools/cmap-resources
+ * Copyright 1990-2023 Adobe. All rights reserved.
+ * License: BSD-3-Clause. See
+ * LICENSES/Adobe-CMap-Resources-LICENSE.md
+ * for the complete license terms.
+ * Generated file: do not edit this mapping manually.
+ */
+ 
 #ifndef KANGXI_MAP_H
 #define KANGXI_MAP_H
 
@@ -250,4 +258,4 @@ static const RadToIdeograph kangxi_map[] = {
 };
 #define KANGXI_MAP_SIZE (sizeof(kangxi_map) / sizeof(kangxi_map[0]))
 
-#endif /* KANGXI_MAP_H */
+#endif // KANGXI_MAP_H 

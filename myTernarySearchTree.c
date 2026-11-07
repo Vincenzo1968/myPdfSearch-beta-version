@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -34,40 +34,6 @@ void tstInit(TernarySearchTree_t* pTree)
 
 tnode_t* tstInsertRecursive(tnode_t* p, const wchar_t *s, const void* pData, uint32_t dataSize, wchar_t* pReserved)
 {
-	/*
-	int keylen = 0;
-
-	wchar_t c;
-
-	int k;
-
-	int bReservedIsNull = 0;
-
-	if ( NULL == pReserved )
-	{
-		bReservedIsNull = 1;
-
-		keylen = 0;
-		c = s[keylen];
-		while ( L'\0' != c )
-		{
-			keylen++;
-			c = s[keylen];
-		}
-
-		pReserved = (wchar_t*)malloc(sizeof(wchar_t) * keylen + sizeof(wchar_t));
-		if ( NULL == pReserved )
-		{
-			return NULL;
-		}
-
-		for ( k = 0; k <= keylen; k++ )
-		{
-			pReserved[k] = s[k];
-		}
-	}
-	*/
-
 	if ( NULL == p )
 	{
 		p = (tnode_t*)malloc(sizeof(tnode_t));
@@ -90,70 +56,6 @@ tnode_t* tstInsertRecursive(tnode_t* p, const wchar_t *s, const void* pData, uin
 
 		if ( 0 != *s )
 			p->eqkid = tstInsertRecursive(p->eqkid, ++s, pData, dataSize, pReserved);
-
-		/*
-		if ( 0 == *s )
-		{
-			p->pData = (tdata_t*)malloc(sizeof(tdata_t));
-			if ( NULL == p->pData )
-			{
-				return NULL;
-			}
-
-			if ( !bReservedIsNull )
-			{
-				keylen = 0;
-				c = pReserved[keylen];
-				while ( L'\0' != c )
-				{
-					keylen++;
-					c = pReserved[keylen];
-				}
-			}
-
-			p->pData->key = (wchar_t*)malloc(sizeof(wchar_t) * keylen + sizeof(wchar_t));
-			if ( NULL == p->pData->key )
-			{
-				free(p->pData);
-				return NULL;
-			}
-
-			for ( k = 0; k <= keylen; k++ )
-			{
-				p->pData->key[k] = pReserved[k];
-			}
-
-			free(pReserved);
-			pReserved = NULL;
-
-			if ( NULL != pData && dataSize > 0 )
-			{
-				p->pData->data = (uint8_t*)malloc(sizeof(uint8_t) * dataSize);
-				if ( NULL == p->pData->data )
-				{
-					free(p->pData->key);
-					free(p->pData);
-					return NULL;
-				}
-				memcpy(p->pData->data, pData, dataSize);
-
-				p->pData->dataSize = dataSize;
-
-				p->eqkid = (tnode_t*)p->pData;
-			}
-			else
-			{
-				p->pData->data = NULL;
-				p->pData->dataSize = 0;
-
-				p->eqkid = (tnode_t*)p->pData;
-			}
-		}
-		else
-		{
-			p->eqkid = tstInsertRecursive(p->eqkid, ++s, pData, dataSize, pReserved);
-		}
-		*/
 	}
 	else
 	{
@@ -176,66 +78,11 @@ void tstFreeRecursive(TernarySearchTree_t* pTree, tnode_t* p)
 
 		tstFreeRecursive(pTree, p->hikid);
 
-		/*
-		if ( NULL != p->pData )
-		{
-			if ( NULL != p->pData->key )
-			{
-				free(p->pData->key);
-				p->pData->key = NULL;
-			}
-			if ( NULL != p->pData->data )
-			{
-				free(p->pData->data);
-				p->pData->data = NULL;
-			}
-			free(p->pData);
-			p->pData = NULL;
-		}
-		*/
-
 		free(p);
     }
 
 	pTree->pRoot = NULL;
 }
-
-/*
-void tstFreeRecursive_OLD(TernarySearchTree_t* pTree, tnode_t* p)
-{
-	if (p)
-	{
-		tstFreeRecursive(pTree, p->lokid);
-
-		if (p->splitchar)
-		{
-			tstFreeRecursive(pTree, p->eqkid);
-		}
-
-		tstFreeRecursive(pTree, p->hikid);
-
-		if ( NULL != p->pData )
-		{
-			if ( NULL != p->pData->key )
-			{
-				free(p->pData->key);
-				p->pData->key = NULL;
-			}
-			if ( NULL != p->pData->data )
-			{
-				free(p->pData->data);
-				p->pData->data = NULL;
-			}
-			free(p->pData);
-			p->pData = NULL;
-		}
-
-		free(p);
-    }
-
-	pTree->pRoot = NULL;
-}
-*/
 
 uint32_t tstTraverseRecursive(tnode_t* p, pfnOnTraverseTst OnTraverse, uint32_t count)
 {

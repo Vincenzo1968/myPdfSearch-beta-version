@@ -1,3 +1,25 @@
+/*
+   Copyright (C) 2026 Vincenzo Lo Cicero
+
+   Author: Vincenzo Lo Cicero.
+   e-mail: vincenzolocicero68@gmail.com
+
+   This file is part of mypdfsearch.
+
+   mypdfsearch is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   mypdfsearch is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #ifndef MYCRYPT_H_INCLUDED
 #define MYCRYPT_H_INCLUDED
 
@@ -109,4 +131,4 @@ void PdfCryptoParams_FreeOutput(PdfCryptoParams *pCryptoParams);
 #ifdef __cplusplus
 }
 #endif
-#endif /* MYCRYPT_H_INCLUDED */
+#endif // MYCRYPT_H_INCLUDED 

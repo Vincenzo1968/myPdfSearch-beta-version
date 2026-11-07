@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -20,16 +20,16 @@
    along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef	__MYCONTENTQUEUELIST_H
-#define	__MYCONTENTQUEUELIST_H
+#ifndef	MYCONTENTQUEUELIST_INCLUDED
+#define	MYCONTENTQUEUELIST_INCLUDED
 
 #ifdef __cplusplus
 #  define BEGIN_C_DECLS extern "C" {
 #  define END_C_DECLS   }
-#else /* !__cplusplus */
+#else // !__cplusplus 
 #  define BEGIN_C_DECLS
 #  define END_C_DECLS
-#endif /* __cplusplus */
+#endif // __cplusplus 
 
 #ifndef MAX_STRLEN
 #define MAX_STRLEN 4096
@@ -40,21 +40,17 @@
 #include "mystringqueuelist.h"
 #include "mydictionaryqueuelist.h"
 
-/*
-The following example shows a stream, containing the marking instructions for a page, that was
-compressed using the LZW compression method and then encoded in ASCII base-85 representation.
+//The following example shows a stream, containing the marking instructions for a page, that was
+//compressed using the LZW compression method and then encoded in ASCII base-85 representation.
 
-1 0 obj
-<< /Length 534
-/Filter [ /ASCII85Decode /LZWDecode ]
->>
-*/
+// 1 0 obj
+// << /Length 534
+// /Filter [ /ASCII85Decode /LZWDecode ]
+// >>
 
-/*
-Se ci sono più filtri e uno qualsiasi dei filtri ha parametri impostati su valori non predefiniti,
-DecodeParms deve essere un array con una voce per ciascun filtro: il dizionario dei parametri per quel filtro
-o l'oggetto null se quel filtro non ha parametri (o se tutti i suoi parametri hanno i loro valori di default).
-*/
+// Se ci sono più filtri e uno qualsiasi dei filtri ha parametri impostati su valori non predefiniti,
+// DecodeParms deve essere un array con una voce per ciascun filtro: il dizionario dei parametri per quel filtro
+// o l'oggetto null se quel filtro non ha parametri (o se tutti i suoi parametri hanno i loro valori di default).
 
 typedef struct _myContent
 {
@@ -96,4 +92,4 @@ int  mycontentqueuelist_Peek(MyContentQueueList_t* p, MyContent_t* pContent);
 
 END_C_DECLS
 
-#endif /* __MYCONTENTQUEUELIST_H */
+#endif // MYCONTENTQUEUELIST_INCLUDED 

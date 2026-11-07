@@ -1,3 +1,25 @@
+/*
+   Copyright (C) 2026 Vincenzo Lo Cicero
+
+   Author: Vincenzo Lo Cicero.
+   e-mail: vincenzolocicero68@gmail.com
+
+   This file is part of mypdfsearch.
+
+   mypdfsearch is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
+
+   mypdfsearch is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include "myUnicodeNFC.h"
 #include "unicode_nfc_data.h"
 
@@ -140,7 +162,7 @@ static int myNfcFindCompositionPair(uint32_t first, uint32_t second,
     return 0;
 }
 
-/* Unicode Standard, section 3.12: algorithmic Hangul decomposition. */
+// Unicode Standard, section 3.12: algorithmic Hangul decomposition.
 static int myNfcDecomposeHangul(uint32_t cp, MyNfcBuffer *buffer)
 {
     const uint32_t S_BASE = 0xAC00u;
@@ -181,7 +203,7 @@ static int myNfcDecomposeHangul(uint32_t cp, MyNfcBuffer *buffer)
     return 1;
 }
 
-/* Recursive canonical decomposition, including algorithmic Hangul. */
+// Recursive canonical decomposition, including algorithmic Hangul. 
 static MyUnicodeNFCStatus myNfcDecompose(uint32_t cp,
                                           MyNfcBuffer *buffer,
                                           unsigned int depth)
@@ -232,11 +254,10 @@ static MyUnicodeNFCStatus myNfcDecompose(uint32_t cp,
     return MY_UNICODE_NFC_OK;
 }
 
-/*
- * Canonical ordering: stable counting sort of each consecutive run of
- * non-starters. Canonical Combining Class is an 8-bit value, so this is
- * linear in the input length and avoids quadratic behavior on long mark runs.
- */
+// Canonical ordering: stable counting sort of each consecutive run of
+// non-starters. Canonical Combining Class is an 8-bit value, so this is
+// linear in the input length and avoids quadratic behavior on long mark runs.
+
 static int myNfcCanonicalOrder(MyNfcBuffer *buffer)
 {
     uint32_t *scratch;
@@ -259,7 +280,7 @@ static int myNfcCanonicalOrder(MyNfcBuffer *buffer)
         size_t j;
         size_t offset = 0u;
 
-        /* A starter (CCC=0) is already correctly positioned. */
+        // A starter (CCC=0) is already correctly positioned. 
         if (myNfcGetCombiningClass(buffer->data[i]) == 0u) {
             ++i;
             continue;
@@ -280,13 +301,13 @@ static int myNfcCanonicalOrder(MyNfcBuffer *buffer)
             ++counts[ccc];
         }
 
-        /* Prefix positions for CCC values 1..255; position 0 is unused. */
+        // Prefix positions for CCC values 1..255; position 0 is unused. 
         for (j = 1u; j < 256u; ++j) {
             positions[j] = offset;
             offset += counts[j];
         }
 
-        /* Stable distribution preserves the order of equal CCC values. */
+        // Stable distribution preserves the order of equal CCC values. 
         for (j = start; j < end; ++j) {
             uint8_t ccc = myNfcGetCombiningClass(buffer->data[j]);
             scratch[start + positions[ccc]++] = buffer->data[j];
@@ -300,7 +321,7 @@ static int myNfcCanonicalOrder(MyNfcBuffer *buffer)
     return 1;
 }
 
-/* Algorithmic Hangul composition, followed by the generated pair table. */
+// Algorithmic Hangul composition, followed by the generated pair table. 
 static int myNfcComposePair(uint32_t first, uint32_t second,
                             uint32_t *composite)
 {
@@ -314,7 +335,7 @@ static int myNfcComposePair(uint32_t first, uint32_t second,
     const uint32_t N_COUNT = V_COUNT * T_COUNT;
     const uint32_t S_COUNT = L_COUNT * N_COUNT;
 
-    /* L Jamo + V Jamo -> LV Hangul syllable. */
+    // L Jamo + V Jamo -> LV Hangul syllable. 
     if (first >= L_BASE && first < L_BASE + L_COUNT &&
         second >= V_BASE && second < V_BASE + V_COUNT) {
         uint32_t l_index = first - L_BASE;
@@ -323,7 +344,7 @@ static int myNfcComposePair(uint32_t first, uint32_t second,
         return 1;
     }
 
-    /* LV Hangul syllable without a final consonant + T Jamo -> LVT. */
+    // LV Hangul syllable without a final consonant + T Jamo -> LVT. 
     if (first >= S_BASE && first < S_BASE + S_COUNT &&
         ((first - S_BASE) % T_COUNT) == 0u &&
         second > T_BASE && second < T_BASE + T_COUNT) {
@@ -334,7 +355,7 @@ static int myNfcComposePair(uint32_t first, uint32_t second,
     return myNfcFindCompositionPair(first, second, composite);
 }
 
-/* Canonical composition, performed in place after decomposition and ordering. */
+// Canonical composition, performed in place after decomposition and ordering. 
 static void myNfcCanonicalCompose(MyNfcBuffer *buffer)
 {
     size_t read_pos;
@@ -353,7 +374,7 @@ static void myNfcCanonicalCompose(MyNfcBuffer *buffer)
             myNfcComposePair(starter, current, &composite)) {
             buffer->data[starter_pos] = composite;
             starter = composite;
-            /* A successful composition does not change last_ccc. */
+            // A successful composition does not change last_ccc. 
             continue;
         }
 

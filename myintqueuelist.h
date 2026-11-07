@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -20,16 +20,16 @@
    along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef	__MYINTQUEUELIST_H
-#define	__MYINTQUEUELIST_H
+#ifndef	MYINTQUEUELIST_INCLUDED
+#define	MYINTQUEUELIST_INCLUDED
 
 #ifdef __cplusplus
 #  define BEGIN_C_DECLS extern "C" {
 #  define END_C_DECLS   }
-#else /* !__cplusplus */
+#else // !__cplusplus 
 #  define BEGIN_C_DECLS
 #  define END_C_DECLS
-#endif /* __cplusplus */
+#endif // __cplusplus 
 
 #ifndef MAX_STRLEN
 #define MAX_STRLEN 4096
@@ -60,4 +60,4 @@ int  myintqueuelist_Peek(MyIntQueueList_t* p, int* pNum);
 
 END_C_DECLS
 
-#endif /* __MYINTQUEUELIST_H */
+#endif // MYINTQUEUELIST_INCLUDED

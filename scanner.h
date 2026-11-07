@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -20,8 +20,8 @@
    along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __MYSCANNER__
-#define __MYSCANNER__
+#ifndef MYSCANNER_INCLUDED
+#define MYSCANNER_INCLUDED
 
 #include "mypdfsearch.h"
 #include "myTree.h"
@@ -426,8 +426,9 @@ typedef struct tagPdfObjsTableItem
 	MyObjRefList_t myXObjRefList;
 	MyObjRefList_t myFontsRefList;
 	MyObjRefList_t myGsRefList;
-	MyIntQueueList_t queueContentsObjRefs; // Coda di riferimenti agli obj che contengono i contents(stream) della pagina
-	// solo per oggetti font:
+	MyIntQueueList_t queueContentsObjRefs; // Coda di riferimenti agli obj
+	                                       // che contengono i contents(stream) della pagina.
+	// Solo per oggetti font:
 	GlyphsWidths *pGlyphsWidths;
 	unsigned char *pszDirectFontResourceString;
 	uint32_t lenDirectFontResourceString;
@@ -544,7 +545,6 @@ typedef struct tag_vlrbtData
 
 } vlrbtData_t;
 
-// Aggiungi questo typedef, ad esempio subito prima della struct Params
 typedef int (*OnUserPasswordCallback)(const char *pdf_filename,
                                       const char *error_msg,
                                       char *out_password,
@@ -562,7 +562,7 @@ typedef struct tagParams
 
 	char szError[8192];
 
-	// NUOVO: Puntatore alla funzione callback per la password
+	// Puntatore alla funzione callback per la password
     OnUserPasswordCallback pOnUserPassword;
 
 	GenHashTable_t myHT_ImageObjs;
@@ -571,8 +571,6 @@ typedef struct tagParams
 	int bCidFontArrayInsteadDict;
 
 	uint32_t bPdfHasText;
-	//uint32_t nCountImageContent;
-	//uint32_t nCountNotImageContent;
 
 	uint32_t currentFileOffset;
 	uint32_t lastTokenOffset;
@@ -637,11 +635,9 @@ typedef struct tagParams
 	int nCTM_StackTop;
 
 	char szExtArraySizeCurrKeyName[MAX_STRLEN];
-	//char szExtArraySizeDW2CurrKeyName[MAX_STRLEN];
 
 	int bCurrParsingFontIsCIDFont;
 	int bWisPresent;
-	//int bW2isPresent;
 
 	int nCurrFontWritingMode;
 
@@ -709,16 +705,13 @@ typedef struct tagParams
 	int blockLenLengthObj;
 	int blockCurPosLengthObj;
 
-
 	unsigned char *myBlockToUnicode;
 	int blockLenToUnicode;
 	int blockCurPosToUnicode;
 
-
 	int bStreamType;
 	int bStreamState;
 	int bStringIsDecoded;
-
 
 	int bInXObj;
 	int bXObjIsIndirect;
@@ -789,13 +782,10 @@ typedef struct tagParams
 
 	wchar_t *pArrayUnicode;
 
-	// >>> NUOVO: sequenze multi-codepoint per CID (per Hindi, Thai composto, ecc.)
+	// sequenze multi-codepoint per CID (per Hindi, Thai composto, ecc.)
 	wchar_t **sequences;   // array di 0x10000 puntatori; sequences[cid] = NULL oppure stringa di 1+ wchar_t + '\0'
 
 	wchar_t *pCurrentEncodingArray;
-
-	//GenHashTable_t myHT_EncodingArray;
-	//unsigned char * pEncodingData;
 
 	// Ultima stringa grezza letta dal content stream (per Tj/'/")
 	unsigned char *pLastRawStringBytes;
@@ -818,7 +808,7 @@ typedef struct tagParams
 	int bOnParseEncryptObject;
 	int isEncrypted;
 	int bSkipCurrentPdf;
-	int bInfoObjectParsed;   // >>> NUOVO: 0 = metadati non ancora stampati, 1 = stampati
+	int bInfoObjectParsed;   // 0 = metadati non ancora stampati, 1 = stampati
 	int bOnParseInfoObject;
 
 	int dimFile;
@@ -875,7 +865,10 @@ typedef struct tagParams
 
 	int nCurrentPageParent;      // 0 se nodo radice; altrimenti intero > 0 indica il nodo genitore della pagina corrente
 
-	int nCurrentPageResources;   // 0 se la pagina non ha riferimenti a Resources; -1 se la pagina eredita Resources da uno dei suoi genitori; altrimenti un intero maggiore di zero che indica il riferimento al numero dell'oggetto Resources.
+	int nCurrentPageResources;   // 0 se la pagina non ha riferimenti a Resources;
+	                             // -1 se la pagina eredita Resources da uno dei suoi genitori;
+	                             // altrimenti un intero maggiore di zero
+	                             // che indica il riferimento al numero dell'oggetto Resources.
 
 	int bXObjectKeys;
 	int bFontsKeys;
@@ -945,9 +938,6 @@ typedef enum tagStates
 	S21
 } States;
 
-/* ------------------------------------------------------------------------------------------------------------- */
-
-//static int read_pdf_literal_string(const unsigned char *input, int *pIndex, unsigned char **outBytes, size_t *outLen);
 
 // Dichiara la funzione Set da qualche parte nell'header
 void SetOnUserPasswordCallback(Params *pParams, OnUserPasswordCallback callback);
@@ -975,7 +965,7 @@ int GetLenNextInput(Params *pParams, int startxref, int *len);
 
 int ManageTypeZeroHexString(Params *pParams, int lenCurrLexeme);
 
-/* ------------------------------------------------------------------------------------------------------------- */
+// ------------------------------------------------------------------------------------------------------------- 
 
 int ReadHeader(Params *pParams);
 
@@ -995,4 +985,4 @@ void GetNextTokenLengthObj(Params *pParams);
 
 void GetNextTokenFromToUnicodeStream(Params *pParams);
 
-#endif // __MYSCANNER__
+#endif // MYSCANNER_INCLUDED

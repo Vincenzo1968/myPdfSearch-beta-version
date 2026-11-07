@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -31,10 +31,6 @@
 #include <unistd.h>
 #endif
 
-/*
-#include "mypdfsearch.h"
-#include "scanner.h"
-*/
 #include "parser.h"
 #include "mycrypt.h"
 #include "mydecode.h"
@@ -43,7 +39,7 @@
 
 #include "myUnicodeNFC.h"
 
-#include "cmap_Adobe-Japan1-7.h"   //#include "cmap_aj1_full.h"
+#include "cmap_Adobe-Japan1-7.h"   // #include "cmap_aj1_full.h"
 #include "cmap_Adobe-CNS1-7.h"
 #include "cmap_Adobe-GB1-6.h"
 #include "cmap_Adobe-Korea1-2.h"
@@ -96,16 +92,16 @@ static void ReportPasswordWarning(
 
 static int IsRTLCodepoint(wchar_t c)
 {
-    return (c >= 0x0590 && c <= 0x05FF) ||   /* Ebraico */
-           (c >= 0x0600 && c <= 0x06FF) ||   /* Arabo */
-           (c >= 0x0700 && c <= 0x074F) ||   /* Siriaco */
-           (c >= 0x0750 && c <= 0x077F) ||   /* Arabo Supplementare */
-           (c >= 0x08A0 && c <= 0x08FF) ||   /* Arabo Esteso-A */
-           (c >= 0xFB1D && c <= 0xFDFF) ||   /* Present. Forms-A */
-           (c >= 0xFE70 && c <= 0xFEFF);     /* Present. Forms-B */
+    return (c >= 0x0590 && c <= 0x05FF) ||   // Ebraico 
+           (c >= 0x0600 && c <= 0x06FF) ||   // Arabo 
+           (c >= 0x0700 && c <= 0x074F) ||   // Siriaco 
+           (c >= 0x0750 && c <= 0x077F) ||   // Arabo Supplementare 
+           (c >= 0x08A0 && c <= 0x08FF) ||   // Arabo Esteso-A 
+           (c >= 0xFB1D && c <= 0xFDFF) ||   // Present. Forms-A 
+           (c >= 0xFE70 && c <= 0xFEFF);     // Present. Forms-B 
 }
 
-/* Inverte in-place ogni run contiguo di caratteri RTL in s[0..len-1]. */
+// Inverte in-place ogni run contiguo di caratteri RTL in s[0..len-1]. 
 static void ReverseRTLRuns(wchar_t *s, size_t len)
 {
     size_t i = 0;
@@ -126,8 +122,8 @@ static void ReverseRTLRuns(wchar_t *s, size_t len)
     }
 }
 
-/* ---------- Voto visivo/logico per riga (decisione da col/ord) ---------- */
-static int   *s_bidiLineVisual = NULL;  /* per riga: 1 = visivo, 0 = logico, -1 = ignoto */
+// ---------- Voto visivo/logico per riga (decisione da col/ord) ---------- 
+static int   *s_bidiLineVisual = NULL;  // per riga: 1 = visivo, 0 = logico, -1 = ignoto 
 static size_t s_bidiLines = 0, s_bidiCap = 0;
 static int    s_bidiVis = 0, s_bidiLog = 0;
 
@@ -139,7 +135,7 @@ static void BidiReset(void)
     s_bidiVis = s_bidiLog = 0;
 }
 
-/* Chiude la riga corrente e ne registra il verdetto. */
+// Chiude la riga corrente e ne registra il verdetto. 
 static void BidiEndLine(void)
 {
     if (s_bidiLines == s_bidiCap)
@@ -155,7 +151,7 @@ static void BidiEndLine(void)
     s_bidiVis = s_bidiLog = 0;
 }
 
-/* Voto: due glifi RTL consecutivi nello stream. col cresce -> ordine visivo. */
+// Voto: due glifi RTL consecutivi nello stream. col cresce -> ordine visivo. 
 static void BidiVote(wchar_t prev, wchar_t cur, double prevCol, double curCol)
 {
     if (!IsRTLCodepoint(prev) || !IsRTLCodepoint(cur)) return;
@@ -163,12 +159,12 @@ static void BidiVote(wchar_t prev, wchar_t cur, double prevCol, double curCol)
     else if (curCol + 0.5 < prevCol) s_bidiLog++;
 }
 
-static void ReverseRange(wchar_t *s, size_t a, size_t b)   /* estremi inclusi */
+static void ReverseRange(wchar_t *s, size_t a, size_t b)   // estremi inclusi 
 {
     while (a < b) { wchar_t t = s[a]; s[a] = s[b]; s[b] = t; a++; b--; }
 }
 
-/* Dopo l'inversione di una riga intera, rimette dritti numeri e latino. */
+// Dopo l'inversione di una riga intera, rimette dritti numeri e latino. 
 static void ReverseLtrRuns(wchar_t *s, size_t len)
 {
     size_t i = 0;
@@ -186,8 +182,8 @@ static void ReverseLtrRuns(wchar_t *s, size_t len)
     }
 }
 
-/* Riga mista in ordine visivo: inverte ogni "frase" RTL, spazi interni inclusi,
-   cosi' cambia anche l'ordine delle parole. */
+// Riga mista in ordine visivo: inverte ogni "frase" RTL, spazi interni inclusi,
+// cosi' cambia anche l'ordine delle parole. 
 static void ReverseRTLPhrases(wchar_t *s, size_t len)
 {
     size_t i = 0;
@@ -210,7 +206,7 @@ static void ReverseRTLRunsInText(wchar_t *text)
 {
     if (text == NULL) return;
 
-    /* I verdetti valgono solo se il numero di righe coincide. */
+    // I verdetti valgono solo se il numero di righe coincide. 
     size_t nl = 1;
     for (wchar_t *p = text; *p; p++) if (*p == L'\n') nl++;
     int useVotes = (s_bidiLineVisual != NULL && nl == s_bidiLines);
@@ -250,7 +246,7 @@ static void ReverseRTLRunsInText(wchar_t *text)
         {
             if (verdict == 0)
             {
-                /* stream gia' in ordine logico: non toccare */
+                // stream gia' in ordine logico: non toccare 
             }
             else if (verdict == 1)
             {
@@ -339,18 +335,14 @@ wchar_t ConvertCIDToUnicode(Params *pParams, int cid)
     const CidToUnicodeMap *map = NULL;
     size_t n = 0;
 
-    /* 0xFFFD (65533) e' il carattere di sostituzione Unicode: se arriva qui,
-     * significa che stiamo cercando di convertire un "notdef" gia' sostituito.
-     * Lo restituiamo silenziosamente senza emettere il warning. */
+    // 0xFFFD (65533) e' il carattere di sostituzione Unicode: se arriva qui,
+    // significa che stiamo cercando di convertire un "notdef" gia' sostituito.
+    // Lo restituiamo silenziosamente senza emettere il warning. 
     if (cid == 0xFFFD)
     {
         return 0xFFFD;
     }
-
-    /* PATCH 3: CID 0 nella grande maggioranza dei font e' lo spazio.
-     * Mapparlo subito a U+0020 evita di finire nel fallback per
-     * Ordering sconosciuto (che restituirebbe 0xFFFD). */
-    if (cid == 0)
+    else if (cid == 0)
     {
         return L' ';
     }
@@ -364,17 +356,12 @@ wchar_t ConvertCIDToUnicode(Params *pParams, int cid)
     else if ( strncmp(pParams->szCIDOrdering, "Japan2",6) == 0 )  { map = japan2_full_map;  n = JAPAN2_FULL_MAP_SIZE; }
     else
     {
-        /* PATCH 3: Ordering sconosciuto (es. "Identity", "UCS", vuoto).
-         * NIENTE piu' fallback su Japan1: restituiamo 0xFFFD.
-         * Il chiamante (ManageShowTextOperator, PATCH 2) lo trasforma
-         * in spazio oppure lo scarta. */
         return 0xFFFD;
     }
 
     CidToUnicodeMap *found = (CidToUnicodeMap *)bsearch(&key, map, n, sizeof(CidToUnicodeMap), compare_cid_map);
     if ( found != NULL )
     {
-        /* PATCH 3: filtro difensivo su noncharacter e surrogati isolati */
         wchar_t c = found->unicode;
         if ( c == 0xFFFF || c == 0xFFFE || c == 0x0000 )
             return L' ';
@@ -383,7 +370,6 @@ wchar_t ConvertCIDToUnicode(Params *pParams, int cid)
         return c;
     }
 
-    /* PATCH 3: niente piu' wprintf rumoroso, return silenzioso */
     return 0xFFFD;
 }
 
@@ -394,8 +380,6 @@ int IsUTF16Encoding(const char *szEncoding)
     if (NULL == szEncoding) return 0;
     return (NULL != strstr(szEncoding, "UTF16"));
 }
-
-//#define UNUSED(x) (void)(x)
 
 /*
 program : decl_list code_block;
@@ -3729,16 +3713,6 @@ int VlRbtCompareFuncOrd(const void* pKey1, uint32_t keysize1, const void* pKey2,
 	}
 }
 
-// static int IsCJK(wchar_t c)
-// {
-//     return (c >= 0x2E80 && c <= 0x9FFF)     // Radicali CJK + CJK Unificati
-//         || (c >= 0x3400 && c <= 0x4DBF)     // CJK Ext A
-//         || (c >= 0xF900 && c <= 0xFAFF)     // CJK Compat
-//         || (c >= 0xFF00 && c <= 0xFFEF)     // Halfwidth/Fullwidth
-//         || (c >= 0x3000 && c <= 0x303F)     // Punteggiatura CJK
-//         || (c >= 0x3040 && c <= 0x30FF);    // Hiragana + Katakana
-// }
-
 #define IS_CJK(c) ( \
     ((c) >= 0x2E80 && (c) <= 0x9FFF) || \
     ((c) >= 0x3400 && (c) <= 0x4DBF) || \
@@ -3747,51 +3721,6 @@ int VlRbtCompareFuncOrd(const void* pKey1, uint32_t keysize1, const void* pKey2,
     ((c) >= 0x3000 && (c) <= 0x303F) || \
     ((c) >= 0x3040 && (c) <= 0x30FF)    \
 ) ? 1 : 0
-
-/*
-// Riconosce i combining mark (matra, virama, nukta, ecc.) delle scritture
-// Indic. Usato per evitare spazi spuri tra un carattere base e il suo
-// combining mark, o tra virama e consonante del congiunto.
-static int IsIndicCombiningMark(wchar_t c)
-{
-    // Devanagari
-    if (c >= 0x093A && c <= 0x094F) return 1;
-    if (c >= 0x0951 && c <= 0x0957) return 1;
-    if (c >= 0x0962 && c <= 0x0963) return 1;
-    // Bengali
-    if (c == 0x09BC) return 1;
-    if (c >= 0x09BE && c <= 0x09CD) return 1;
-    if (c == 0x09D7) return 1;
-    if (c >= 0x09E2 && c <= 0x09E3) return 1;
-    // Tamil
-    if (c >= 0x0BBE && c <= 0x0BCD) return 1;
-    if (c == 0x0BD7) return 1;
-    // Telugu
-    if (c >= 0x0C3E && c <= 0x0C56) return 1;
-    // Kannada
-    if (c >= 0x0CBE && c <= 0x0CD6) return 1;
-    if (c >= 0x0CE2 && c <= 0x0CE3) return 1;
-    return 0;
-}
-*/
-
-/*
-// Riconosce i virama (segni di unione tra consonanti) delle scritture Indic.
-// Un virama seguito da una consonante forma un congiunto: non va inserito
-// spazio tra i due caratteri.
-static int IsIndicVirama(wchar_t c)
-{
-    return (c == 0x094D ||  // Devanagari
-            c == 0x09CD ||  // Bengali
-            c == 0x0A4D ||  // Gurmukhi
-            c == 0x0ACD ||  // Gujarati
-            c == 0x0B4D ||  // Oriya
-            c == 0x0BCD ||  // Tamil
-            c == 0x0C4D ||  // Telugu
-            c == 0x0CCD ||  // Kannada
-            c == 0x0D4D);   // Malayalam
-}
-*/
 
 int VlRbtOnTraverseFunc(void* pCurrNode)
 {
@@ -3912,26 +3841,12 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 	if ( rowDiff < 0 )
 		rowDiff = -rowDiff;
 
-	/*
-	if ( rowDiff < 0.5 )   // tolleranza: stessa riga visiva
-	{
-		xDiff = pMyKey->col - prevXCoordNext;
-
-		if ( FontObjRefCurr == FontObjRefPrev )
-		{
-			if ( TcPrev != TcCurr )
-			{
-				xDiff += (TcPrev - TcCurr);
-			}
-		}
-	}
-	*/
 	if ( rowDiff < 0.5 )   // tolleranza: stessa riga visiva
 	{
 		if ( pMyKeyPredecessor != NULL && SORT_GLYPHS_BY_ROW != pMyData->pParams->nSortGlyphs )
 			BidiVote(prevChar, pMyData->c, pMyKeyPredecessor->col, pMyKey->col);
 
-		// >>> NUOVO: distingui LTR da RTL confrontando le posizioni <<<
+		// distingui LTR da RTL confrontando le posizioni 
 		int bRTL = 0;
 		if ( pMyKeyPredecessor != NULL && (pMyKey->col + 0.5) < pMyKeyPredecessor->col )
 		{
@@ -4154,353 +4069,6 @@ double getCurrCharWidth(Params *pParams, wchar_t c, wchar_t cEncoding)
 	return dblCurrCharWidth;
 }
 
-/*
-int ManageShowTextOperator(Params *pParams, const char *szOpName, wchar_t *pszString, size_t lenString, wchar_t *pszEncodingString)
-{
-	double xCoordNext = 0.0;
-	double yCoordNext = 0.0;
-
-	double xCoordCurrent;
-	double yCoordCurrent;
-
-	double Tx = 0.0;
-	double Ty = 0.0;
-
-	TransMatrix tempTextMatrixA;
-	TransMatrix tempTextMatrixB;
-
-	TransMatrix UserSpaceMatrix;
-
-	wchar_t cEncoding;
-	wchar_t c;
-	double dblCurrCharWidth;
-
-	double avgWidth;
-	double avgWidthScaled;
-	double maxWidth;
-	double maxWidthScaled;
-	double fontSpaceWidth;
-	double fontSpaceWidthScaled;
-
-	double fontLmWidth;
-	double fontLmWidthScaled;
-	double fontUmWidth;
-	double fontUmWidthScaled;
-
-	double dFontSize10;
-
-	size_t i = 0;
-
-	#if !defined(MYDEBUG_PRINT_ALL) && !defined(MYDEBUG_PRINT_ON_SHOW_STRING_OPERATOR) && !defined(MYDEBUG_PRINT_SINGLE_CHAR_COORD)
-	UNUSED(szOpName);
-	#endif
-
-	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_SHOW_STRING_OPERATOR)
-	wprintf(L"\nOPERATOR %s:\n", szOpName);
-	wprintf(L"\tSTRING pszString = (%ls)\n", pszString);
-	wprintf(L"\tSTRING pszEncodingString = (%ls)\n", pszEncodingString);
-	wprintf(L"\tTextState      -> Tc = %f; Tw = %f; Th = %f; Tl = %f; Tfs = %f; Trise = %f\n",
-			pParams->dsTextState.Tc,
-			pParams->dsTextState.Tw,
-			pParams->dsTextState.Th,
-			pParams->dsTextState.Tl,
-			pParams->dsTextState.Tfs,
-			pParams->dsTextState.Trise);
-	if ( NULL != pParams->pCurrFontGlyphsWidths )
-	{
-		wprintf(L"\tGlyphsWidths -> FirstChar = %d; LastChar = %d; WidthsArraySize = %d; MissingWidth = %f; DW = %f; dFontSpaceWidth = %f; pParams->dCurrFontSpaceWidth = %f; WritingMode = %d\n",
-				pParams->pCurrFontGlyphsWidths->FirstChar,
-				pParams->pCurrFontGlyphsWidths->LastChar,
-				pParams->pCurrFontGlyphsWidths->WidthsArraySize,
-				pParams->pCurrFontGlyphsWidths->MissingWidth,
-				pParams->pCurrFontGlyphsWidths->DW,
-				pParams->pCurrFontGlyphsWidths->dFontSpaceWidth,
-				pParams->dCurrFontSpaceWidth,
-				pParams->pCurrFontGlyphsWidths->WritingMode);
-	}
-	else
-	{
-		wprintf(L"\tGlyphsWidths -> NULL\n");
-	}
-	wprintf(L"\tCTM            -> a = %f; b = %f; c = %f; d = %f; e = %f; f = %f;\n",
-			pParams->dCTM_Stack[pParams->nCTM_StackTop].a,
-			pParams->dCTM_Stack[pParams->nCTM_StackTop].b,
-			pParams->dCTM_Stack[pParams->nCTM_StackTop].c,
-			pParams->dCTM_Stack[pParams->nCTM_StackTop].d,
-			pParams->dCTM_Stack[pParams->nCTM_StackTop].e,
-			pParams->dCTM_Stack[pParams->nCTM_StackTop].f);
-	wprintf(L"\tTextMatrix     -> a = %f; b = %f; c = %f; d = %f; e = %f; f = %f;\n",
-			pParams->dsTextMatrix.a,
-			pParams->dsTextMatrix.b,
-			pParams->dsTextMatrix.c,
-			pParams->dsTextMatrix.d,
-			pParams->dsTextMatrix.e,
-			pParams->dsTextMatrix.f);
-	wprintf(L"\tLineMatrix     -> a = %f; b = %f; c = %f; d = %f; e = %f; f = %f;\n",
-			pParams->dsLineMatrix.a,
-			pParams->dsLineMatrix.b,
-			pParams->dsLineMatrix.c,
-			pParams->dsLineMatrix.d,
-			pParams->dsLineMatrix.e,
-			pParams->dsLineMatrix.f);
-	#endif
-
-	pParams->dCurrFontSpaceWidthScaled = 0.0;
-
-	avgWidth = pParams->pCurrFontGlyphsWidths->AvgWidth;
-	maxWidth = pParams->pCurrFontGlyphsWidths->MaxWidth;
-	fontSpaceWidth = pParams->pCurrFontGlyphsWidths->dFontSpaceWidth;
-	fontLmWidth = pParams->pCurrFontGlyphsWidths->dFontLmWidth;
-	fontUmWidth = pParams->pCurrFontGlyphsWidths->dFontUmWidth;
-
-	dFontSize10 = pParams->dsTextState.Tfs * 0.1; // 10% del font size
-	if ( fontSpaceWidth < dFontSize10 )
-		fontSpaceWidth = dFontSize10;
-
-	for ( i = 0; i < lenString; i++ )
-	{
-		c = pszString[i];
-		cEncoding = pszEncodingString[i];
-
-		// **************************************************************************************************************************
-		if ( pParams->Tj != 0.0 )
-		{
-			dblCurrCharWidth = -1.0;
-
-			dblCurrCharWidth = getCurrCharWidth(pParams, pParams->cLastChar, pParams->cLastCharEncoding);
-
-			if ( WRITING_MODE_HORIZONTAL == pParams->pCurrFontGlyphsWidths->WritingMode )
-			{
-				Ty = 0.0;
-				if ( L' ' != pParams->cLastChar )
-					Tx = ((dblCurrCharWidth - pParams->Tj) * pParams->dsTextState.Tfs + pParams->dsTextState.Tc) * pParams->dsTextState.Th;
-				else
-					Tx = ((dblCurrCharWidth - pParams->Tj) * pParams->dsTextState.Tfs + pParams->dsTextState.Tc + pParams->dsTextState.Tw) * pParams->dsTextState.Th;
-			}
-			else
-			{
-				Tx = 0.0;
-				if ( L' ' != pParams->cLastChar )
-					Ty = (dblCurrCharWidth - pParams->Tj) * pParams->dsTextState.Tfs + pParams->dsTextState.Tc;
-				else
-					Ty = (dblCurrCharWidth - pParams->Tj) * pParams->dsTextState.Tfs + pParams->dsTextState.Tc + pParams->dsTextState.Tw;
-			}
-
-			tempTextMatrixA.a = 1;
-			tempTextMatrixA.b = 0;
-			tempTextMatrixA.c = 0;
-			tempTextMatrixA.d = 1;
-			if ( WRITING_MODE_HORIZONTAL == pParams->pCurrFontGlyphsWidths->WritingMode )
-			{
-				tempTextMatrixA.e = Tx - pParams->dLastCharWidth;
-				tempTextMatrixA.f = Ty;
-			}
-			else
-			{
-				tempTextMatrixA.e = Tx;
-				tempTextMatrixA.f = Ty - pParams->dLastCharWidth;
-			}
-
-			tempTextMatrixB.a = pParams->dsTextMatrix.a;
-			tempTextMatrixB.b = pParams->dsTextMatrix.b;
-			tempTextMatrixB.c = pParams->dsTextMatrix.c;
-			tempTextMatrixB.d = pParams->dsTextMatrix.d;
-			tempTextMatrixB.e = pParams->dsTextMatrix.e;
-			tempTextMatrixB.f = pParams->dsTextMatrix.f;
-
-			MultiplyTransMatrix(&tempTextMatrixA, &tempTextMatrixB, &(pParams->dsTextMatrix));
-		}
-		// **************************************************************************************************************************
-
-		tempTextMatrixA.a = pParams->dsTextState.Tfs * pParams->dsTextState.Th;
-		tempTextMatrixA.b = 0;
-		tempTextMatrixA.c = 0;
-		tempTextMatrixA.d = pParams->dsTextState.Tfs;
-		tempTextMatrixA.e = 0;
-		tempTextMatrixA.f = pParams->dsTextState.Trise;
-
-		MultiplyTransMatrix(&tempTextMatrixA, &(pParams->dsTextMatrix), &UserSpaceMatrix);
-
-		MultiplyTransMatrix(&tempTextMatrixA, &(pParams->dsTextMatrix), &tempTextMatrixB);
-		MultiplyTransMatrix(&tempTextMatrixB, &(pParams->dCTM_Stack[pParams->nCTM_StackTop]), &(pParams->dsRenderingMatrix));
-
-		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_SHOW_STRING_OPERATOR)
-		wprintf(L"\n\tRenderingMatrix -> a = %f; b = %f; c = %f; d = %f; e = %f; f = %f;\n",
-				pParams->dsRenderingMatrix.a,
-				pParams->dsRenderingMatrix.b,
-				pParams->dsRenderingMatrix.c,
-				pParams->dsRenderingMatrix.d,
-				pParams->dsRenderingMatrix.e,
-				pParams->dsRenderingMatrix.f);
-		#endif
-
-		xCoordCurrent = pParams->dsRenderingMatrix.e;
-		yCoordCurrent = pParams->dsRenderingMatrix.f;
-
-		dblCurrCharWidth = -1.0;
-
-		// 1. Calcola la larghezza usando 'c' come CID (corretto per i font CID)
-		dblCurrCharWidth = getCurrCharWidth(pParams, c, cEncoding);
-
-		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_SINGLE_CHAR_ENCODING)
-		wprintf(L"i = %d, c = '%lc', Value = %d; cEncoding = '%lc', Value = %d; dblCurrCharWidth = %f\n",
-				i, c, c, cEncoding, cEncoding, dblCurrCharWidth);
-		#endif
-
-		// 2. INTERCETTAZIONE E CONVERSIONE DEL FONT CID PRIVO DI /ToUnicode
-		wchar_t finalChar = c;
-		if (pParams->nCurrentFontSubtype == FONT_SUBTYPE_Type0 && pParams->nToUnicodeStreamObjRef <= 0)
-		{
-			finalChar = ConvertCIDToUnicode(pParams, (int)c);
-		}
-
-		if ( WRITING_MODE_HORIZONTAL == pParams->pCurrFontGlyphsWidths->WritingMode )
-		{
-			Ty = 0.0;
-			if ( L' ' != c )
-				Tx = (dblCurrCharWidth * pParams->dsTextState.Tfs + pParams->dsTextState.Tc) * pParams->dsTextState.Th;
-			else
-				Tx = (dblCurrCharWidth * pParams->dsTextState.Tfs + pParams->dsTextState.Tc + pParams->dsTextState.Tw) * pParams->dsTextState.Th;
-		}
-		else
-		{
-			Tx = 0.0;
-			if ( L' ' != c )
-				Ty = dblCurrCharWidth * pParams->dsTextState.Tfs + pParams->dsTextState.Tc;
-			else
-				Ty = dblCurrCharWidth * pParams->dsTextState.Tfs + pParams->dsTextState.Tc + pParams->dsTextState.Tw;
-		}
-
-		if ( pParams->dCurrFontSpaceWidth < 0.0 )
-			pParams->dCurrFontSpaceWidth = 0.0;
-
-		if ( pParams->dsTextState.Tfs != 1.0 )
-		{
-			avgWidthScaled = (avgWidth * pParams->dsTextState.Tfs + pParams->dsTextState.Tc + pParams->dsTextState.Tw) * pParams->dsTextState.Th;
-			maxWidthScaled = (maxWidth * pParams->dsTextState.Tfs + pParams->dsTextState.Tc + pParams->dsTextState.Tw) * pParams->dsTextState.Th;
-			fontSpaceWidthScaled = (fontSpaceWidth * pParams->dsTextState.Tfs + pParams->dsTextState.Tc + pParams->dsTextState.Tw) * pParams->dsTextState.Th;
-			fontLmWidthScaled = (fontLmWidth * pParams->dsTextState.Tfs + pParams->dsTextState.Tc + pParams->dsTextState.Tw) * pParams->dsTextState.Th;
-			fontUmWidthScaled = (fontUmWidth * pParams->dsTextState.Tfs + pParams->dsTextState.Tc + pParams->dsTextState.Tw) * pParams->dsTextState.Th;
-
-			xCoordNext = pParams->dsRenderingMatrix.e + Tx;
-			yCoordNext = pParams->dsRenderingMatrix.f + Ty;
-		}
-		else
-		{
-			avgWidthScaled = avgWidth * pParams->dsRenderingMatrix.a;
-			maxWidthScaled = maxWidth * pParams->dsRenderingMatrix.a;
-			fontSpaceWidthScaled = fontSpaceWidth * pParams->dsRenderingMatrix.a;
-			fontLmWidthScaled = fontLmWidth * pParams->dsRenderingMatrix.a;
-			fontUmWidthScaled = fontUmWidth * pParams->dsRenderingMatrix.a;
-
-			xCoordNext = pParams->dsRenderingMatrix.e + (Tx * pParams->dsRenderingMatrix.a);
-			yCoordNext = pParams->dsRenderingMatrix.f + (Ty * pParams->dsRenderingMatrix.a);
-		}
-
-		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_SINGLE_CHAR_COORD)
-		wprintf(L"\t%s: %lc -> TextX = %f; TextY = %f; <> Tx = %f; CurrCharWidth = %f; MissingWidth = %f\n",
-				szOpName,
-				finalChar, // Usiamo finalChar per il debug
-				pParams->dsTextMatrix.e,
-				pParams->dsTextMatrix.f,
-				Tx,
-				dblCurrCharWidth,
-				pParams->pCurrFontGlyphsWidths->MissingWidth);
-		wprintf(L"\txCoordNext = %f; FontSpaceWidth = %f; FontSize = %f; FontSpaceWidth * FontSize = %f\n",
-				xCoordNext,
-				pParams->dCurrFontSpaceWidth,
-				pParams->dsTextState.Tfs,
-				pParams->dCurrFontSpaceWidth * pParams->dsTextState.Tfs);
-		#endif
-
-		pParams->xCoordPrev = pParams->dsRenderingMatrix.e;
-
-		tempTextMatrixA.a = 1;
-		tempTextMatrixA.b = 0;
-		tempTextMatrixA.c = 0;
-		tempTextMatrixA.d = 1;
-		tempTextMatrixA.e = Tx;
-		tempTextMatrixA.f = Ty;
-
-		tempTextMatrixB.a = pParams->dsTextMatrix.a;
-		tempTextMatrixB.b = pParams->dsTextMatrix.b;
-		tempTextMatrixB.c = pParams->dsTextMatrix.c;
-		tempTextMatrixB.d = pParams->dsTextMatrix.d;
-		tempTextMatrixB.e = pParams->dsTextMatrix.e;
-		tempTextMatrixB.f = pParams->dsTextMatrix.f;
-
-		MultiplyTransMatrix(&tempTextMatrixA, &tempTextMatrixB, &(pParams->dsTextMatrix));
-
-		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_SINGLE_CHAR_COORD2)
-		wprintf(L"c = '%lc', XCoord = %f; YCoord = %f; CharWidth = %f; Tx = %f, xCoordNext = %f; FontSpaceWidthScaled = %f\n",
-				finalChar, xCoordCurrent, yCoordCurrent, dblCurrCharWidth, Tx, xCoordNext, pParams->dCurrFontSpaceWidthScaled);
-		#endif
-
-		pParams->myRedBlackTreeKey.row = yCoordCurrent;
-		pParams->myRedBlackTreeKey.col = xCoordCurrent;
-		pParams->myRedBlackTreeKey.ord++;
-
-		// 3. SALVIAMO IL CARATTERE CONVERTITO NELL'ALBERO
-		pParams->myRedBlackTreeData.c = finalChar;
-
-		pParams->myRedBlackTreeData.currFontSpaceWidth = fontSpaceWidth;
-		pParams->myRedBlackTreeData.currFontSpaceWidthScaled = fontSpaceWidthScaled;
-		pParams->myRedBlackTreeData.width = dblCurrCharWidth;
-		pParams->myRedBlackTreeData.widthScaled = Tx;
-		pParams->myRedBlackTreeData.xCoordNext = xCoordNext;
-		pParams->myRedBlackTreeData.yCoordNext = yCoordNext;
-		pParams->myRedBlackTreeData.nCurrentFontSubtype = pParams->nCurrentFontSubtype;
-		pParams->myRedBlackTreeData.nCurrentCIDFontSubtype = pParams->nCurrentCIDFontSubtype;
-
-		pParams->myRedBlackTreeData.avgWidth = avgWidth;
-		pParams->myRedBlackTreeData.avgWidthScaled = avgWidthScaled;
-
-		pParams->myRedBlackTreeData.maxWidth = maxWidth;
-		pParams->myRedBlackTreeData.maxWidthScaled = maxWidthScaled;
-
-		pParams->myRedBlackTreeData.currFontLmWidth = fontLmWidth;
-		pParams->myRedBlackTreeData.currFontLmWidthScaled = fontLmWidthScaled;
-
-		pParams->myRedBlackTreeData.currFontUmWidth = fontUmWidth;
-		pParams->myRedBlackTreeData.currFontUmWidthScaled = fontUmWidthScaled;
-
-		pParams->myRedBlackTreeData.currFontObjRef = pParams->nCurrentParsingFontObjNum;
-
-		pParams->myRedBlackTreeData.Tc = pParams->dsTextState.Tc;
-		pParams->myRedBlackTreeData.Tw = pParams->dsTextState.Tw;
-		pParams->myRedBlackTreeData.Th = pParams->dsTextState.Th;
-		pParams->myRedBlackTreeData.Tl = pParams->dsTextState.Tl;
-		pParams->myRedBlackTreeData.Tfs = pParams->dsTextState.Tfs;
-		pParams->myRedBlackTreeData.Trise = pParams->dsTextState.Trise;
-
-		pParams->myRedBlackTreeData.bFromActualText = 0;
-
-		pParams->pLastNode = vlrbtInsertNode(&(pParams->myRedBlackTree), &(pParams->myRedBlackTreeKey), sizeof(pParams->myRedBlackTreeKey), &(pParams->myRedBlackTreeData), sizeof(pParams->myRedBlackTreeData));
-
-		pParams->xCoordNextPrev = xCoordNext;
-		pParams->yCoordNextPrev = yCoordNext;
-
-		pParams->Tj = 0.0;
-	}
-
-	if ( lenString > 0 )
-	{
-		pParams->cLastChar = pszString[lenString - 1];
-		pParams->cLastCharEncoding = pszEncodingString[lenString - 1];
-	}
-	else
-	{
-		pParams->cLastChar = L' ';
-		pParams->cLastCharEncoding = 0;
-	}
-
-	pParams->dLastCharWidth = Tx;
-	pParams->dLastCharFontSize = pParams->dsTextState.Tfs;
-
-	return 1;
-}
-*/
-
 unsigned int DecodeUTF16BE(const unsigned char *pBuf, size_t bufLen, size_t *pConsumed)
 {
     unsigned int hi, lo;
@@ -4623,28 +4191,6 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
     wchar_t lastC = L' ';
     wchar_t lastCEncoding = 0;
 
-	/*
-    int useUtf16Direct = 0;
-    if ((pParams->nCurrentFontSubtype == FONT_SUBTYPE_Type0) && (pParams->nToUnicodeStreamObjRef <= 0) && (pRawBytes != NULL) && (rawBytesLen >= 4))
-    {
-        // In Shift-JIS i kanji sono doppi byte con primo byte SEMPRE in
-        // 0x81-0x9F o 0xE0-0xFC. In UTF-16BE invece il byte alto (posizioni
-        // pari) e' quasi sempre < 0x80 (ASCII/kana/CJK), ma puo' anche
-        // essere 0xFE/0xFF (fullwidth forms U+FFxx, halfwidth U+FExx):
-        // questi valori NON sono mai validi come high-byte Shift-JIS,
-        // quindi li contiamo come indicatori UTF-16.
-        size_t pairs = rawBytesLen / 2;
-        size_t low_high_bytes = 0;
-        for (size_t z = 0; z < pairs; z++)
-        {
-            unsigned char hb = pRawBytes[2 * z];
-            if (hb < 0x80 || hb == 0xFE || hb == 0xFF)
-                low_high_bytes++;
-        }
-        if (pairs > 0 && (low_high_bytes * 100 / pairs) >= 30)
-            useUtf16Direct = 1;
-    }
-    */
 	int useIdentityHCID = 0;
 	int useUtf16Direct = 0;
 
@@ -4735,22 +4281,6 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
 	}
 	#endif
 
-	/*
-    if (useUtf16Direct)
-    {
-        size_t idx = 0;
-        size_t nChars = 0;
-        while (idx < rawBytesLen)
-        {
-            size_t consumed = 0;
-            DecodeUTF16BE(pRawBytes + idx, rawBytesLen - idx, &consumed);
-            if (consumed == 0) consumed = 2;
-            idx += consumed;
-            nChars++;
-        }
-        lenString = nChars;
-    }
-    */
 	if (useIdentityHCID)
 	{
     // Identity-H: ogni codice occupa due byte.
@@ -5039,7 +4569,7 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
                 finalChar = c;
             }
 
-            // >>> PATCH 2: gestione CID non mappati (identity) e noncharacter <<<
+            // gestione CID non mappati (identity) e noncharacter
             if ( pParams->nCurrentFontSubtype == FONT_SUBTYPE_Type0 && pParams->nToUnicodeStreamObjRef > 0 && pParams->paCustomizedFont_CharSet != NULL )
             {
                 int cid = (int)cEncoding;
@@ -6481,14 +6011,6 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 				break;
 				case T_CONTENT_OP_TJ:
 				{
-					// https://stackoverflow.com/questions/16462708/extract-text-from-pdf-document-based-on-position-c
-					// And how does parameters w0 and w1 evolve during glyph painting? are they initially (0,0)
-
-					// w0 and w1 denote the glyph's horizontal and vertical displacements.
-					// In horizontal writing mode, w0 is the glyph widths transformed to text mode
-					// (i.e. most often merely divided by 1000) and w1 is 0.
-					// For vertical writing mode text inspect sections 9.2.4 and 9.7.4.3 in ISO 32000-1:2008.
-
 					int k = 0;
 					while ( k <= nTJStackTop )
 					{
@@ -7115,12 +6637,6 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 						retValue = 0;
 						goto uscita;
 					}
-
-					//strncpy(szPrevFontResName, szName, len);
-					//#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_FN) || defined(MYDEBUG_PRINT_ON_ManageContent_FN_ShowFontSelected)
-					//wprintf(L"\nEHI 2: szName = '%s' -> szPrevFontResName = '%s'\n", szName, szPrevFontResName);
-					//#endif
-					//szName[0] = '\0';
 				}
 				break;
 				case T_CONTENT_OP_gs:
@@ -7133,9 +6649,6 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 					{
 						len = strnlen(szName, 128);
 
-					//if ( strncmp(szName, szPrevFontResName, 128) != 0 )
-					//{
-						//len = strnlen(szName, 128);
 						#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_FN) || defined(MYDEBUG_PRINT_ON_ManageContent_FN_ShowGsSelected) || defined(MYDEBUG_PRINT_DECODED_CONTENT_TOKENS)
 						wprintf(L"\nTROVATO 'gs GRAPHIC STATE SELECTOR' command: vado a prendere la Resource %s\n", szName);
 						#endif
@@ -7242,7 +6755,6 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 							wprintf(L"\tRISORSA GS '%s' NON TROVATA!!!\n", szName);
 						}
 						#endif
-					//}
 					}
 					else
 					{
@@ -7253,12 +6765,6 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 						retValue = 0;
 						goto uscita;
 					}
-
-					//strncpy(szPrevFontResName, szName, len);
-					//#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_FN) || defined(MYDEBUG_PRINT_ON_ManageContent_FN_ShowFontSelected)
-					//wprintf(L"\nEHI 2: szName = '%s' -> szPrevFontResName = '%s'\n", szName, szPrevFontResName);
-					//#endif
-					//szName[0] = '\0';
 				}
 				break;
 				case T_CONTENT_OP_BI:
@@ -7740,15 +7246,12 @@ static void NormalizeIndicVisualOrder(Params *pParams)
         // /ActualText is already in logical Unicode order.
         // Do not apply the visual-to-logical heuristic to a pair that
         // contains one of its characters.
-        if (!bPairContainsActualText && c1 == 0x093F && c2 >= 0x0915 && c2 <= 0x0939) bNeedSwap = 1;
-        /* Tamil: ெ (U+0BC6), ே (U+0BC7), ை (U+0BC8) */
-        else if (!bPairContainsActualText &&
-                 (c1 == 0x0BC6 || c1 == 0x0BC7 || c1 == 0x0BC8)
-                 && c2 >= 0x0B95 && c2 <= 0x0BB9) bNeedSwap = 1;
-        /* Bengalese: ি (U+09BF), ে (U+09C7), ৈ (U+09C8) */
-        else if (!bPairContainsActualText &&
-                 (c1 == 0x09BF || c1 == 0x09C7 || c1 == 0x09C8)
-                 && c2 >= 0x0995 && c2 <= 0x09B9) bNeedSwap = 1;
+        if (!bPairContainsActualText && c1 == 0x093F && c2 >= 0x0915 && c2 <= 0x0939)
+			bNeedSwap = 1;
+        else if (!bPairContainsActualText && (c1 == 0x0BC6 || c1 == 0x0BC7 || c1 == 0x0BC8) && c2 >= 0x0B95 && c2 <= 0x0BB9)
+			bNeedSwap = 1;
+        else if (!bPairContainsActualText && (c1 == 0x09BF || c1 == 0x09C7 || c1 == 0x09C8) && c2 >= 0x0995 && c2 <= 0x09B9)
+			bNeedSwap = 1;
 
         if (bNeedSwap)
         {
@@ -7764,8 +7267,6 @@ static void NormalizeIndicVisualOrder(Params *pParams)
 }
 
 // Compone matra decomposte in Tamil e Kannada (normalizzazione NFC manuale).
-// - Tamil:  ெ+ா → ொ,  ே+ா → ோ,  ை+ா → ௌ
-// - Kannada: ಿ+ೕ → ೀ,  ೆ+ೕ → ೇ,  ೆ+ೖ → ೈ,  ೊ+ೕ → ೋ
 // Modifica pText in place.
 static void ComposeTamilKannadaMatras(Params *pParams)
 {
@@ -7781,14 +7282,14 @@ static void ComposeTamilKannadaMatras(Params *pParams)
         wchar_t composed = 0;
 
         // Tamil
-        if      (c1 == 0x0BC6 && c2 == 0x0BBE) composed = 0x0BCA; // ெ + ா → ொ
-        else if (c1 == 0x0BC7 && c2 == 0x0BBE) composed = 0x0BCB; // ே + ா → ோ
-        else if (c1 == 0x0BC8 && c2 == 0x0BBE) composed = 0x0BCC; // ை + ா → ௌ
+        if      (c1 == 0x0BC6 && c2 == 0x0BBE) composed = 0x0BCA;
+        else if (c1 == 0x0BC7 && c2 == 0x0BBE) composed = 0x0BCB;
+        else if (c1 == 0x0BC8 && c2 == 0x0BBE) composed = 0x0BCC;
         // Kannada
-        else if (c1 == 0x0CBF && c2 == 0x0CD5) composed = 0x0CC0; // ಿ + ೕ → ೀ
-        else if (c1 == 0x0CC6 && c2 == 0x0CD5) composed = 0x0CC7; // ೆ + ೕ → ೇ
-        else if (c1 == 0x0CC6 && c2 == 0x0CD6) composed = 0x0CC8; // ೆ + ೖ → ೈ
-        else if (c1 == 0x0CCA && c2 == 0x0CD5) composed = 0x0CCB; // ೊ + ೕ → ೋ
+        else if (c1 == 0x0CBF && c2 == 0x0CD5) composed = 0x0CC0;
+        else if (c1 == 0x0CC6 && c2 == 0x0CD5) composed = 0x0CC7;
+        else if (c1 == 0x0CC6 && c2 == 0x0CD6) composed = 0x0CC8;
+        else if (c1 == 0x0CCA && c2 == 0x0CD5) composed = 0x0CCB;
 
         if (composed)
         {
@@ -7865,8 +7366,6 @@ static int IsSingleFilePasswordRequest(Params *pParams)
     return !S_ISDIR(st.st_mode);
 #endif
 }
-
-
 
 static int AuthenticateCurrentPdf(Params *pParams)
 {
@@ -7981,148 +7480,6 @@ autenticazione_riuscita:
 
     return 1;
 }
-
-
-/*
-// Autentica il PDF provando prima la password utente vuota.
-// Se non è valida, chiede la password soltanto per un singolo file.
-// Nella ricerca su directory imposta bSkipCurrentPdf e ritorna 0.
-static int AuthenticateCurrentPdf(Params *pParams)
-{
-    static const unsigned char emptyPassword[] = "";
-
-    PdfCryptoParams *cp;
-    char password[4096];
-    size_t passwordLength = 0;
-    int bSingleFile;
-
-    if (pParams == NULL || pParams->pCryptoParams == NULL)
-        return 0;
-
-    cp = pParams->pCryptoParams;
-    bSingleFile = IsSingleFilePasswordRequest(pParams);
-
-    // Non ripetere l'autenticazione se la chiave del documento
-    // è già stata verificata e memorizzata.
-    if (cp->bUseProvidedFileKey && cp->lenFileKey > 0)
-        return 1;
-
-    // L'autenticazione non deve dipendere da uno stream specifico.
-    cp->pInput = NULL;
-    cp->lenInput = 0;
-
-    // Primo tentativo: password utente vuota.
-    cp->pPassword = emptyPassword;
-    cp->lenPassword = 0;
-    cp->bPasswordSet = 1;
-
-    if (PdfCryptoParams_Authenticate(cp))
-        goto autenticazione_riuscita;
-
-    // La password vuota non è valida. Elimina il riferimento
-    // al candidato prima di scegliere il comportamento successivo.
-    cp->pPassword = NULL;
-    cp->lenPassword = 0;
-    cp->bPasswordSet = 0;
-
-    if (!bSingleFile)
-    {
-        // Durante la ricerca automatica non chiediamo password.
-        pParams->bSkipCurrentPdf = 1;
-
-        ReportPasswordWarning(
-            pParams,
-            L"Password utente non vuota: PDF ignorato nella ricerca in directory.");
-
-        return 0;
-    }
-
-    // File singolo: consente più tentativi con password non vuota.
-    for (;;)
-    {
-        wprintf(
-            L"Inserisci la password utente del PDF "
-            L"(invio a vuoto per annullare): ");
-
-        fflush(stdout);
-
-		if (!ReadPasswordFromTerminal(password, sizeof(password), &passwordLength))
-		{
-			memset(password, 0, sizeof(password));
-
-			ReportPasswordWarning(pParams, L"Richiesta della password annullata: file non elaborato.");
-
-			return 0;
-		}
-
-        // La password vuota è già stata verificata senza successo.
-        if (passwordLength == 0)
-        {
-            ReportPasswordWarning(
-                pParams,
-                L"Richiesta della password annullata: file non elaborato.");
-
-            memset(password, 0, sizeof(password));
-            return 0;
-        }
-
-        cp->pPassword = (const unsigned char *)password;
-        cp->lenPassword = passwordLength;
-        cp->bPasswordSet = 1;
-
-        if (PdfCryptoParams_Authenticate(cp))
-            goto autenticazione_riuscita;
-
-        // La verifica non è riuscita: il buffer locale non deve
-        // rimanere referenziato dalla struttura crittografica.
-        cp->pPassword = NULL;
-        cp->lenPassword = 0;
-        cp->bPasswordSet = 0;
-
-        memset(password, 0, sizeof(password));
-
-        wprintf(L"Password non valida. Riprova.\n");
-    }
-
-autenticazione_riuscita:
-
-    // La file key è già memorizzata in PdfCryptoParams.
-    // Non conservare il puntatore alla password locale.
-    cp->pPassword = NULL;
-    cp->lenPassword = 0;
-    cp->bPasswordSet = 0;
-
-    memset(password, 0, sizeof(password));
-
-    // >>> NUOVO: ora che la chiave e' disponibile, stampa i metadati
-    // (solo per PDF cifrati; per i non cifrati e' gia' stato fatto in Parse).
-    // Salviamo e ripristiniamo lo stato di parsing perche' siamo dentro
-    // ManageContent e ParseInfoObject usa myBlock e pReadNextChar.
-    if (!pParams->bInfoObjectParsed && pParams->myPdfTrailer.Info.Number > 0)
-    {
-        uint32_t saved_nCurrentParsingObj       = pParams->nCurrentParsingObj;
-        uint32_t saved_nCurrentObjNum           = pParams->nCurrentObjNum;
-        uint32_t saved_nCurrentParsingLengthObj = pParams->nCurrentParsingLengthObj;
-        int      saved_blockLen                 = pParams->blockLen;
-        int      saved_blockCurPos              = pParams->blockCurPos;
-        int      saved_nObjToParse              = pParams->nObjToParse;
-        pfnReadNextChar saved_pReadNextChar     = pParams->pReadNextChar;
-
-        ParseInfoObject(pParams, pParams->myPdfTrailer.Info.Number);
-        pParams->bInfoObjectParsed = 1;
-
-        pParams->nCurrentParsingObj       = saved_nCurrentParsingObj;
-        pParams->nCurrentObjNum           = saved_nCurrentObjNum;
-        pParams->nCurrentParsingLengthObj = saved_nCurrentParsingLengthObj;
-        pParams->blockLen                 = saved_blockLen;
-        pParams->blockCurPos              = saved_blockCurPos;
-        pParams->nObjToParse              = saved_nObjToParse;
-        pParams->pReadNextChar            = saved_pReadNextChar;
-    }
-
-    return 1;
-}
-*/
 
 int ManageContent(Params *pParams, int nPageNumber)
 {
@@ -8558,14 +7915,12 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
     pParams->pwszPreviousWord[0] = L'\0';
 
 
-    /*
-     * ============================================================
-     * PASSAGGIO 1:
-     * Preparazione del testo da indicizzare e normalizzazione NFC.
-     *
-     * Il testo originale pParams->pText NON viene modificato.
-     * ============================================================
-     */
+    // ============================================================
+    // PASSAGGIO 1:
+    // Preparazione del testo da indicizzare e normalizzazione NFC.
+     
+    // Il testo originale pParams->pText NON viene modificato.
+    // ============================================================
 
     if ( bSearch )
     {
@@ -8573,10 +7928,8 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
 
         textLength = (size_t)pParams->TextLength;
 
-        /*
-         * Controllo contro eventuale overflow nella dimensione
-         * dell'allocazione.
-         */
+        // Controllo contro eventuale overflow nella dimensione
+        // dell'allocazione.
 
         if ( textLength > (((size_t)-1) / sizeof(wchar_t)) - 1 )
         {
@@ -8608,14 +7961,12 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
             goto uscita;
         }
 
-        /*
-         * Copia il testo originale, scartando gli stessi caratteri
-         * che venivano già esclusi dalla funzione precedente:
-         *
-         * U+FFFD
-         * U+D800 - U+DFFF
-         * U+001F
-         */
+        // Copia il testo originale, scartando gli stessi caratteri
+        // che venivano già esclusi dalla funzione precedente:
+        
+        // U+FFFD
+        // U+D800 - U+DFFF
+        // U+001F
 
         for ( k = 0; k < textLength; k++ )
         {
@@ -8635,32 +7986,19 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
 
         pSearchInput[searchInputLength] = L'\0';
 
-        /*
-         * Normalizzazione Unicode NFC.
-         *
-         * pSearchText viene allocato dalla funzione NFC.
-         * La sua lunghezza viene restituita in searchTextLength.
-         */
+        // Normalizzazione Unicode NFC.
+        
+        // pSearchText viene allocato dalla funzione NFC.
+        // La sua lunghezza viene restituita in searchTextLength.
 
-        nfcStatus = myUnicodeNFC_Normalize(
-            pSearchInput,
-            searchInputLength,
-            &pSearchText,
-            &searchTextLength
-        );
+        nfcStatus = myUnicodeNFC_Normalize(pSearchInput, searchInputLength, &pSearchText, &searchTextLength);
 
         free(pSearchInput);
         pSearchInput = NULL;
 
         if ( MY_UNICODE_NFC_OK != nfcStatus )
         {
-            snprintf(
-                pParams->szError,
-                8192,
-                "ERRORE ManageExtractedText: normalizzazione NFC fallita: %s.\n",
-                myUnicodeNFC_StatusString(nfcStatus)
-            );
-
+            snprintf( pParams->szError, 8192, "ERRORE ManageExtractedText: normalizzazione NFC fallita: %s.\n", myUnicodeNFC_StatusString(nfcStatus) );
             myShowErrorMessage(pParams, pParams->szError, 1);
             retValue = 0;
             goto uscita;
@@ -8668,16 +8006,13 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
     }
 
 
-    /*
-     * ============================================================
-     * PASSAGGIO 2:
-     * Stampa del testo originale.
-     *
-     * Non stampiamo pSearchText perché è normalizzato NFC.
-     * L'estrazione testuale deve conservare il comportamento
-     * precedente.
-     * ============================================================
-     */
+    // ============================================================
+    // PASSAGGIO 2:
+    // Stampa del testo originale.
+    // Non stampiamo pSearchText perché è normalizzato NFC.
+    // L'estrazione testuale deve conservare il comportamento
+    // precedente.
+    // ============================================================
 
     if ( bPrint )
     {
@@ -8702,15 +8037,13 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
     }
 
 
-    /*
-     * ============================================================
-     * PASSAGGIO 3:
-     * Indicizzazione del testo normalizzato NFC.
-     *
-     * Da qui in avanti la logica di suddivisione delle parole
-     * rimane quella originale.
-     * ============================================================
-     */
+    // ============================================================
+    // PASSAGGIO 3:
+    // Indicizzazione del testo normalizzato NFC.
+    
+    // Da qui in avanti la logica di suddivisione delle parole
+    // rimane quella originale.
+    // ============================================================
 
     if ( bSearch )
     {
@@ -8720,14 +8053,10 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
 
             c = towlower(c);
 
-            // FIX 2: il danda (U+0964) e il double danda (U+0965)
+            // Il danda (U+0964) e il double danda (U+0965)
             // sono separatori di parola, non parte della parola stessa.
             // Devanagari, Bengalese e altre scritture li usano come
-            // equivalente del punto fermo. Se li trattassimo come
-            // caratteri normali, la parola "है।" verrebbe inserita
-            // nel TST con il danda attaccato, e la ricerca di "है"
-            // (senza danda) non troverebbe nulla.
-
+            // equivalente del punto fermo.
             if ( c == 0x0964 || c == 0x0965 )
             {
                 // Chiude la parola corrente (se non e' vuota) e la
@@ -8895,10 +8224,8 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
                 pParams->pwszCurrentWord[pParams->idxCurrentWordChar++] = c;
             }
 
-            /*
-             * Gestione della sillabazione:
-             * il trattino separa la parola tra due righe.
-             */
+            // Gestione della sillabazione:
+            // il trattino separa la parola tra due righe.
 
             else if ( L'-' == c )
             {
@@ -8906,10 +8233,8 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
                 {
                     int nCopy;
 
-                    /*
-                     * Copiamo la prima parte della parola
-                     * sillabata in pwszPreviousWord.
-                     */
+                    // Copiamo la prima parte della parola
+                    // sillabata in pwszPreviousWord.
 
                     nCopy = 0;
 
@@ -8925,10 +8250,8 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
 
                     pParams->idxPreviousWordChar = nCopy;
 
-                    /*
-                     * Azzera il buffer corrente.
-                     * La continuazione verrà accumulata qui.
-                     */
+                    // Azzera il buffer corrente.
+                    // La continuazione verrà accumulata qui.
 
                     pParams->idxCurrentWordChar = 0;
                     pParams->pwszCurrentWord[0] = L'\0';
@@ -8946,24 +8269,17 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
         }
     }
 
-
-    /*
-     * NECESSARIO PER INSERIRE L'ULTIMA PAROLA NEL TST.
-     *
-     * Manteniamo la chiamata nella stessa posizione logica
-     * della funzione originale.
-     */
+    // NECESSARIO PER INSERIRE L'ULTIMA PAROLA NEL TST.
+    // Manteniamo la chiamata nella stessa posizione logica
+    // della funzione originale.
 
     pParams->pwszCurrentWord[pParams->idxCurrentWordChar] = L'\0';
 
     InsertWordIntoTst(pParams);
 
-
 uscita:
 
-    /*
-     * Rilascio dei buffer temporanei NFC.
-     */
+    // Rilascio dei buffer temporanei NFC.
 
     if ( NULL != pSearchInput )
     {
@@ -8978,10 +8294,8 @@ uscita:
     }
 
 
-    /*
-     * Rilascio dei buffer utilizzati per la costruzione
-     * delle parole.
-     */
+    // Rilascio dei buffer utilizzati per la costruzione
+    // delle parole.
 
     if ( NULL != pParams->pwszCurrentWord )
     {
@@ -8997,283 +8311,6 @@ uscita:
 
     return retValue;
 }
-
-/*
-int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
-{
-	int retValue = 1;
-
-	//uint32_t k;
-	//wchar_t c;
-
-	size_t k;
-	wchar_t c;
-
-	size_t searchInputLength = 0;
-	size_t searchTextLength = 0;
-
-	wchar_t *pSearchInput = NULL;
-	wchar_t *pSearchText = NULL;
-
-	MyUnicodeNFCStatus nfcStatus;
-
-	pParams->pwszCurrentWord = (wchar_t*)malloc(MAX_STRING_LENTGTH_IN_CONTENT_STREAM + sizeof(wchar_t));
-	if ( NULL == pParams->pwszCurrentWord )
-	{
-		snprintf(pParams->szError, 8192, "ERRORE ManageExtractedText: impossibile allocare la memoria per pParams->pwszCurrentWord.\n");
-		myShowErrorMessage(pParams, pParams->szError, 1);
-		retValue = 0;
-		goto uscita;
-	}
-
-	pParams->pwszPreviousWord = (wchar_t*)malloc(MAX_STRING_LENTGTH_IN_CONTENT_STREAM + sizeof(wchar_t));
-	if ( NULL == pParams->pwszPreviousWord )
-	{
-		snprintf(pParams->szError, 8192, "ERRORE ManageExtractedText: impossibile allocare la memoria per pParams->pwszPreviousWord.\n");
-		myShowErrorMessage(pParams, pParams->szError, 1);
-		retValue = 0;
-		goto uscita;
-	}
-
-	pParams->bStateSillab = 0;
-
-	pParams->idxCurrentWordChar = 0;
-	pParams->pwszCurrentWord[0] = L'\0';
-	pParams->idxPreviousWordChar = 0;
-	pParams->pwszPreviousWord[0] = L'\0';
-
-	for ( k = 0; k < pParams->TextLength; k++ )
-	{
-		c = pParams->pText[k];
-
-		// >>> FINESTRA DI CONTROLLO: Salta i caratteri Unicode invalidi o corrotti <<<
-		// Evita di stampare '' (U+FFFD) o di processare surrogati UTF-16 isolati (0xD800-0xDFFF)
-		if ( c == 0xFFFD || (c >= 0xD800 && c <= 0xDFFF) || c == 0x001F )
-		{
-			continue; // Salta questo carattere e non inserirlo nell'output o nel TST
-		}
-
-		if ( bPrint )
-		{
-			if ( NULL != pParams->fpOutput )
-				fwprintf(pParams->fpOutput, L"%lc", c);
-			else
-				wprintf(L"%lc", c);
-		}
-
-		//if ( '\0' != pParams->szWordsToSearch[0] )
-		if ( bSearch )
-		{
-			// SPLIT WORDS INIZIO
-			c = towlower(c);
-
-			// FIX 2: il danda (U+0964) e il double danda (U+0965)
-			// sono separatori di parola, non parte della parola stessa.
-			// Devanagari, Bengalese e altre scritture li usano come
-			// equivalente del punto fermo. Se li trattassimo come
-			// caratteri normali, la parola "है।" verrebbe inserita
-			// nel TST con il danda attaccato, e la ricerca di "है"
-			// (senza danda) non troverebbe nulla.
-			if ( c == 0x0964 || c == 0x0965 )
-			{
-				// Chiude la parola corrente (se non e' vuota) e la
-				// inserisce nel TST. Non accumula il danda.
-				pParams->pwszCurrentWord[pParams->idxCurrentWordChar] = L'\0';
-				InsertWordIntoTst(pParams);
-			}
-			// >>> NUOVO RAMO PER LA LOGICA ASIATICA A BIGRAMMI (CJK + THAI) <<<
-			else if ( IS_ASIAN_SCRIPT(c) )
-			{
-				// Se c'era una parola occidentale accumulata precedentemente, la salviamo prima
-				if ( pParams->idxCurrentWordChar > 0 && !IS_ASIAN_SCRIPT(pParams->pwszCurrentWord[0]) )
-				{
-					pParams->pwszCurrentWord[pParams->idxCurrentWordChar] = L'\0';
-					InsertWordIntoTst(pParams);
-				}
-
-				if ( pParams->idxCurrentWordChar == 0 )
-				{
-					pParams->pwszCurrentWord[pParams->idxCurrentWordChar++] = c;
-				}
-				else
-				{
-					// Se c'era già un carattere asiatico prima, formiamo la coppia (Bigramma)
-					pParams->pwszCurrentWord[pParams->idxCurrentWordChar++] = c;
-					pParams->pwszCurrentWord[pParams->idxCurrentWordChar] = L'\0';
-
-					// Inserisce la coppia (es. "世界") nel TST
-					InsertWordIntoTst(pParams);
-
-					// Fa scivolare il carattere corrente in posizione iniziale 0
-					// per permettere al ciclo successivo di fare coppia con lui
-					pParams->pwszCurrentWord[0] = c;
-					pParams->idxCurrentWordChar = 1;
-				}
-			}
-			// RAMO OCCIDENTALE / MEDIORIENTALE STANDARD (Rimosse le lingue CJK/Thai da qui)
-			else if (
-			     (c >= 0x0041 && c <= 0x007A) ||
-			     (c >= 0x00C0 && c <= 0x00FF) ||
-			     (c >= 0x0100 && c <= 0x017F) ||
-			     (c >= 0x0180 && c <= 0x024F) ||
-			     (c >= 0x0250 && c <= 0x02AF) ||
-			     (c >= 0x1D00 && c <= 0x1DBF) ||
-			     (c >= 0x1E00 && c <= 0x1EFF) ||
-			     (c >= 0x2C60 && c <= 0x2C7F) ||
-			     (c >= 0xA720 && c <= 0xA7FF) ||
-			     (c >= 0xAB30 && c <= 0xAB7F) ||
-			     (c >= 0xFB00 && c <= 0xFB06) ||
-			     (c >= 0x0370 && c <= 0x03FF) ||
-			     (c >= 0x1F00 && c <= 0x1FFF) ||
-			     (c >= 0x0400 && c <= 0x04FF) ||
-			     (c >= 0x0500 && c <= 0x052F) ||
-			     (c >= 0x2DE0 && c <= 0x2DFF) ||
-			     (c >= 0xA640 && c <= 0xA69F) ||
-			     (c >= 0x1C80 && c <= 0x1C8F) ||
-			     (c >= 0x0530 && c <= 0x058F) ||  // Armenian
-			     (c >= 0x10A0 && c <= 0x10FF) ||
-			     (c >= 0x1C90 && c <= 0x1CBF) ||
-			     (c >= 0x2D00 && c <= 0x2D2F) ||
-			     (c >= 0x02B0 && c <= 0x02FF) ||
-			     (c >= 0xA700 && c <= 0xA71F) ||
-			     (c >= 0x0300 && c <= 0x036F) ||
-			     (c >= 0x1AB0 && c <= 0x1AFF) ||
-			     (c >= 0x1DC0 && c <= 0x1DFF) ||
-			     (c >= 0x20D0 && c <= 0x20FF) ||
-			     (c >= 0xFE20 && c <= 0xFE2F) ||
-			     (c >= 0x16A0 && c <= 0x16F0) ||
-			     (c >= 0x1680 && c <= 0x169F) ||
-			     (c >= 0x0590 && c <= 0x05FF) ||
-			     (c >= 0xFB1D && c <= 0xFB4F) ||
-			     (c >= 0x0600 && c <= 0x06FF) ||
-			     (c >= 0x0750 && c <= 0x077F) ||
-			     (c >= 0x08A0 && c <= 0x08FF) ||
-			     (c >= 0xFB50 && c <= 0xFDFF) ||
-			     (c >= 0xFE70 && c <= 0xFEFF) ||
-			     (c >= 0x0700 && c <= 0x074F) ||
-			     (c >= 0x0800 && c <= 0x083F) ||
-			     (c >= 0x0840 && c <= 0x085F) ||
-			     (c >= 0x0900 && c <= 0x097F) ||
-			     (c >= 0x0980 && c <= 0x09FF) ||
-			     (c >= 0x0A00 && c <= 0x0A7F) ||
-			     (c >= 0x0A80 && c <= 0x0AFF) ||
-			     (c >= 0x0B00 && c <= 0x0B7F) ||
-			     (c >= 0x0B80 && c <= 0x0BFF) ||
-			     (c >= 0x0C00 && c <= 0x0C7F) ||
-			     (c >= 0x0C80 && c <= 0x0CFF) ||
-			     (c >= 0x0D00 && c <= 0x0D7F) ||
-			     (c >= 0x0780 && c <= 0x07BF) ||
-			     (c >= 0x0D80 && c <= 0x0DFF) ||
-			     (c >= 0x0F00 && c <= 0x0FFF) ||
-			     (c >= 0x1800 && c <= 0x18AF) ||
-			     (c >= 0x1900 && c <= 0x194F) ||
-			     (c >= 0xABC0 && c <= 0xABFF) ||
-			     (c >= 0x1C50 && c <= 0x1C7F) ||
-			     (c >= 0x1C00 && c <= 0x1C4F) ||
-			     (c >= 0xA880 && c <= 0xA8DF) ||
-			     (c >= 0xA840 && c <= 0xA87F) ||
-			     (c >= 0xA800 && c <= 0xA82F) ||
-			     (c >= 0x0E80 && c <= 0x0EFF) ||
-			     (c >= 0x1000 && c <= 0x109F) ||
-			     (c >= 0x1780 && c <= 0x17FF) ||
-			     (c >= 0x1950 && c <= 0x197F) ||
-			     (c >= 0x1980 && c <= 0x19DF) ||
-			     (c >= 0x1A20 && c <= 0x1AAF) ||
-			     (c >= 0xAA80 && c <= 0xAADF) ||
-			     (c >= 0xA900 && c <= 0xA92F) ||
-			     (c >= 0xAA00 && c <= 0xAA5F) ||  // Cham
-			     (c >= 0x1700 && c <= 0x171F) ||
-			     (c >= 0x1720 && c <= 0x173F) ||
-			     (c >= 0x1740 && c <= 0x175F) ||
-			     (c >= 0x1760 && c <= 0x177F) ||
-			     (c >= 0x1A00 && c <= 0x1A1F) ||
-			     (c >= 0x1B00 && c <= 0x1B7F) ||
-			     (c >= 0xA980 && c <= 0xA9DF) ||
-			     (c >= 0xA930 && c <= 0xA95F) ||
-			     (c >= 0x1BC0 && c <= 0x1BFF) ||
-			     (c >= 0x1B80 && c <= 0x1BBF) ||
-			     (c >= 0xF900 && c <= 0xFAFF) ||
-			     (c >= 0x3190 && c <= 0x319F) ||
-			     (c >= 0x2E80 && c <= 0x2FD5) ||
-			     (c >= 0x31C0 && c <= 0x31EF) ||
-			     (c >= 0x1200 && c <= 0x137F) ||
-			     (c >= 0x2D30 && c <= 0x2D7F) ||
-			     (c >= 0x07C7 && c <= 0x07FF) ||
-			     (c >= 0xA500 && c <= 0xA63F) ||
-			     (c >= 0xA6A0 && c <= 0xA6FF) ||
-			     (c >= 0x13A0 && c <= 0x13FF) ||
-			     (c >= 0xAB70 && c <= 0xABBF) ||
-			     (c >= 0x1400 && c <= 0x167F) ||
-			     (c >= 0x2800 && c <= 0x28FF)
-			   )
-			{
-				// Se passiamo repentinamente da uno script asiatico a uno occidentale, azzeriamo l'indice
-				if ( pParams->idxCurrentWordChar > 0 && IS_ASIAN_SCRIPT(pParams->pwszCurrentWord[0]) )
-				{
-					pParams->idxCurrentWordChar = 0;
-				}
-				pParams->pwszCurrentWord[pParams->idxCurrentWordChar++] = c;
-			}
-			else if ( L'-' == c )
-			{
-				if ( pParams->idxCurrentWordChar > 0 )
-				{
-					int nCopy;
-
-					// Copiamo la prima parte della parola spezzata
-					// in pwszPreviousWord.
-					nCopy = 0;
-
-					while ( nCopy < pParams->idxCurrentWordChar )
-					{
-						pParams->pwszPreviousWord[nCopy] = pParams->pwszCurrentWord[nCopy];
-
-						nCopy++;
-					}
-
-					pParams->pwszPreviousWord[nCopy] = L'\0';
-
-					pParams->idxPreviousWordChar = nCopy;
-
-
-					// Azzera il buffer corrente.
-					// La continuazione verrà accumulata qui.
-					pParams->idxCurrentWordChar = 0;
-					pParams->pwszCurrentWord[0] = L'\0';
-
-					pParams->bStateSillab = 1;
-				}
-			}
-			else
-			{
-				pParams->pwszCurrentWord[pParams->idxCurrentWordChar] = L'\0';
-				InsertWordIntoTst(pParams);
-			}
-			// SPLIT WORDS FINE
-		}
-	}
-
-	// NECESSARIO PER INSERIRE L'ULTIMA PAROLA NEL TST:
-	pParams->pwszCurrentWord[pParams->idxCurrentWordChar] = L'\0';
-	InsertWordIntoTst(pParams);
-
-	uscita:
-
-	if ( NULL != pParams->pwszCurrentWord )
-	{
-		free(pParams->pwszCurrentWord);
-		pParams->pwszCurrentWord = NULL;
-	}
-
-	if ( NULL != pParams->pwszPreviousWord )
-	{
-		free(pParams->pwszPreviousWord);
-		pParams->pwszPreviousWord = NULL;
-	}
-
-	return retValue;
-}
-*/
 
 int LoadFirstBlock(Params *pParams, int objNum, const char *pszFunctionName)
 {
@@ -9406,10 +8443,6 @@ int LoadFirstBlock(Params *pParams, int objNum, const char *pszFunctionName)
 	}
 	else if ( OBJ_TYPE_STREAM == pParams->myObjsTable[objNum]->Obj.Type )
 	{
-	//else if ( OBJ_TYPE_STREAM == pParams->myObjsTable[objNum]->Obj.Type )
-	//{
-		// >>> FIX: se pszDecodedStream e' NULL, l'oggetto e' ancora
-		// in fase di parsing. Non possiamo rileggerlo: usciamo senza crash.
 		if ( NULL == pParams->myObjsTable[objNum]->Obj.pszDecodedStream )
 		{
 			snprintf(pParams->szError, 8192,
@@ -9419,11 +8452,6 @@ int LoadFirstBlock(Params *pParams, int objNum, const char *pszFunctionName)
 			retValue = 0;
 			goto uscita;
 		}
-
-		//pParams->pReadNextChar = ReadNextCharFromStmObjStream;
-		//newStreamLength = 0;
-
-
 
 		pParams->pReadNextChar = ReadNextCharFromStmObjStream;
 
@@ -9461,13 +8489,6 @@ int LoadFirstBlock(Params *pParams, int objNum, const char *pszFunctionName)
 			}
 		}
 
-		//wprintf(L"\n\nLoadFirstBlock STREAM: nBlockSize = %lu -> pParams->myObjsTable[%d]->Obj.StreamLength = %lu\n", nBlockSize, objNum, pParams->myObjsTable[objNum]->Obj.StreamLength);
-		//for ( uint32_t i = 0; i < pParams->myObjsTable[objNum]->Obj.StreamLength; i++ )
-		//{
-		//	wprintf(L"%c", pParams->myObjsTable[objNum]->Obj.pszDecodedStream[i]);
-		//}
-		//wprintf(L"\nLoadFirstBlock FINE STREAM.\n\n");
-
 		blockOffset = 0;
 
 		memcpy(pParams->myBlock, szTemp1, lenTemp1);
@@ -9482,13 +8503,6 @@ int LoadFirstBlock(Params *pParams, int objNum, const char *pszFunctionName)
 		pParams->blockLen = blockOffset;
 
 		pParams->blockCurPos = 0;
-
-		//wprintf(L"\n\nLoadFirstBlock STREAM(obj num = %d): nBlockSize = %lu -> newStreamLength = %lu; blockOffset = %lu; pParams->blockLen = %d\n", objNum, nBlockSize, newStreamLength, blockOffset, pParams->blockLen);
-		//for ( int i = 0; i < pParams->blockLen; i++ )
-		//{
-		//	wprintf(L"%c", pParams->myBlock[i]);
-		//}
-		//wprintf(L"\nLoadFirstBlock FINE STREAM.\n\n");
 	}
 	else
 	{
@@ -9531,9 +8545,6 @@ void myTreeTraversePostOrderLeafOnly(Tree *head, Params *pParams)
 
 		pParams->pPagesArray[pParams->nCurrentPageNum].numObjContent = head->nCurrentNumPageObjContent;
 		pParams->pPagesArray[pParams->nCurrentPageNum].bContentIsPresent = head->bCurrentContentIsPresent;
-
-		//myintqueuelist_Init(&(pParams->pPagesArray[pParams->nCurrentPageNum].queueContentsObjRefs));
-		//mycontentqueuelist_Init(&(pParams->pPagesArray[pParams->nCurrentPageNum].queueContens));
 
 		while ( myintqueuelist_Dequeue(&(pParams->myObjsTable[head->numObjNumber]->queueContentsObjRefs), &(pParams->nTemp)) )
 		{
@@ -9596,12 +8607,6 @@ void myTreeTraversePostOrderLeafOnly(Tree *head, Params *pParams)
 		}
 		else if ( !(head->bCurrentPageHasDirectResources) && head->nCurrentPageResources > 0 )   // Un intero > 0 indica il riferimento al numero dell'oggetto Resources.
 		{
-			//if ( !ParseDictionaryObject(pParams, head->nCurrentPageResources) )
-			//{
-			//	snprintf(pParams->szError, 8192, "ERRORE ParseObject -> ParseDictionaryObject\n");
-			//	myShowErrorMessage(pParams, pParams->szError, 1);
-			//}
-
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseObject_FN) || defined(MYDEBUG_PRINT_ON_myTreeTraversePostOrderLeafOnly_FN)
 			wprintf(L"La pagina %d ha un oggetto Resources indiretto.\n", pParams->nCurrentPageNum);
 			#endif
@@ -10020,12 +9025,6 @@ int ParseObject(Params *pParams, int objNum)
 			}
 			else if ( !(pParams->bCurrentPageHasDirectResources) && pParams->nCurrentPageResources > 0 )   // Un intero > 0 indica il riferimento al numero dell'oggetto Resources.
 			{
-				//if ( !ParseDictionaryObject(pParams, pParams->nCurrentPageResources) )
-				//{
-				//	snprintf(pParams->szError, 8192, "ERRORE ParseObject -> ParseDictionaryObject\n");
-				//	myShowErrorMessage(pParams, pParams->szError, 1);
-				//}
-
 				if ( OBJ_TYPE_PAGES == pParams->eCurrentObjType )
 				{
 					#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseObject_FN)
@@ -10141,8 +9140,6 @@ int ParseObject(Params *pParams, int objNum)
 	for ( nInt = nFromPage; nInt <= nToPage; nInt++ )
 	{
 		pParams->nCurrentPageNum = nInt;
-
-		//wprintf(L"\n\nTotal number of Image Contents = %u;\nTotal number of content other than Image = %u\n\n", pParams->nCountImageContent, pParams->nCountNotImageContent);
 
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ReadTrailer_FN) || defined(MYDEBUG_PRINT_COUNT_CONTENT_TYPE)
 		wprintf(L"ParseObject: pParams->nCurrentPageNum = %d; nMiddlePage = %d\n", pParams->nCurrentPageNum, nMiddlePage);
@@ -10459,31 +9456,6 @@ int ParseInfoObject(Params *pParams, int objNum)
                         }
                     }
 
-					/*
-                    if (bTextBytesReady && pTextBytes != NULL)
-                    {
-                        wchar_t *pWideStr = DecodePdfTextString(pTextBytes, textBytesLen);
-
-                        if (pWideStr != NULL)
-                        {
-                            #if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseInfoObject_FN)
-                            wprintf(L"  /%-12s : %ls\n", szKey, pWideStr);
-                            #endif
-                            free(pWideStr);
-                        }
-                        else
-                        {
-                            snprintf(pParams->szError, 8192,
-                                     "[ParseInfoObject]   /%-12s : (errore decodifica stringa)\n",
-                                     szKey);
-                            myShowErrorMessage(pParams, pParams->szError, 1);
-                            #if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseInfoObject_FN)
-                            wprintf(L"  /%-12s : (errore decodifica stringa)\n", szKey);
-                            #endif
-                        }
-                    }
-                    */
-
 					if (bTextBytesReady && pTextBytes != NULL)
 					{
 						if (textBytesLen == 0)
@@ -10610,7 +9582,6 @@ int PrintThisObject(Params *pParams, int objNum, int bDecodeStream, int nPageNum
 	unsigned char szTemp[21];
 	unsigned char szTempStream[21];
 
-	//if ( objNum < 1 || objNum >= pParams->myPdfTrailer.Size )
 	if ( objNum < 1 || (uint32_t)objNum >= pParams->nObjsTableSizeFromPrescanFile )
 	{
 		retValue = 0;
@@ -10815,16 +9786,7 @@ int PrintThisObject(Params *pParams, int objNum, int bDecodeStream, int nPageNum
 		pParams->bStreamStateToUnicode = 1;
 
 		if ( !contentobj(pParams) )
-		//if ( !ParseStreamObject(pParams, objNum) )
 		{
-			//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-			//{
-			//	if ( NULL != pParams->myToken.vString )
-			//	{
-			//		free(pParams->myToken.vString);
-			//		pParams->myToken.vString = NULL;
-			//	}
-			//}
 			snprintf(pParams->szError, 8192, "\n\nERRORE PrintThisObject -> contentobj: objNum = %d; pParams->myObjsTable[%d]->Obj.Offset = %d\n\n", objNum, objNum, pParams->myObjsTable[objNum]->Obj.Offset);
 			myShowErrorMessage(pParams, pParams->szError, 1);
 			//wprintf(L"\n\nERRORE PrintThisObject -> contentobj: objNum = %d; pParams->myObjsTable[%d]->Obj.Offset = %lu\n\n", objNum, objNum, pParams->myObjsTable[objNum]->Obj.Offset);
@@ -10916,14 +9878,6 @@ uscita:
 	return retValue;
 }
 
-
-
-
-
-
-
-
-
 int PrintThisObjectFontFile(Params *pParams, int objNum, FILE* fpOutput)
 {
 	int retValue = 1;
@@ -10941,16 +9895,7 @@ int PrintThisObjectFontFile(Params *pParams, int objNum, FILE* fpOutput)
 	unsigned char szTempStream[21];
 
 	unsigned char *myStreamBlock = NULL;
-
-
-
-	//unsigned char *pszDecodedStream = NULL;
-	//unsigned long int DecodedStreamSize = 0;
-	//MyContent_t myContent;
-
-
-
-	//if ( objNum < 1 || objNum >= pParams->myPdfTrailer.Size )
+	
 	if ( objNum < 1 || (uint32_t)objNum >= pParams->nObjsTableSizeFromPrescanFile )
 	{
 		retValue = 0;
@@ -10979,18 +9924,7 @@ int PrintThisObjectFontFile(Params *pParams, int objNum, FILE* fpOutput)
 
 	uStreamOffset = pParams->myObjsTable[objNum]->Obj.StreamOffset;
 	uStreamLength = pParams->myObjsTable[objNum]->Obj.StreamLength;
-
-
-
-	//mydictionaryqueuelist_Init(&(myContent.decodeParms), 1, 1);
-	//mystringqueuelist_Init(&(myContent.queueFilters));
-	//mystringqueuelist_Enqueue(&(myContent.queueFilters), "FlateDecode");
-	//myContent.LengthFromPdf = uStreamLength;
-	//myContent.Offset = uStreamOffset;
-
-
-
-
+	
 	k = 0;
 	szTempStream[0] = '\0';
 	y = 0;
@@ -11000,9 +9934,6 @@ int PrintThisObjectFontFile(Params *pParams, int objNum, FILE* fpOutput)
 	bStreamAlreadyHandled = 0;
 	while ( pParams->blockLen > 0 )
 	{
-		//if ( OBJ_TYPE_STREAM == pParams->myObjsTable[objNum]->Obj.Type && k >= pParams->blockLen )
-		//	goto uscita;
-
 		c = pParams->myBlock[k];
 
 		if ( y > 0 && !bStreamAlreadyHandled )
@@ -11053,35 +9984,6 @@ int PrintThisObjectFontFile(Params *pParams, int objNum, FILE* fpOutput)
 					}
 
 					wprintf(L"\n\nLETTI CON SUCCESSO %d BYTE. ", bytesRead);
-
-					//wprintf(L"\nINIZIO STREAM:\n");
-					//for ( size_t i = 0; i < bytesRead; i++ )
-					//{
-					//	fputc(myStreamBlock[i], fpOutput);
-					//}
-					//wprintf(L"\nFINE STREAM.\n");
-
-
-
-					//pszDecodedStream = getDecodedStream(pParams, &DecodedStreamSize, &myContent);
-					//if ( NULL == pszDecodedStream )
-					//{
-					//	snprintf(pParams->szError, 8192, "ERRORE PrintThisObjectFontFile: getDecodedStream\n");
-					//	myShowErrorMessage(pParams, pParams->szError, 1);
-					//	retValue = 0;
-					//	goto uscita;
-					//}
-
-					//if ( NULL == fpOutput )
-					//{
-					//	bytesWrite = fwrite((void*)pszDecodedStream, 1, DecodedStreamSize, stdout);
-					//	fwprintf(stdout, L"endstream\nendobj\n\n");
-					//}
-					//else
-					//{
-					//	bytesWrite = fwrite((void*)pszDecodedStream, 1, DecodedStreamSize, fpOutput);
-					//	fprintf(fpOutput, "endstream\nendobj\n\n");
-					//}
 
 					if ( NULL == fpOutput )
 					{
@@ -11213,15 +10115,6 @@ int PrintThisObjectFontFile(Params *pParams, int objNum, FILE* fpOutput)
 
 uscita:
 
-	//mydictionaryqueuelist_Free(&(myContent.decodeParms));
-	//mystringqueuelist_Free(&(myContent.queueFilters));
-	//if ( NULL != pszDecodedStream )
-	//{
-	//	free(pszDecodedStream);
-	//	pszDecodedStream = NULL;
-	//}
-
-
 	if ( NULL != myStreamBlock )
 	{
 		free(myStreamBlock);
@@ -11252,31 +10145,9 @@ int ParseNextObject(Params *pParams, int objNum)
 	pParams->nObjToParse = objNum;
 
 	pParams->pReadNextChar = ReadNextChar;
+	
 
 	mynumstacklist_Init( &(pParams->myNumStack) );
-
-	/*
-	if ( !LoadFirstBlock(pParams, objNum, "ParseNextObject") )
-	{
-		retValue = 0;
-		goto uscita;
-	}
-
-	GetNextToken(pParams);
-
-	if ( !prepagetree(pParams) )
-	{
-		retValue = 0;
-
-		goto uscita;
-	}
-
-	pParams->bPrePageTreeExit = 1;
-
-	mynumstacklist_Free( &(pParams->myNumStack) );
-	*/
-
-	// --------------------------------------------------------------------------------------------------------------------------------------
 
 	if ( !LoadFirstBlock(pParams, objNum, "ParseNextObject") )
 	{
@@ -11288,14 +10159,6 @@ int ParseNextObject(Params *pParams, int objNum)
 
 	if ( !pagetree(pParams) )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
 		retValue = 0;
 
 		goto uscita;
@@ -11356,19 +10219,6 @@ unsigned char * getDecodedStream(Params *pParams, unsigned long int *pDecodedStr
 		goto uscita;
 	}
 
-
-	/*
-	pszEncodedStream = (unsigned char*)malloc(EncodedStreamSize);
-	if ( NULL == pszEncodedStream )
-	{
-		snprintf(pParams->szError, 8192, "ERRORE getDecodedStream: impossibile allocare %lu byte per leggere lo stream\n", EncodedStreamSize);
-		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE getDecodedStream: impossibile allocare %lu byte per leggere lo stream\n", EncodedStreamSize);
-		//fwprintf(pParams->fpErrors, L"ERRORE getDecodedStream: impossibile allocare %lu byte per leggere lo stream\n", EncodedStreamSize);
-		goto uscita;
-	}
-	*/
-
 	fseek(pParams->fp, pContent->Offset, SEEK_SET);
 
 	bytesRead = fread(pszEncodedStream, 1, pContent->LengthFromPdf, pParams->fp);
@@ -11381,18 +10231,6 @@ unsigned char * getDecodedStream(Params *pParams, unsigned long int *pDecodedStr
 		goto uscita;
 	}
 	pszEncodedStream[bytesRead] = '\0';
-
-	/*
-	pszDecodedStream = DecodeStream(pszEncodedStream, EncodedStreamSize, pContent, pParams->fpErrors, pszDecodedStream, pDecodedStreamSize);
-	if ( NULL ==  pszDecodedStream )
-	{
-		snprintf(pParams->szError, 8192, "\nERRORE getDecodedStream: DecodeStream failed.\n");
-		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"\nERRORE getDecodedStream: DecodeStream failed.\n");
-		//fwprintf(pParams->fpErrors, L"\nERRORE getDecodedStream: DecodeStream failed.\n");
-		goto uscita;
-	}
-	*/
 
 	// Per impostazione predefinita, DecodeStream() riceve i byte letti dal PDF.
 	pszStreamForDecode = pszEncodedStream;
@@ -11557,14 +10395,6 @@ int CheckObjectType(Params *pParams, int objNum)
 
 	if ( !cot(pParams) )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
 		retValue = 0;
 		goto uscita;
 	}
@@ -11580,7 +10410,6 @@ int ParseStmObj(Params *pParams, int objNum)
 {
 	int retValue = 1;
 
-	//if ( objNum < 1 || objNum >= pParams->myPdfTrailer.Size )
 	if ( objNum < 1 || (uint32_t)objNum >= pParams->nObjsTableSizeFromPrescanFile )
 	{
 		retValue = 0;
@@ -11595,13 +10424,6 @@ int ParseStmObj(Params *pParams, int objNum)
 	pParams->nCurrentParsingLengthObj = 0;
 	pParams->nCurrentParsingObj = (uint32_t)objNum;
 	pParams->nCurrentObjNum = objNum;
-
-	//if ( OBJ_TYPE_STREAM != pParams->myObjsTable[objNum]->Obj.Type )
-	//{
-	//	fwprintf(pParams->fpErrors, L"Errore ParseStmObj: l'oggetto %d non è un oggetto Object Stream.\n", objNum);
-	//	retValue = 0;
-	//	goto uscita;
-	//}
 
 	pParams->nNumBytesReadFromCurrentStream = pParams->myObjsTable[objNum]->Obj.Offset;
 
@@ -11627,14 +10449,6 @@ int ParseStmObj(Params *pParams, int objNum)
 
 	if ( !stmobj(pParams) )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
 		retValue = 0;
 		goto uscita;
 	}
@@ -11719,14 +10533,6 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 
 	if ( !xrefstream_obj(pParams) )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
 		snprintf(pParams->szError, 8192, "Errore ParseTrailerXRefStreamObject: xrefstream_obj failed\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
 		//wprintf(L"Errore ParseTrailerXRefStreamObject: xrefstream_obj failed\n");
@@ -11734,8 +10540,6 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 		retValue = 0;
 		goto uscita;
 	}
-
-	// ************************************************************************************************************************************************************
 
 	pszDecodedStream = getDecodedStream(pParams, &DecodedStreamSize, NULL);
 	if ( NULL ==  pszDecodedStream )
@@ -11808,7 +10612,7 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 
 		myDecimalValue3 = getDecimalValue(pParams->nThisMachineEndianness, &(pszDecodedStream[y]), pParams->trailerW3);
 
-		// >>> FIX: bounds check su nObjNum per evitare SIGSEGV <<<
+		// bounds check su nObjNum per evitare SIGSEGV
 		if ( nObjNum < 0 || nObjNum >= (int)pParams->nObjsTableSizeFromPrescanFile )
 		{
 			snprintf(pParams->szError, 8192,
@@ -11848,62 +10652,19 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 			myobjreflist_Init(&(pParams->myObjsTable[nObjNum]->myFontsRefList));
 		}
 
-		/*
-		x = y;
-		for ( int z = 0; z < pParams->trailerW3; z++ )
-		{
-			if ( x >= DecodedStreamSize )
-				break;
-			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseTrailerXRefStreamObject_FN) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
-			if ( pszDecodedStream[x] <= 0xF )
-			{
-				wprintf(L"0");
-				wprintf(L"%X", pszDecodedStream[x]);
-			}
-			else
-			{
-				wprintf(L"%X", pszDecodedStream[x]);
-			}
-			#endif
-			//y++;   // NO PERCHÉ L'ULTIMO INCREMENTO LO EFFETTUA IL CICLO FOR; ALTRIMENTI y VIENE INCREMENTATA DI pParams->trailerW3 UNITÀ IN PIÙ E SBALLA TUTTO.
-			x++;
-		}
-		*/
-
-		/*
 		// consuma i W3 byte dell'ultimo campo
 		for ( int z = 0; z < pParams->trailerW3; z++ )
 		{
 			if ( y >= DecodedStreamSize ) break;
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseTrailerXRefStreamObject_FN) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
-			if ( pszDecodedStream[x] <= 0xF )
+			if ( pszDecodedStream[y] <= 0xF )      // * <-- y, non x 
 			{
 				wprintf(L"0");
-				wprintf(L"%X", pszDecodedStream[x]);
+				wprintf(L"%X", pszDecodedStream[y]);   // <-- y, non x 
 			}
 			else
 			{
-				wprintf(L"%X", pszDecodedStream[x]);
-			}
-			#endif
-			y++;
-		}
-		y--;  // compensa l'incremento del for esterno
-		*/
-
-		// consuma i W3 byte dell'ultimo campo
-		for ( int z = 0; z < pParams->trailerW3; z++ )
-		{
-			if ( y >= DecodedStreamSize ) break;
-			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseTrailerXRefStreamObject_FN) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
-			if ( pszDecodedStream[y] <= 0xF )      /* <-- y, non x */
-			{
-				wprintf(L"0");
-				wprintf(L"%X", pszDecodedStream[y]);   /* <-- y, non x */
-			}
-			else
-			{
-				wprintf(L"%X", pszDecodedStream[y]);   /* <-- y, non x */
+				wprintf(L"%X", pszDecodedStream[y]);   // <-- y, non x 
 			}
 			#endif
 			y++;
@@ -11939,15 +10700,11 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseTrailerXRefStreamObject_FN) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
 	wprintf(L"ParseTrailerXRefStreamObject: FINE DECODED STREAM(DecodedStremSizeTemp = %lu).\n\n", DecodedStreamSize);
-	#endif
-
-	// ************************************************************************************************************************************************************
-
-	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseTrailerXRefStreamObject_FN) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
 	wprintf(L"\n\npParams->myPdfTrailer.Prev = %d\n\n", pParams->myPdfTrailer.Prev);
 	#endif
 
 	pParams->bIsLastTrailer = 0;
+	
 	while ( pParams->myPdfTrailer.Prev > 0 )
 	{
 		if ( NULL != pszDecodedStream )
@@ -11999,14 +10756,6 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 
 		if ( !xrefstream_obj(pParams) )
 		{
-			//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-			//{
-			//	if ( NULL != pParams->myToken.vString )
-			//	{
-			//		free(pParams->myToken.vString);
-			//		pParams->myToken.vString = NULL;
-			//	}
-			//}
 			snprintf(pParams->szError, 8192, "Errore ParseTrailerXRefStreamObject: xrefstream_obj failed\n");
 			myShowErrorMessage(pParams, pParams->szError, 1);
 			//wprintf(L"Errore ParseTrailerXRefStreamObject: xrefstream_obj failed\n");
@@ -12088,7 +10837,7 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 
 			myDecimalValue3 = getDecimalValue(pParams->nThisMachineEndianness, &(pszDecodedStream[y]), pParams->trailerW3);
 
-			// >>> FIX: bounds check su nObjNum per evitare SIGSEGV <<<
+			// bounds check su nObjNum per evitare SIGSEGV
 			if ( nObjNum < 0 || nObjNum >= (int)pParams->nObjsTableSizeFromPrescanFile )
 			{
 				snprintf(pParams->szError, 8192,
@@ -12127,28 +10876,6 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 				myobjreflist_Init(&(pParams->myObjsTable[nObjNum]->myXObjRefList));
 				myobjreflist_Init(&(pParams->myObjsTable[nObjNum]->myFontsRefList));
 			}
-
-			/*
-			x = y;
-			for ( int z = 0; z < pParams->trailerW3; z++ )
-			{
-				if ( x >= DecodedStreamSize )
-					break;
-				#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseTrailerXRefStreamObject_FN) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
-				if ( pszDecodedStream[x] <= 0xF )
-				{
-					wprintf(L"0");
-					wprintf(L"%X", pszDecodedStream[x]);
-				}
-				else
-				{
-					wprintf(L"%X", pszDecodedStream[x]);
-				}
-				#endif
-				//y++;   // NO PERCHÉ L'ULTIMO INCREMENTO LO EFFETTUA IL CICLO FOR; ALTRIMENTI y VIENE INCREMENTATA DI pParams->trailerW3 UNITÀ IN PIÙ E SBALLA TUTTO.
-				x++;
-			}
-			*/
 
 			// consuma i W3 byte dell'ultimo campo
 			for ( int z = 0; z < pParams->trailerW3; z++ )
@@ -12297,14 +11024,6 @@ int ParseStreamObject(Params *pParams, int objNum)
 	pParams->bStreamStateToUnicode = 0;
 	if ( !contentobj(pParams) )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
 		retValue = 0;
 		goto uscita;
 	}
@@ -12382,14 +11101,6 @@ int ParseStreamXObject(Params *pParams, int objNum)
 
 	if ( !contentxobj(pParams) )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
 		retValue = 0;
 		goto uscita;
 	}
@@ -12711,15 +11422,10 @@ int ParseCMapStream(Params *pParams, int objNum, unsigned char *pszDecodedStream
 					}
 				}
 
-				//if ( codepoint > 0 )
-				//	myValue = codepoint;
-
 				if ( bBfRangeState && nCountBfRangeValues >= 2 )
 				{
 					if ( codepoint > 0 )
 						myValue = codepoint;
-
-					//nCountBfRangeValues = 0;
 				}
 
 				if ( bCodeSpaceRangeState )
@@ -12761,68 +11467,6 @@ int ParseCMapStream(Params *pParams, int objNum, unsigned char *pszDecodedStream
 						nCountCodeSpaceRangeValues = 0;
 					}
 				}
-
-				/*
-				if ( bCodeSpaceRangeState )
-				{
-					if ( nCountCodeSpaceRangeValues < 1 )
-					{
-						codeSpaceRange1 = myValue;
-						nCountCodeSpaceRangeValues++;
-					}
-					else
-					{
-						codeSpaceRange2 = myValue;
-						//nCountCodeSpaceRangeValues++;
-
-						if ( codeSpaceRange2 > 0xFFFF )
-						{
-							snprintf(pParams->szError, 8192, "ParseCMapStream: VALORI ARRAY UNICODE > 0xFFFF PER IL MOMENTO NON SUPPORTATI -> codeSpaceRange1 = %u, codeSpaceRange2 = %u\n", codeSpaceRange1, codeSpaceRange2);
-							myShowErrorMessage(pParams, pParams->szError, 1);
-							//fwprintf(pParams->fpErrors, L"ParseCMapStream: VALORI ARRAY UNICODE > 0xFFFF PER IL MOMENTO NON SUPPORTATI -> codeSpaceRange1 = %lu, codeSpaceRange2 = %lu\n", codeSpaceRange1, codeSpaceRange2);
-
-							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_CMAP_STREAM)
-							wprintf(L"ParseCMapStream: VALORI ARRAY UNICODE > 0xFFFF PER IL MOMENTO NON SUPPORTATI -> codeSpaceRange1 = %u, codeSpaceRange2 = %u\n", codeSpaceRange1, codeSpaceRange2);
-							#endif
-
-							pParams->bHasCodeSpaceOneByte = pParams->bHasCodeSpaceTwoByte = 0;
-
-							//retValue = 0;
-							//goto uscita;
-
-							//codeSpaceRange1 = 0;
-							//codeSpaceRange2 = 0;
-							//nCountCodeSpaceRangeValues = 0;
-							//continue;
-
-						}
-						else if ( codeSpaceRange2 <= 0xFF )
-						{
-							pParams->bHasCodeSpaceOneByte = 1;
-							pParams->pCodeSpaceRangeArray[idxCodeSpace].nNumBytes = 1;
-						}
-						else if ( codeSpaceRange2 <= 0xFFFF )
-						{
-							pParams->bHasCodeSpaceTwoByte = 1;
-							pParams->pCodeSpaceRangeArray[idxCodeSpace].nNumBytes = 2;
-						}
-						#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_CMAP_STREAM)
-						else
-						{
-							wprintf(L"ParseCMapStream: OK!!! ARRAY UNICODE CODE SPACE RANGE -> codeSpaceRange1 = %u, codeSpaceRange2 = %u\n", codeSpaceRange1, codeSpaceRange2);
-						}
-						#endif
-
-						pParams->pCodeSpaceRangeArray[idxCodeSpace].nFrom = codeSpaceRange1;
-						pParams->pCodeSpaceRangeArray[idxCodeSpace].nTo = codeSpaceRange2;
-						idxCodeSpace++;
-
-						codeSpaceRange1 = 0;
-						codeSpaceRange2 = 0;
-						nCountCodeSpaceRangeValues = 0;
-					}
-				}
-				*/
 				else if ( bCidRangeState )
 				{
 					if ( nCountCidRangeValues < 1 )
@@ -13059,10 +11703,6 @@ int ParseCMapStream(Params *pParams, int objNum, unsigned char *pszDecodedStream
 							if ( codepoint > 0 )
 								myValue = codepoint;
 
-							//lead = 0;
-							//trail = 0;
-							//codepoint = 0;
-
 							bfChar2 = myValue;
 
 							if ( bfChar1 <= 0xFFFF )
@@ -13131,7 +11771,6 @@ int ParseCMapStream(Params *pParams, int objNum, unsigned char *pszDecodedStream
 					else
 					{
 						bfRange3 = myValue;
-						//nCountBfRangeValues++;
 
 						if ( bfRange1 <= 0xFFFF && bfRange2 <= 0xFFFF )
 						{
@@ -13210,7 +11849,7 @@ static wchar_t *ParseUTF16BEHexToWcharSeq(const char *hex, size_t hexLen, size_t
     size_t i = 0, out = 0;
     while (i + 3 < hexLen)
     {
-        /* Decodifica 4 cifre hex -> uint16 */
+        // Decodifica 4 cifre hex -> uint16 
         unsigned int v = 0;
         int ok = 1;
         for (size_t j = 0; j < 4; j++)
@@ -13225,7 +11864,7 @@ static wchar_t *ParseUTF16BEHexToWcharSeq(const char *hex, size_t hexLen, size_t
         if (!ok) { free(seq); return NULL; }
         i += 4;
 
-        /* Surrogato alto? Prova a leggere il basso. */
+        // Surrogato alto? Prova a leggere il basso. 
         if (v >= 0xD800u && v <= 0xDBFFu && i + 3 < hexLen)
         {
             unsigned int v2 = 0;
@@ -13532,60 +12171,6 @@ int ParseToUnicodeStream(Params *pParams, int objNum, unsigned char *pszDecodedS
 						nCountCodeSpaceRangeValues = 0;
 					}
 				}
-				/*
-				if ( bCodeSpaceRangeState )
-				{
-					if ( nCountCodeSpaceRangeValues < 1 )
-					{
-						codeSpaceRange1 = myValue;
-						nCountCodeSpaceRangeValues++;
-					}
-					else
-					{
-						codeSpaceRange2 = myValue;
-
-						if ( codeSpaceRange2 > 0xFFFF )
-						{
-							snprintf(pParams->szError, 8192, "ParseToUnicodeStream: VALORI CODESPACERANGE > 0xFFFF PER IL MOMENTO NON SUPPORTATI -> codeSpaceRange1 = %u, codeSpaceRange2 = %u\n", codeSpaceRange1, codeSpaceRange2);
-							myShowErrorMessage(pParams, pParams->szError, 1);
-							//fwprintf(pParams->fpErrors, L"ParseToUnicodeStream: VALORI CODESPACERANGE > 0xFFFF PER IL MOMENTO NON SUPPORTATI -> codeSpaceRange1 = %lu, codeSpaceRange2 = %lu\n", codeSpaceRange1, codeSpaceRange2);
-
-							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_TOUNICODE_STREAM)
-							wprintf(L"ParseToUnicodeStream: VALORI CODESPACERANGE > 0xFFFF PER IL MOMENTO NON SUPPORTATI -> codeSpaceRange1 = %u, codeSpaceRange2 = %u\n", codeSpaceRange1, codeSpaceRange2);
-							#endif
-
-							pParams->bHasCodeSpaceOneByte = pParams->bHasCodeSpaceTwoByte = 0;
-
-							//retValue = 0;
-							//goto uscita;
-						}
-						else if ( codeSpaceRange2 <= 0xFF )
-						{
-							pParams->bHasCodeSpaceOneByte = 1;
-							pParams->pCodeSpaceRangeArray[idxCodeSpace].nNumBytes = 1;
-						}
-						else if ( codeSpaceRange2 <= 0xFFFF )
-						{
-							pParams->bHasCodeSpaceTwoByte = 1;
-							pParams->pCodeSpaceRangeArray[idxCodeSpace].nNumBytes = 2;
-						}
-						#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_TOUNICODE_STREAM)
-						else
-						{
-							wprintf(L"ParseToUnicodeStream: OK!!! CODESPACERANGE -> codeSpaceRange1 = %u, codeSpaceRange2 = %u\n", codeSpaceRange1, codeSpaceRange2);
-						}
-						#endif
-
-						pParams->pCodeSpaceRangeArray[idxCodeSpace].nFrom = codeSpaceRange1;
-						pParams->pCodeSpaceRangeArray[idxCodeSpace].nTo = codeSpaceRange2;
-						idxCodeSpace++;
-
-						codeSpaceRange1 = 0;
-						codeSpaceRange2 = 0;
-						nCountCodeSpaceRangeValues = 0;
-					}
-				}
-				*/
 				else if ( bBfCharState )
 				{
 					if ( nCountBfCharValues < 1 )
@@ -13623,7 +12208,7 @@ int ParseToUnicodeStream(Params *pParams, int objNum, unsigned char *pszDecodedS
 								pParams->paCustomizedFont_CharSet[bfChar1] = seq[0];
 
 								if ( seqLen > 1 )
-									pParams->sequences[bfChar1] = seq;   /* salva l'intera sequenza */
+									pParams->sequences[bfChar1] = seq;  // salva l'intera sequenza
 								else
 								{
 									free(seq);
@@ -13654,7 +12239,7 @@ int ParseToUnicodeStream(Params *pParams, int objNum, unsigned char *pszDecodedS
 						{
 							tnameLen = strnlen(pParams->myToken.vString, 4096);
 							nRes = htFind(&(pParams->myCharSetHashTable), pParams->myToken.vString, tnameLen + sizeof(char), (void*)&bfChar2, &nDataSize, &bContentAlreadyProcessed);
-							if ( nRes >= 0 ) // TROVATO
+							if ( nRes >= 0 ) // TROVATO - FOUND
 							{
 								pParams->paCustomizedFont_CharSet[bfChar1] = bfChar2;
 
@@ -13697,7 +12282,6 @@ int ParseToUnicodeStream(Params *pParams, int objNum, unsigned char *pszDecodedS
 					else
 					{
 						bfRange3 = myValue;
-						//nCountBfRangeValues++;
 
 						if ( bfRange1 <= 0xFFFF && bfRange2 <= 0xFFFF )
 						{
@@ -13861,22 +12445,9 @@ int ParseCMapObject(Params *pParams, int objNum)
 	pParams->bStreamStateToUnicode = 1;
 	if ( !contentobj(pParams) )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
 		retValue = 0;
 		goto uscita;
 	}
-
-	// ************************************************************************************************************************************************************
-
-	//wprintf(L"\npParams->CurrentContent.queueFilters.count = %d\n", pParams->CurrentContent.queueFilters.count);
-	//wprintf(L"\tpParams->CurrentContent.decodeParms.count = %d\n", pParams->CurrentContent.decodeParms.count);
 
 	pszDecodedStream = getDecodedStream(pParams, &DecodedStreamSize, NULL);
 	if ( NULL ==  pszDecodedStream )
@@ -13959,7 +12530,6 @@ int ParseCIDFontObject(Params *pParams, int objNum)
 	pParams->bParsingFontObj = 0;
 
 	mynumstacklist_Init( &(pParams->myNumStack) );
-	//pParams->nToUnicodeStreamObjRef = 0;
 
 	mynumstacklist_Init(&(pParams->myCurrFontWidthsStack));
 
@@ -13967,14 +12537,6 @@ int ParseCIDFontObject(Params *pParams, int objNum)
 
 	if ( !cidfontobj(pParams) )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
 		retValue = 0;
 		goto uscita;
 	}
@@ -14021,7 +12583,6 @@ int ParseEncryptObject(Params *pParams, int objNum)
 	pParams->bParsingEncryptObj = 0;
 
 	mynumstacklist_Init( &(pParams->myNumStack) );
-	//pParams->nToUnicodeStreamObjRef = 0;
 
 	mynumstacklist_Init(&(pParams->myCurrFontWidthsStack));
 
@@ -14029,15 +12590,6 @@ int ParseEncryptObject(Params *pParams, int objNum)
 
 	if ( !encryptobj(pParams) )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
-
 		retValue = 0;
 		goto uscita;
 	}
@@ -14072,8 +12624,6 @@ int ParseEncryptObject(Params *pParams, int objNum)
 	}
 
 uscita:
-
-	//mynumstacklist_Free(&(pParams->myCurrFontWidthsStack));
 
 	mynumstacklist_Free( &(pParams->myNumStack) );
 
@@ -14115,7 +12665,6 @@ int ParseFontObject(Params *pParams, int objNum)
 	pParams->bCurrentFontIdentityH = 0;
 
 	mynumstacklist_Init( &(pParams->myNumStack) );
-	//pParams->nToUnicodeStreamObjRef = 0;
 
 	mynumstacklist_Init(&(pParams->myCurrFontWidthsStack));
 
@@ -14123,14 +12672,6 @@ int ParseFontObject(Params *pParams, int objNum)
 
 	if ( !contentfontobj(pParams) )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
 		retValue = 0;
 		goto uscita;
 	}
@@ -14180,14 +12721,6 @@ int ParseGsObject(Params *pParams, int objNum)
 
 	if ( !gsobj(pParams) )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
 		retValue = 0;
 		goto uscita;
 	}
@@ -14233,14 +12766,6 @@ int ParseFontWidthsArray(Params *pParams, int objNum)
 
 	if ( !widthsarrayobj(pParams) )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
 		retValue = 0;
 		goto uscita;
 	}
@@ -14283,20 +12808,11 @@ int ParseFontDescriptorObject(Params *pParams, int objNum)
 	}
 
 	mynumstacklist_Init( &(pParams->myNumStack) );
-	//pParams->nToUnicodeStreamObjRef = 0;
 
 	GetNextToken(pParams);
 
 	if ( !fontdescriptorobj(pParams) )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
 		retValue = 0;
 		goto uscita;
 	}
@@ -14344,14 +12860,6 @@ int ParseEncodingObject(Params *pParams, int objNum)
 
 	if ( !encodingobj(pParams) )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
 		retValue = 0;
 		goto uscita;
 	}
@@ -14398,17 +12906,8 @@ int ParseDictionaryObject(Params *pParams, int objNum)
 
 	GetNextToken(pParams);
 
-	//wprintf(L"\nParseDictionaryObject: INIZIO DIZIONARIO(objNum = %d).\n", objNum);
 	if ( !resourcesdictionary(pParams) )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
 		snprintf(pParams->szError, 8192, "\nERRORE ParseDictionaryObject resourcesdictionary -> pParams->nObjToParse = %d\n", pParams->nObjToParse);
 		myShowErrorMessage(pParams, pParams->szError, 1);
 		//wprintf(L"\nERRORE ParseDictionaryObject resourcesdictionary -> pParams->nObjToParse = %d\n", pParams->nObjToParse);
@@ -14419,7 +12918,6 @@ int ParseDictionaryObject(Params *pParams, int objNum)
 		retValue = 0;
 		goto uscita;
 	}
-	//wprintf(L"\nParseDictionaryObject: FINE DIZIONARIO(objNum = %d).\n", objNum);
 
 uscita:
 
@@ -14492,14 +12990,6 @@ int ParseLengthObject(Params *pParams, int objNum)
 	c = pParams->myBlockLengthObj[pParams->blockCurPosLengthObj++];
 	if ( (c != '\n' && c != '\r' && c != ' ' && c != '\t' && c != '\f' && c != '\b' && c != '\0') )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
 		snprintf(pParams->szError, 8192, "Errore ParseLengthObject: oggetto n. %d; atteso spazio, trovato '%c'\n", objNum, c);
 		myShowErrorMessage(pParams, pParams->szError, 1);
 		//wprintf(L"Errore ParseLengthObject: oggetto n. %d; atteso spazio, trovato '%c'\n", objNum, c);
@@ -14607,14 +13097,6 @@ int ParseIntegerObject(Params *pParams, int objNum)
 	c = pParams->myBlockLengthObj[pParams->blockCurPosLengthObj++];
 	if ( (c != '\n' && c != '\r' && c != ' ' && c != '\t' && c != '\f' && c != '\b' && c != '\0') )
 	{
-		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-		//{
-		//	if ( NULL != pParams->myToken.vString )
-		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
-		//	}
-		//}
 		snprintf(pParams->szError, 8192, "Errore ParseIntegerObject: oggetto n. %d; atteso spazio, trovato '%c'\n", objNum, c);
 		myShowErrorMessage(pParams, pParams->szError, 1);
 		//wprintf(L"Errore ParseIntegerObject: oggetto n. %d; atteso spazio, trovato '%c'\n", objNum, c);
@@ -14905,18 +13387,8 @@ int dictionary(Params *pParams)
 	if ( !match(pParams, T_DICT_BEGIN, "dictionary") )
 		return 0;
 
-	//pParams->nScope++;
-
-	//wprintf(L"\ndictionary 1: pParams->nScope = %d\n", pParams->nScope);
-
-	//while (pParams->myToken.Type == T_NAME)
 	while (pParams->myToken.Type == T_NAME || pParams->myToken.Type == T_STRING)
 	{
-		//if (pParams->myToken.Type == T_NAME)
-		//	wprintf(L"\ndictionary T_NAME: pParams->myToken.vString = %s\n", pParams->myToken.vString);
-		//else if (pParams->myToken.Type == T_STRING)
-		//	wprintf(L"\ndictionary T_STRING: pParams->myToken.vString = %s\n", pParams->myToken.vString);
-
 		if ( strncmp(pParams->myToken.vString, "Pages", 1024) == 0 )
 		{
 			bNameIsPages = 1;
@@ -14933,8 +13405,6 @@ int dictionary(Params *pParams)
 		{
 			pParams->nScope++;
 
-			//wprintf(L"\ndictionary 2: pParams->nScope = %d\n", pParams->nScope);
-
 			while ( pParams->nScope > 0 )
 			{
 				#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_OBJ)
@@ -14949,8 +13419,6 @@ int dictionary(Params *pParams)
 					pParams->nScope++;
 				else if ( pParams->myToken.Type == T_ERROR || pParams->myToken.Type == T_EOF || pParams->myToken.Type == T_UNKNOWN )
 					return 0;
-
-				//wprintf(L"\ndictionary 3: pParams->nScope = %d\n", pParams->nScope);
 			}
 
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_OBJ)
@@ -14960,8 +13428,6 @@ int dictionary(Params *pParams)
 			GetNextToken(pParams);
 		}
 		pParams->nScope = 0;
-
-		//wprintf(L"\ndictionary 4: pParams->nScope = %d\n", pParams->nScope);
 
 		if ( pParams->myToken.Type == T_QOPAREN )
 		{
@@ -15808,8 +14274,6 @@ int contentobj(Params *pParams)
 
 	GetNextToken(pParams);
 
-
-
 	//if ( !match(pParams, T_INT_LITERAL, "contentobj") )
 	//	return 0;
 
@@ -15927,19 +14391,7 @@ int contentobjbody(Params *pParams)
 
 	pParams->CurrentContent.Offset = pParams->nNumBytesReadFromCurrentStream;
 	pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamOffset = pParams->CurrentContent.Offset;
-	//pParams->CurrentContent.Offset = pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamOffset;
-	/*
-	if ( pParams->CurrentContent.LengthFromPdf != pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamLength )
-	{
-		fwprintf(pParams->fpErrors, L"WARNING contentobjbody: pParams->CurrentContent.LengthFromPdf = %lu differs from pParams->myObjsTable[%d]->Obj.StreamLength = %lu\n",  pParams->CurrentContent.LengthFromPdf, pParams->nCurrentParsingObj, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamLength);
-		//PrintThisObject(pParams, pParams->nCurrentParsingObj, 0, 0, pParams->fpErrors);
-		//pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamLength = pParams->CurrentContent.LengthFromPdf;
-	}
-	*/
-	//pParams->CurrentContent.LengthFromPdf = pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamLength;
-
-	//pos1 = ftell(pParams->fp);
-	//GetNextToken(pParams);
+	
 	if ( fseek(pParams->fp, pParams->CurrentContent.Offset + pParams->CurrentContent.LengthFromPdf, SEEK_SET) != 0 )
 	{
 		snprintf(pParams->szError, 8192, "ERRORE contentobjbody: fseek\n");
@@ -15949,9 +14401,6 @@ int contentobjbody(Params *pParams)
 		retValue = 0;
 		goto uscita;
 	}
-	//pos2 = ftell(pParams->fp);
-	//wprintf(L"\n\npos1 = %lu <> pos2 = %lu <> Length = %lu <> pos2 - pos1 = %lu\n\n", pos1, pos2, pParams->CurrentContent.LengthFromPdf, pos2 - pos1);
-
 
 	pParams->blockLen = fread(pParams->myBlock, 1, BLOCK_SIZE, pParams->fp);
 	if ( pParams->blockLen == 0 )
@@ -16160,42 +14609,21 @@ int contentkeyvalue(Params *pParams)
 
 			GetNextToken(pParams);
 			break;
-		case T_STRING_LITERAL: // File Specifications: vedi su PDF3000_2008 a pag. 99
-			/*
-			if ( (strncmp(pParams->szCurrKeyName, "F", 1024) == 0) )
-			{
-				len = strnlen(pParams->myToken.vString, 4096);
-				strncpy(pParams->CurrentContent.szFileSpecifications, pParams->myToken.vString, len + 1);
-			}
-			*/
+		case T_STRING_LITERAL:
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_STRING_HEXADECIMAL: // File Specifications: vedi su PDF3000_2008 a pag. 99
-			/*
-			if ( (strncmp(pParams->szCurrKeyName, "F", 1024) == 0) )
-			{
-				len = strnlen(pParams->myToken.vString, 4096);
-				strncpy(pParams->CurrentContent.szFileSpecifications, pParams->myToken.vString, len + 1);
-			}
-			*/
+		case T_STRING_HEXADECIMAL:
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_STRING: // File Specifications: vedi su PDF3000_2008 a pag. 99
-			/*
-			if ( (strncmp(pParams->szCurrKeyName, "F", 1024) == 0) )
-			{
-				len = strnlen(pParams->myToken.vString, 4096);
-				strncpy(pParams->CurrentContent.szFileSpecifications, pParams->myToken.vString, len + 1);
-			}
-			*/
+		case T_STRING:
 			// IGNORIAMO
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -16450,30 +14878,30 @@ int contentkeyvalueinternal(Params *pParams)
 
 			GetNextToken(pParams);
 			break;
-		case T_STRING_LITERAL: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING_LITERAL: 
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_STRING_HEXADECIMAL: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING_HEXADECIMAL: 
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_STRING: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING: 
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_KW_TRUE:        // File Specifications: vedi su PDF3000_2008 a pag. 99
-		case T_KW_FALSE:       // File Specifications: vedi su PDF3000_2008 a pag. 99
-		case T_REAL_LITERAL:   // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_KW_TRUE:        
+		case T_KW_FALSE:       
+		case T_REAL_LITERAL:   
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
@@ -17936,19 +16364,6 @@ int contentxobjbody(Params *pParams)
 
 	pParams->CurrentContent.Offset = pParams->nNumBytesReadFromCurrentStream;
 	pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamOffset = pParams->CurrentContent.Offset;
-	//pParams->CurrentContent.Offset = pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamOffset;
-	/*
-	if ( pParams->CurrentContent.LengthFromPdf != pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamLength )
-	{
-		fwprintf(pParams->fpErrors, L"WARNING contentxobjbody: pParams->CurrentContent.LengthFromPdf = %lu differs from pParams->myObjsTable[%d]->Obj.StreamLength = %lu\n",  pParams->CurrentContent.LengthFromPdf, pParams->nCurrentParsingObj, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamLength);
-		//PrintThisObject(pParams, pParams->nCurrentParsingObj, 0, 0, pParams->fpErrors);
-		//pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamLength = pParams->CurrentContent.LengthFromPdf;
-	}
-	*/
-	//pParams->CurrentContent.LengthFromPdf = pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamLength;
-
-
-
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMXOBJ)
 	wprintf(L"contentxobjbody -> ");
@@ -18302,7 +16717,7 @@ int xobjcontentkeyvalue(Params *pParams)
 
 			GetNextToken(pParams);
 			break;
-		case T_STRING_LITERAL: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING_LITERAL: 
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMXOBJ)
 			wprintf(L"xobjcontentkeyvalue -> ");
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -18310,7 +16725,7 @@ int xobjcontentkeyvalue(Params *pParams)
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_STRING_HEXADECIMAL: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING_HEXADECIMAL: 
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMXOBJ)
 			wprintf(L"xobjcontentkeyvalue -> ");
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -18327,7 +16742,7 @@ int xobjcontentkeyvalue(Params *pParams)
 			#endif
 			GetNextToken(pParams);
 			break;
-		case T_STRING: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING: 
 			// IGNORIAMO
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMXOBJ)
 			wprintf(L"xobjcontentkeyvalue -> ");
@@ -19319,7 +17734,6 @@ int widthsarrayobjbody(Params *pParams)
 				return 0;
 			}
 		}
-		// *************************************************************************************************************************************************************
 
 		goto uscita;
 	}
@@ -20053,29 +18467,6 @@ int encryptobjbody(Params *pParams)
 	return 1;
 }
 
-/*
-// encryptobjdictitems : T_NAME encryptobjkeyvalue {T_NAME encryptobjkeyvalue};
-int encryptobjdictitems(Params *pParams)
-{
-	if ( !encryptobjkeyvalue(pParams) )
-		return 0;
-
-	while (pParams->myToken.Type == T_NAME ||
-			pParams->myToken.Type == T_STRING_LITERAL ||
-			pParams->myToken.Type == T_STRING_HEXADECIMAL ||
-			pParams->myToken.Type == T_INT_LITERAL ||
-			pParams->myToken.Type == T_KW_FALSE ||
-			pParams->myToken.Type == T_KW_TRUE ||
-			pParams->myToken.Type == T_DICT_BEGIN)
-			{
-				if ( !encryptobjkeyvalue(pParams) )
-					return 0;
-			}
-
-	return 1;
-}
-*/
-
 // encryptobjdictitems : T_NAME encryptobjkeyvalue
 //                       { T_NAME encryptobjkeyvalue };
 int encryptobjdictitems(Params *pParams)
@@ -20189,30 +18580,6 @@ int encryptobjkeyvalue(Params *pParams)
 	return 1;
 }
 
-/*
-Che cosa rappresenta /CF?
-Il dizionario Crypt Filters associa un nome a un dizionario che descrive
-come cifrare o decifrare determinati dati. Per esempio, un filtro può
-indicare /CFM /AESV2, che seleziona AES a 128 bit, oppure /CFM /V2, che seleziona RC4.
-
-Nel dizionario /Encrypt, le voci /StmF e /StrF indicano rispettivamente
-il filtro predefinito per gli stream e per le stringhe.
-/CF contiene le definizioni dei filtri nominati utilizzati dal documento,
-con le eccezioni previste per i nomi standard.
-
-Per il tuo parser, la parte interessante sarà questa struttura
-
-/CF
-<<
-    /StdCF
-    <<
-        /CFM /AESV2
-        /AuthEvent /DocOpen
-        /Length 16
-    >>
->>
-*/
-
 // encryptobjkeydict : T_DICT_BEGIN { T_NAME encryptobjkeyvalue } T_DICT_END;
 int encryptobjkeydict(Params *pParams)
 {
@@ -20307,82 +18674,6 @@ int encryptobjkeydict(Params *pParams)
 
     return 1;
 }
-
-/*
-// encryptobjkeydict : T_DICT_BEGIN { T_NAME encryptobjkeyvalue } T_DICT_END;
-int encryptobjkeydict(Params *pParams)
-{
-    #if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_ENCRYPT_OBJ)
-    PrintToken(&(pParams->myToken), ' ', ' ', 1);
-    #endif
-
-    if (!match(pParams, T_DICT_BEGIN, "encryptobjkeydict"))
-        return 0;
-
-    // Ogni elemento del dizionario è composto da:
-    // T_NAME (chiave) + encryptobjkeyvalue (valore).
-    while (pParams->myToken.Type == T_NAME)
-    {
-        // Stampa la chiave prima di consumarla.
-        #if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_ENCRYPT_OBJ)
-        PrintToken(&(pParams->myToken), ' ', ' ', 1);
-        #endif
-
-        // Consuma la chiave del dizionario.
-        if (!match(pParams, T_NAME, "encryptobjkeydict"))
-            return 0;
-
-        // Analizza il valore associato alla chiave.
-        if (!encryptobjkeyvalue(pParams))
-            return 0;
-    }
-
-    #if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_ENCRYPT_OBJ)
-    PrintToken(&(pParams->myToken), ' ', ' ', 1);
-    #endif
-
-    if (!match(pParams, T_DICT_END, "encryptobjkeydict"))
-        return 0;
-
-    return 1;
-}
-*/
-
-/*
-// encryptobjkeydict  : T_DICT_BEGIN { T_NAME encryptobjkeyvalue } T_DICT_END;
-int encryptobjkeydict(Params *pParams)
-{
-	//(void)pParams;
-
-	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_ENCRYPT_OBJ)
-	PrintToken(&(pParams->myToken), ' ', ' ', 1);
-	#endif
-
-	if ( !match(pParams, T_DICT_BEGIN, "encryptobjkeydict") )
-		return 0;
-
-	while (pParams->myToken.Type == T_NAME ||
-			pParams->myToken.Type == T_STRING_LITERAL ||
-			pParams->myToken.Type == T_STRING_HEXADECIMAL ||
-			pParams->myToken.Type == T_INT_LITERAL ||
-			pParams->myToken.Type == T_KW_FALSE ||
-			pParams->myToken.Type == T_KW_TRUE ||
-			pParams->myToken.Type == T_DICT_BEGIN)
-			{
-				if ( !encryptobjkeyvalue(pParams) )
-					return 0;
-			}
-
-	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_ENCRYPT_OBJ)
-	PrintToken(&(pParams->myToken), ' ', ' ', 1);
-	#endif
-
-	if ( !match(pParams, T_DICT_END, "encryptobjkeydict") )
-		return 0;
-
-	return 1;
-}
-*/
 
 // ********************************************************************** FINE ENCRYPT ******************************************************************
 
@@ -20817,15 +19108,6 @@ int contentfontobj(Params *pParams)
 		wprintf(L"\t***** 2 pParams->nToUnicodeStreamObjRef = %d, pParams->nCurrentUseCMapRef = %d *****\n", pParams->nToUnicodeStreamObjRef, pParams->nCurrentUseCMapRef);
 		#endif
 
-
-		//pParams->pCurrentEncodingArray = &(pParams->paCustomizedFont_CharSet[0]);
-
-		//#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
-		//wprintf(L"\t***** 2 pParams->nToUnicodeStreamObjRef = %d, pParams->nCurrentUseCMapRef = %d *****\n", pParams->nToUnicodeStreamObjRef, pParams->nCurrentUseCMapRef);
-		//#endif
-
-
-
 		if ( pParams->nCurrentEncodingObj > 0 )
 		{
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
@@ -20834,12 +19116,7 @@ int contentfontobj(Params *pParams)
 
 			if ( FONT_SUBTYPE_Type0 != pParams->nCurrentFontSubtype )
 				ParseEncodingObject(pParams, pParams->nCurrentEncodingObj);
-
-			//if ( !ParseEncodingObject(pParams, pParams->nCurrentEncodingObj) )
-			//	return 0;
 		}
-
-
 
 		if ( pParams->nCurrentUseCMapRef > 0 )
 		{
@@ -21042,28 +19319,8 @@ int contentfontobj(Params *pParams)
 			wprintf(L"\t***** FONT 'MacExpertEncoding'. OK! *****\n\n");
 			#endif
 		}
-		/*
 		else
 		{
-			pParams->pCurrentEncodingArray = &(pParams->aSTD_CharSet[0]);
-
-			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
-			wprintf(L"\t***** FONT 'PDF STANDARD'. OK! *****\n\n");
-			#endif
-		}
-		*/
-		else
-		{
-			/* Font senza /Encoding e senza /ToUnicode.
-			   Default secondo la specifica:
-			   - TrueType: WinAnsiEncoding
-			   - gli altri (Type1, ecc.): StandardEncoding
-
-			   RATIONALE: i generatori "sporchi" come Justsystem PDF Creator
-			   v3.28 marcano i font TrueType come Symbolic e non dichiarano
-			   l'encoding, ma usano i byte WinAnsi. Con StandardEncoding
-			   il testo viene letto male (es. "perchØ" invece di "perché").
-			   WinAnsi produce il testo corretto, in linea con pdftotext. */
 			if ( pParams->nCurrentFontSubtype == FONT_SUBTYPE_TrueType )
 			{
 				pParams->pCurrentEncodingArray = &(pParams->aWIN_CharSet[0]);
@@ -21129,7 +19386,6 @@ uscita:
 
 		for ( int k = 0; k < pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->WidthsArraySize; k++ )
 		{
-			//pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[k] = pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->MissingWidth;
 			pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[k] = -1.0;
 		}
 
@@ -21179,10 +19435,7 @@ uscita:
 
 				while ( mynumstacklist_Pop(&(pParams->myCurrFontWidthsStack), &dblWidth) )
 				{
-					//if ( dblWidth > 0 )
-						pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[nCurrCharIndex] = dblWidth;
-					//else
-					//	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[nCurrCharIndex] = pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->MissingWidth;
+					pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[nCurrCharIndex] = dblWidth;
 
 					#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ_WIDTHS)
 					wprintf(L"\tcontentfontobj -> STACK POP(nCurrCharIndex = %d) -> pParams->myObjsTable[%d]->pGlyphsWidths->pWidths[%d] = %f\n", nCurrCharIndex, pParams->nCurrentParsingFontObjNum, nCurrCharIndex, pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[nCurrCharIndex]);
@@ -21196,9 +19449,6 @@ uscita:
 						wprintf(L"\tc = '<%X>'(%d) -> Width = %f\n", cTemp, cTemp, dblWidth);
 					}
 					#endif
-
-					//if ( L' ' == pParams->pCurrentEncodingArray[nCurrCharIndex + pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->FirstChar] )
-					//	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = dblWidth;
 
 					switch ( pParams->pCurrentEncodingArray[nCurrCharIndex + pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->FirstChar] )
 					{
@@ -21252,7 +19502,7 @@ uscita:
 		}
 		if ( nCountWidthsGEZero <= 0 )
 			nCountWidthsGEZero = 1;
-		//pParams->dCurrFontAvgWidth = dblCumWidths / pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->WidthsArraySize;
+		
 		pParams->dCurrFontAvgWidth = dblCumWidths / nCountWidthsGEZero;
 
 		if ( pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->AvgWidth <= 0.0 )
@@ -21314,15 +19564,7 @@ uscita:
 
 	if ( pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth < 0.0 )
 	{
-		//pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->MissingWidth;
-
 		pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = 0.0;
-
-		//if ( pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->MissingWidth > 0.0 )
-		//	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->MissingWidth;
-		//else
-		//	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = pParams->dCurrFontAvgWidth;
-		//pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = pParams->dCurrFontMaxWidth;
 
 		pParams->bCurrFontSpaceWidthIsZero = 1;
 
@@ -21333,8 +19575,6 @@ uscita:
 	{
 		pParams->bCurrFontSpaceWidthIsZero = 0;
 	}
-
-	//pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = pParams->dCurrFontAvgWidth;
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ_WIDTHS)
 	wprintf(L"\tcontentfontobj -> pParams->myObjsTable[%d]->pGlyphsWidths->dFontSpaceWidth = %f; pParams->myObjsTable[%d]->pGlyphsWidths->AvgWidth = %f; pParams->myObjsTable[%d]->pGlyphsWidths->MaxWidth = %f; pParams->myObjsTable[%d]->pGlyphsWidths->MissingWidth = %f; pParams->myObjsTable[%d]->pGlyphsWidths->dFontLmWidth = %f; pParams->myObjsTable[%d]->pGlyphsWidths->dFontUmWidth = %f;\n\n",
@@ -21411,10 +19651,6 @@ int fontobjcontentkeyvalue(Params *pParams)
 {
 	int n1 = -1;
 	int n2 = -1;
-
-	//#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
-	//wprintf(L"\tATTENZIONE TRIS 1: fontobjcontentkeyvalue ENCODING -> pParams->szTemp = '%s' <> n1 = %d, n2 = %d\n", pParams->szTemp, n1, n2);
-	//#endif
 
 	switch ( pParams->myToken.Type )
 	{
@@ -21504,21 +19740,6 @@ int fontobjcontentkeyvalue(Params *pParams)
 				wprintf(L"\tATTENZIONE TRIS 3: fontobjcontentkeyvalue ENCODING -> pParams->szTemp = '%s' <> n1 = %d, n2 = %d\n", pParams->szTemp, n1, n2);
 				#endif
 			}
-			/*
-			if ( strncmp(pParams->szCurrKeyName, "Encoding", 1024) == 0 )
-			{
-				//#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
-				//wprintf(L"\tATTENZIONE TRIS 2: fontobjcontentkeyvalue ENCODING -> pParams->szTemp = '%s' <> n1 = %d, n2 = %d\n", pParams->szTemp, n1, n2);
-				//#endif
-				// MacRomanEncoding, MacExpertEncoding, or WinAnsiEncoding
-				strncpy(pParams->szTemp, pParams->myToken.vString, strnlen(pParams->myToken.vString, 4096) + 1);
-				pParams->nCurrentEncodingObj = 0;
-
-				//#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
-				//wprintf(L"\tATTENZIONE TRIS 3: fontobjcontentkeyvalue ENCODING -> pParams->szTemp = '%s' <> n1 = %d, n2 = %d\n", pParams->szTemp, n1, n2);
-				//#endif
-			}
-			*/
 			else if ( strncmp(pParams->szCurrKeyName, "Subtype", 1024) == 0 )
 			{
 				if ( strncmp(pParams->myToken.vString, "Type1", strnlen(pParams->myToken.vString, 4096) + 1) == 0 )
@@ -21545,10 +19766,6 @@ int fontobjcontentkeyvalue(Params *pParams)
 				strncpy(pParams->szBaseFont, pParams->myToken.vString, strnlen(pParams->myToken.vString, 4096) + 1);
 
 				psz = &(pParams->szBaseFont[1]);
-
-				//#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
-				//wprintf(L"\tATTENZIONE TRIS 4: fontobjcontentkeyvalue ENCODING -> pParams->szTemp = '%s'  <> n1 = %d, n2 = %d <> psz = '%s' <> pParams->szBaseFont = '%s' <> pParams->szBaseFont[0] = '%c' <> pParams->szBaseFont[1] = '%c'\n", pParams->szTemp, n1, n2, psz, pParams->szBaseFont, pParams->szBaseFont[0], pParams->szBaseFont[1]);
-				//#endif
 
 				switch ( pParams->szBaseFont[0] )
 				{
@@ -21634,12 +19851,6 @@ int fontobjcontentkeyvalue(Params *pParams)
 			return 0;
 			break;
 	}
-
-	//pParams->szTemp[0] = cTemp;
-
-	//#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
-	//wprintf(L"\tATTENZIONE TRIS 5: fontobjcontentkeyvalue ENCODING -> pParams->szTemp = '%s'  <> n1 = %d, n2 = %d\n", pParams->szTemp, n1, n2);
-	//#endif
 
 	return 1;
 }
@@ -21828,12 +20039,7 @@ int fontobjcontentkeyarray(Params *pParams)
 					if ( strncmp(pParams->szCurrKeyName, "DescendantFonts", 1024) == 0 )
 					{
 						pParams->nDescendantFontRef = n1;
-						//pParams->szTemp[0] = '0';
 					}
-
-					//#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
-					//PrintToken(&(pParams->myToken), ' ', ' ', 1);
-					//#endif
 
 					GetNextToken(pParams);
 				}
@@ -21918,7 +20124,6 @@ int cidfontobj(Params *pParams)
 	pParams->bCidFontArrayInsteadDict = 0;
 
 	pParams->szExtArraySizeCurrKeyName[0] = '\0';
-	//pParams->szExtArraySizeDW2CurrKeyName[0] = '\0';
 
 	pParams->nCurrentParsingFontWidthsArrayRef = 0;
 	pParams->nCurrentParsingFontDW2WidthsArrayRef = 0;
@@ -21971,12 +20176,8 @@ int cidfontobj(Params *pParams)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
 	#endif
 
-	//if ( pParams->bCidFontArrayInsteadDict )
-	//	goto uscita;
-
 	if ( !match(pParams, T_KW_ENDOBJ, "cidfontobj") )
 		return 0;
-
 
 	switch ( pParams->nCurrentCIDFontSubtype )
 	{
@@ -22065,9 +20266,6 @@ int cidfontobj(Params *pParams)
 		}
 	}
 
-	//pParams->szExtArraySizeCurrKeyName[0] = '\0';
-	//pParams->szExtArraySizeDW2CurrKeyName[0] = '\0';
-
 	dblCumWidths = 0.0;
 	nCountWidthsGEZero = 0;
 	if ( pParams->bWisPresent )
@@ -22083,7 +20281,7 @@ int cidfontobj(Params *pParams)
 				nCountWidthsGEZero++;
 			}
 		}
-		//pParams->dCurrFontAvgWidth = dblCumWidths / pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->WidthsArraySize;
+		
 		if ( nCountWidthsGEZero <= 0 )
 			nCountWidthsGEZero = 1;
 		pParams->dCurrFontAvgWidth = dblCumWidths / nCountWidthsGEZero;
@@ -22171,7 +20369,6 @@ int cidfontobjbody(Params *pParams)
 		if ( !match(pParams, T_QCPAREN, "cidfontobjbody") )
 			return 0;
 
-		//return ParseCIDFontObject(pParams, pParams->nDescendantFontRef);
 		return 1;
 	}
 
@@ -22205,8 +20402,6 @@ int cidfontobjdictitems(Params *pParams)
 
 		if ( strncmp(pParams->szCurrKeyName, "W", 1024) == 0 )
 		{
-			//strncpy(pParams->szExtArraySizeCurrKeyName, pParams->szCurrKeyName, strnlen(pParams->szCurrKeyName, MAX_STRLEN));
-
 			pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->FirstChar = 0;
 			pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->LastChar = 0x10000;
 			pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->WidthsArraySize = pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->LastChar - pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->FirstChar + 1;
@@ -22229,8 +20424,6 @@ int cidfontobjdictitems(Params *pParams)
 		}
 		else if ( strncmp(pParams->szCurrKeyName, "W2", 1024) == 0 )
 		{
-			//strncpy(pParams->szExtArraySizeCurrKeyName, pParams->szCurrKeyName, strnlen(pParams->szCurrKeyName, MAX_STRLEN));
-
 			pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->FirstChar = 0;
 			pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->LastChar = 0x10000;
 			pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->WidthsArraySize = pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->LastChar - pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->FirstChar + 1;
@@ -22249,7 +20442,6 @@ int cidfontobjdictitems(Params *pParams)
 			}
 
 			pParams->bFontWidthsArrayState = 1;
-			//pParams->bW2isPresent = 1;
 			pParams->bWisPresent = 1;
 		}
 
@@ -22312,23 +20504,18 @@ int cidfontobjkeyvalue(Params *pParams)
 				if ( strncmp(pParams->szCurrKeyName, "FontDescriptor", 1024) == 0 )
 				{
 					pParams->nCurrFontDescriptorRef = n1;
-					//pParams->szTemp[0] = '0';
 				}
 				else if ( strncmp(pParams->szCurrKeyName, "W", 1024) == 0 || strncmp(pParams->szCurrKeyName, "W2", 1024) == 0 )
 				{
-					//strncpy(pParams->szExtArraySizeCurrKeyName, pParams->szCurrKeyName, 3);
 					pParams->szExtArraySizeCurrKeyName[0] = pParams->szCurrKeyName[0];
 					pParams->szExtArraySizeCurrKeyName[1] = pParams->szCurrKeyName[1];
 					if ( '\0' != pParams->szCurrKeyName[1] )
 						pParams->szExtArraySizeCurrKeyName[2] = '\0';
 					pParams->nCurrentParsingFontWidthsArrayRef = n1;
 
-					//pParams->szTemp[0] = '0';
 				}
 				else if ( strncmp(pParams->szCurrKeyName, "DW2", 1024) == 0 )
 				{
-					//strncpy(pParams->szExtArraySizeDW2CurrKeyName, pParams->szCurrKeyName, strnlen(pParams->szCurrKeyName, MAX_STRLEN));
-					//pParams->nCurrentParsingFontWidthsArrayRef = n1;
 					pParams->nCurrentParsingFontDW2WidthsArrayRef = n1;
 				}
 			}
@@ -22446,9 +20633,6 @@ int cidfontobjkeyvalue(Params *pParams)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			GetNextToken(pParams);
-		//	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
-		//	PrintToken(&(pParams->myToken), ' ', ' ', 1);
-		//	#endif
 
 		//	GetNextToken(pParams);
 			break;
@@ -22500,8 +20684,6 @@ int cidfontobjkeyarray(Params *pParams)
 	{
 		while ( pParams->myToken.Type == T_INT_LITERAL )
 		{
-			//pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[nCurrCharIndex] = dblWidth;
-
 			n1 = pParams->myToken.vInt;
 
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
@@ -22531,9 +20713,6 @@ int cidfontobjkeyarray(Params *pParams)
 								if ( pParams->dCurrFontMaxWidth < dblWidth )
 									pParams->dCurrFontMaxWidth = dblWidth;
 
-								//if ( 32 == n1 )
-								//	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = dblWidth;
-
 								switch ( n1 )
 								{
 									case 32:   // space
@@ -22559,9 +20738,6 @@ int cidfontobjkeyarray(Params *pParams)
 
 								if ( pParams->dCurrFontMaxWidth < dblWidth )
 									pParams->dCurrFontMaxWidth = dblWidth;
-
-								//if ( 32 == n1 )
-								//	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = dblWidth;
 
 								switch ( n1 )
 								{
@@ -22624,9 +20800,6 @@ int cidfontobjkeyarray(Params *pParams)
 							if ( pParams->dCurrFontMaxWidth < dblWidth )
 								pParams->dCurrFontMaxWidth = dblWidth;
 
-							//if ( 32 == n1 )
-							//	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = dblWidth;
-
 							for ( int k = n1; k <= n2; k++ )
 							{
 								switch ( k )
@@ -22654,9 +20827,6 @@ int cidfontobjkeyarray(Params *pParams)
 
 							if ( pParams->dCurrFontMaxWidth < dblWidth )
 								pParams->dCurrFontMaxWidth = dblWidth;
-
-							//if ( 32 == n1 )
-							//	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = dblWidth;
 
 							for ( int k = n1; k <= n2; k++ )
 							{
@@ -22709,15 +20879,8 @@ int cidfontobjkeyarray(Params *pParams)
 	}
 	else if ( strncmp(pParams->szCurrKeyName, "W2", 1024) == 0 )
 	{
-		//snprintf(pParams->szError, 8192, "ERRORE cidfontobjkeyarray: W2, PER IL MOMENTO, NON IMPLEMENTATO.\n");
-		//myShowErrorMessage(pParams, pParams->szError, 1);
-		//PrintToken(&(pParams->myToken), ' ', ' ', 1);
-		//return 0;
-
 		while ( pParams->myToken.Type == T_INT_LITERAL )
 		{
-			//pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[nCurrCharIndex] = dblWidth;
-
 			n1 = pParams->myToken.vInt;
 
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
@@ -22747,9 +20910,6 @@ int cidfontobjkeyarray(Params *pParams)
 								if ( pParams->dCurrFontMaxWidth < dblWidth )
 									pParams->dCurrFontMaxWidth = dblWidth;
 
-								//if ( 32 == n1 )
-								//	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = dblWidth;
-
 								switch ( n1 )
 								{
 									case 32:   // space
@@ -22775,9 +20935,6 @@ int cidfontobjkeyarray(Params *pParams)
 
 								if ( pParams->dCurrFontMaxWidth < dblWidth )
 									pParams->dCurrFontMaxWidth = dblWidth;
-
-								//if ( 32 == n1 )
-								//	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = dblWidth;
 
 								switch ( n1 )
 								{
@@ -22860,9 +21017,6 @@ int cidfontobjkeyarray(Params *pParams)
 							if ( pParams->dCurrFontMaxWidth < dblWidth )
 								pParams->dCurrFontMaxWidth = dblWidth;
 
-							//if ( 32 == n1 )
-							//	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = dblWidth;
-
 							for ( int k = n1; k <= n2; k++ )
 							{
 								switch ( k )
@@ -22916,9 +21070,6 @@ int cidfontobjkeyarray(Params *pParams)
 
 							if ( pParams->dCurrFontMaxWidth < dblWidth )
 								pParams->dCurrFontMaxWidth = dblWidth;
-
-							//if ( 32 == n1 )
-							//	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = dblWidth;
 
 							for ( int k = n1; k <= n2; k++ )
 							{
@@ -23024,13 +21175,11 @@ int cidfontobjkeyarray(Params *pParams)
 		if ( T_INT_LITERAL == pParams->myToken.Type )
 		{
 			dblWidth = (double)pParams->myToken.vInt * 0.001;
-			//pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->DW2.w1 = dblWidth;
 			pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->DW = dblWidth;
 		}
 		else if ( T_REAL_LITERAL == pParams->myToken.Type )
 		{
 			dblWidth = pParams->myToken.vDouble * 0.001;
-			//pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->DW2.w1 = dblWidth;
 			pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->DW = dblWidth;
 		}
 		else
@@ -23041,7 +21190,6 @@ int cidfontobjkeyarray(Params *pParams)
 			return 0;
 		}
 	}
-	// *************************************************************************************************************************************************************
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -23071,18 +21219,6 @@ int cidfontobjkeydict(Params *pParams)
 	//}
 	GetNextToken(pParams);
 
-	//while ( pParams->myToken.Type == T_NAME )
-	//{
-	//	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
-	//	PrintToken(&(pParams->myToken), ' ', ' ', 1);
-	//	#endif
-
-	//	GetNextToken(pParams);
-
-	//	if ( !cidfontobjkeyvalue(pParams) )
-	//		return 0;
-	//}
-
 	while ( pParams->myToken.Type == T_NAME )
 	{
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
@@ -23109,7 +21245,6 @@ int cidfontobjkeydict(Params *pParams)
 	return 1;
 }
 
-// ------------------------------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------------------------------------------------------------------
 
 //encodingobj                   : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ encodingobjbody T_KW_ENDOBJ;
@@ -23449,12 +21584,6 @@ int xrefstream_obj(Params *pParams)
 	pParams->trailerW2 = -1;
 	pParams->trailerW3 = -1;
 
-	//myintqueuelist_Init( &(pParams->queueTrailerIndex) );
-	//myintqueuelist_Init( &(pParams->queueTrailerW) );
-
-
-
-
 	if ( T_INT_LITERAL != pParams->myToken.Type )
 	{
 		snprintf(pParams->szError, 8192, "ERRORE xrefstream_obj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
@@ -23471,8 +21600,6 @@ int xrefstream_obj(Params *pParams)
 	#endif
 
 	GetNextToken(pParams);
-
-
 
 	//if ( !match(pParams, T_INT_LITERAL, "xrefstream_obj") )
 	//	return 0;
@@ -23775,14 +21902,6 @@ int xrefstream_objbody(Params *pParams)
 
 	pParams->CurrentContent.Offset = pParams->nNumBytesReadFromCurrentStream;
 	pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamOffset = pParams->CurrentContent.Offset;
-	/*
-	if ( pParams->CurrentContent.LengthFromPdf != pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamLength )
-	{
-		fwprintf(pParams->fpErrors, L"WARNING xrefstream_objbody: pParams->CurrentContent.LengthFromPdf = %lu differs from pParams->myObjsTable[%d]->Obj.StreamLength = %lu\n",  pParams->CurrentContent.LengthFromPdf, pParams->nCurrentParsingObj, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamLength);
-		//PrintThisObject(pParams, pParams->nCurrentParsingObj, 0, 0, pParams->fpErrors);
-		//pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamLength = pParams->CurrentContent.LengthFromPdf;
-	}
-	*/
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -23925,15 +22044,6 @@ int xrefstream_keyvalue(Params *pParams)
 				{
 					pParams->myPdfTrailer.Prev = n1;
 				}
-				/*
-				else if ( strncmp(pParams->szCurrKeyName, "Size", 1024) == 0 )
-				{
-					if ( pParams->bIsLastTrailer )
-					{
-						pParams->myPdfTrailer.Size = n1;
-					}
-				}
-				*/
 				else if ( strncmp(pParams->szCurrKeyName, "Size", 1024) == 0 )
 				{
 					#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
@@ -24005,30 +22115,30 @@ int xrefstream_keyvalue(Params *pParams)
 
 			GetNextToken(pParams);
 			break;
-		case T_STRING_LITERAL: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING_LITERAL: 
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_STRING_HEXADECIMAL: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING_HEXADECIMAL: 
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_STRING: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING: 
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_KW_TRUE:        // File Specifications: vedi su PDF3000_2008 a pag. 99
-		case T_KW_FALSE:       // File Specifications: vedi su PDF3000_2008 a pag. 99
-		case T_REAL_LITERAL:   // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_KW_TRUE:        
+		case T_KW_FALSE:       
+		case T_REAL_LITERAL:   
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
@@ -24326,30 +22436,30 @@ int xrefstream_keyvalueinternal(Params *pParams)
 
 			GetNextToken(pParams);
 			break;
-		case T_STRING_LITERAL: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING_LITERAL:
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_STRING_HEXADECIMAL: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING_HEXADECIMAL:
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_STRING: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING:
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_KW_TRUE:        // File Specifications: vedi su PDF3000_2008 a pag. 99
-		case T_KW_FALSE:       // File Specifications: vedi su PDF3000_2008 a pag. 99
-		case T_REAL_LITERAL:   // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_KW_TRUE:
+		case T_KW_FALSE:
+		case T_REAL_LITERAL:
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
@@ -24546,7 +22656,7 @@ int getObjStmDataFromDecodedStream(Params *pParams)
 		}
 		else
 		{
-			// >>> DUMP dei primi 100 byte per capire cosa c'e' dentro <<<
+			// >>> DUMP dei primi 100 byte per capire cosa c'è dentro <<<
 			uint32_t dumpLen = pParams->currentObjStm.nDecodedStreamSize < 100 ? pParams->currentObjStm.nDecodedStreamSize : 100;
 
 			wprintf(L"\n=== getObjStmDataFromDecodedStream DUMP ===\n");
@@ -24584,18 +22694,6 @@ int getObjStmDataFromDecodedStream(Params *pParams)
 			retValue = 0;
 			goto uscita;
 		}
-		/*
-		else
-		{
-			snprintf(pParams->szError, 8192, "ERRORE getObjStmDataFromDecodedStream(num = %u, gen = %u): atteso T_INT_LITERAL o SPAZIO; trovato carattere(hex) %X.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->currentObjStm.pszDecodedStream[k]);
-			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): atteso T_INT_LITERAL o SPAZIO; trovato carattere(hex) %X.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->currentObjStm.pszDecodedStream[k]);
-			//fwprintf(pParams->fpErrors, L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): atteso T_INT_LITERAL o SPAZIO; trovato carattere(hex) %X.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->currentObjStm.pszDecodedStream[k]);
-			PrintThisObject(pParams, pParams->nCurrentParsingObj, 1, 0, pParams->fpErrors);
-			retValue = 0;
-			goto uscita;
-		}
-		*/
 	}
 
 	if ( objNum != 0 || objOffset != 0 )
@@ -24666,8 +22764,6 @@ int getObjStmDataFromDecodedStream(Params *pParams)
 		//PrintThisObject(pParams, pParams->myObjsTable[pArray[i].Number]->Obj.Number, 0, 0, NULL);
 	}
 	//wprintf(L"\nFine pArray\n\n");
-
-
 
 uscita:
 
@@ -24846,19 +22942,6 @@ int stmobjbody(Params *pParams)
 
 	pParams->CurrentContent.Offset = pParams->nNumBytesReadFromCurrentStream;
 	pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamOffset = pParams->CurrentContent.Offset;
-	//pParams->CurrentContent.Offset = pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamOffset;
-	/*
-	if ( pParams->CurrentContent.LengthFromPdf != pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamLength )
-	{
-		fwprintf(pParams->fpErrors, L"WARNING stmobjbody(OBJ num = %lu, gen = %lu): pParams->CurrentContent.LengthFromPdf = %lu differs from pParams->myObjsTable[%d]->Obj.StreamLength = %lu\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->CurrentContent.LengthFromPdf, pParams->nCurrentParsingObj, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamLength);
-		//PrintThisObject(pParams, pParams->nCurrentParsingObj, 0, 0, pParams->fpErrors);
-		//pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamLength = pParams->CurrentContent.LengthFromPdf;
-	}
-	*/
-	//pParams->CurrentContent.LengthFromPdf = pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.StreamLength;
-
-
-
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STMOBJ)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -25369,30 +23452,30 @@ int stmobjkeyvalueinternal(Params *pParams)
 
 			GetNextToken(pParams);
 			break;
-		case T_STRING_LITERAL: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING_LITERAL: 
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_STRING_HEXADECIMAL: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING_HEXADECIMAL:
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_STRING: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING:
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_KW_TRUE:        // File Specifications: vedi su PDF3000_2008 a pag. 99
-		case T_KW_FALSE:       // File Specifications: vedi su PDF3000_2008 a pag. 99
-		case T_REAL_LITERAL:   // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_KW_TRUE:
+		case T_KW_FALSE:
+		case T_REAL_LITERAL:
 #if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 #endif
@@ -25504,29 +23587,16 @@ int cot(Params *pParams)
 	//if ( !match(pParams, T_DICT_BEGIN, "cot") )
 	//	return 1;   // OBJ_TYPE_IN_USE
 
-/*
- * Un object stream deve avere un dizionario come corpo.
- * Se il corpo inizia con un altro tipo di oggetto, non
- * è un object stream: lo lasciamo classificato IN_USE.
- *
- * Non usare match() per questo controllo preliminare,
- * perché in caso di mancata corrispondenza genera errori
- * diagnostici e tenta di stampare l'oggetto.
- */
 	if ( T_DICT_BEGIN != pParams->myToken.Type )
 		return 1;   // OBJ_TYPE_IN_USE
 
-/* Il token è T_DICT_BEGIN: consumiamo '<<' e proseguiamo. */
 	GetNextToken(pParams);
-
 
 	retValue = cot_dictbody(pParams);
 	if ( !retValue )
 		goto uscita;
 	if ( retValue > 1 )
 		goto uscita;
-
-
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_COT)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -25717,34 +23787,11 @@ void setPredefFontsWidthsArray(Params *pParams)
 {
 	int k;
 
-	//for ( k = 0; k < pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->WidthsArraySize; k++ )
-	//{
-	//	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[k] = pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->MissingWidth;
-	//}
-
 	switch ( pParams->nCurrentBaseFont )
 	{
 		case BASEFONT_Courier:
-			//for ( k = pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->FirstChar; k <= pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->LastChar; k++ )
-			//{
-			//	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[k] = 0.600;
-			//}
-			//pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = 0.600;
-			//break;
 		case BASEFONT_Courier_Bold:
-			//for ( k = pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->FirstChar; k <= pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->LastChar; k++ )
-			//{
-			//	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[k] = 0.600;
-			//}
-			//pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = 0.600;
-			//break;
 		case BASEFONT_Courier_BoldOblique:
-			//for ( k = pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->FirstChar; k <= pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->LastChar; k++ )
-			//{
-			//	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[k] = 0.600;
-			//}
-			//pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontSpaceWidth = 0.600;
-			//break;
 		case BASEFONT_Courier_Oblique:
 			for ( k = pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->FirstChar; k <= pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->LastChar; k++ )
 			{
@@ -26165,7 +24212,7 @@ void set_Helvetica_BoldOblique(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 0.975; // at ; B 186 -19 954 737 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[65] = 0.722; // A ; B 20 0 702 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[66] = 0.722; // B ; B 76 0 764 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[67] = 0.722; // pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[; B 107 -19 789 737 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[67] = 0.722; // 
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[68] = 0.722; // D ; B 76 0 777 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[69] = 0.667; // E ; B 76 0 757 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[70] = 0.611; // F ; B 76 0 740 718 ;

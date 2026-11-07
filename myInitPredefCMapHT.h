@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -20,16 +20,16 @@
    along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef	__MY_INIT__PREDEFINED_CMAP_HASHTABLE_H
-#define	__MY_INIT__PREDEFINED_CMAP_HASHTABLE_H
+#ifndef	MY_INIT__PREDEFINED_CMAP_HASHTABLE_INCLUDED
+#define	MY_INIT__PREDEFINED_CMAP_HASHTABLE_INCLUDED
 
 #ifdef __cplusplus
 #  define BEGIN_C_DECLS extern "C" {
 #  define END_C_DECLS   }
-#else /* !__cplusplus */
+#else // !__cplusplus 
 #  define BEGIN_C_DECLS
 #  define END_C_DECLS
-#endif /* __cplusplus */
+#endif // __cplusplus 
 
 //#include "scanner.h"
 
@@ -96,4 +96,4 @@ int CMapHT_KSCpc_EUC_H(Params *pParams);
 
 END_C_DECLS
 
-#endif /* __MY_INIT__PREDEFINED_CMAP_HASHTABLE_H */
+#endif // MY_INIT__PREDEFINED_CMAP_HASHTABLE_INCLUDED

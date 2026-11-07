@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -25,10 +25,9 @@
 #include <math.h>
 #include <string.h>
 
-/*
-#include "mypdfsearch.h"
-#include "scanner.h"
-*/
+
+//#include "mypdfsearch.h"
+//#include "scanner.h"
 #include "parser.h"
 //#include "mydecode.h"
 
@@ -38,18 +37,15 @@ int InitializeUnicodeArray(Params *pParams)
 
 	pParams->dimCustomizedFont_CharSet = 16729;
 
-	//pParams->pArrayUnicode = (wchar_t*)malloc(pParams->dimCustomizedFont_CharSet * sizeof(wchar_t));
-	//pParams->pArrayUnicode = (wchar_t*)malloc(0xFFFF * sizeof(wchar_t));
 	pParams->pArrayUnicode = (wchar_t*)malloc(0x10000 * sizeof(wchar_t));
 	if ( NULL == pParams->pArrayUnicode )
 	{
 		snprintf(pParams->szError, 4096, "ERRORE InitializeUnicodeArray: impossibile allocare la memoria per pParams->pArrayUnicode\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//fwprintf(pParams->fpErrors, L"ERRORE InitializeUnicodeArray: impossibile allocare la memoria per pParams->pArrayUnicode\n");
 		return 0;
 	}
 
-	// >>> NUOVO: allocazione sequences (array parallelo di puntatori) <<<
+	// allocazione sequences (array parallelo di puntatori)
 	pParams->sequences = (wchar_t**)calloc(0x10000, sizeof(wchar_t*));
 	if ( NULL == pParams->sequences )
 	{
@@ -60,15 +56,11 @@ int InitializeUnicodeArray(Params *pParams)
 		return 0;
 	}
 
-	//pParams->paCustomizedFont_CharSet = (wchar_t*)malloc(pParams->dimCustomizedFont_CharSet * sizeof(wchar_t));
-	//pParams->paCustomizedFont_CharSet = (wchar_t*)malloc(0xFFFF * sizeof(wchar_t));
 	pParams->paCustomizedFont_CharSet = (wchar_t*)malloc(0x10000 * sizeof(wchar_t));
 	if ( NULL == pParams->paCustomizedFont_CharSet )
 	{
 		snprintf(pParams->szError, 4096, "ERRORE InitializeUnicodeArray: impossibile allocare la memoria per pParams->paCustomizedFont_CharSet\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-
-		//fwprintf(pParams->fpErrors, L"ERRORE InitializeUnicodeArray: impossibile allocare la memoria per pParams->paCustomizedFont_CharSet\n");
 
 		free(pParams->pArrayUnicode);
 		pParams->pArrayUnicode = NULL;
@@ -30786,11 +30778,6 @@ void InitializeCharSetArrays(Params *pParams)
 	MakeDifferencesArrayCodes(pParams);
 
 	MakeMacExpertArrayCodes(pParams);
-
-	//for ( k = 0; k < 256; k++ )
-	//{
-	//	pParams->paCustomizedFont_CharSet[k] = 0;
-	//}
 }
 
 void MakeDifferencesArrayCodes(Params *pParams)
@@ -31021,9 +31008,6 @@ void MakeDifferencesArrayCodes(Params *pParams)
 	pParams->aSTD_CharSet[0370]  =  (int)L'ł';   // lslash
 	pParams->aMAC_CharSet[0233]  =  (int)L'ł';   //
 
-	//pParams->aSTD_CharSet[0305]  =  0xC2AF; // (int)L'̄ '  // macron
-	//pParams->aMAC_CharSet[0370]  =  0xC2AF; // (int)L'̄ '
-
 	pParams->aSTD_CharSet[0305]  =  0x00AF; // (int)L'̄ '  // macron
 	pParams->aMAC_CharSet[0370]  =  0x00AF; // (int)L'̄ '
 
@@ -31138,6 +31122,7 @@ void MakeDifferencesArrayCodes(Params *pParams)
 void MakeMacExpertArrayCodes(Params *pParams)
 {
 	// http://www.fileformat.info/info/unicode/char/1d01/index.htm
+	
 	pParams->aMACEXP_CharSet[0276]  =  (int)L'ᴁ';   // AEsmall
 
 	pParams->aMACEXP_CharSet[0]  =  (int)L'ɶ';   // OEsmall

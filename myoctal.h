@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -20,11 +20,11 @@
    along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __MYOCTAL__
-#define __MYOCTAL__
+#ifndef MYOCTAL_INCLUDED
+#define MYOCTAL_INCLUDED
 
 #include "mypdfsearch.h"
 
 int GetOctalChar(unsigned char c1, unsigned char c2, unsigned char c3, unsigned char *pChar, int *bOctalOverflow);
 
-#endif /* __MYOCTAL__ */
+#endif // MYOCTAL_INCLUDED

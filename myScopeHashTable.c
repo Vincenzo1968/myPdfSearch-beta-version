@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -597,7 +597,7 @@ void scopeFree(Scope* pScope)
 
 int scopeFind(Scope* pScope, void* pKey, uint32_t keysize, void* pData, uint32_t* datasize, uint32_t* bContentAlreadyProcessed, int bOnlyTop)
 {
-	int retValue = -1; // non trovato
+	int retValue = -1; // NOT FOUND - NON TROVATO
 
 	HashTable_t** pHT = NULL;
 	int x;

@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -20,8 +20,8 @@
    along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef __MYDECODE__
-#define __MYDECODE__
+#ifndef MYDECODE_INCLUDED
+#define MYDECODE_INCLUDED
 
 #include <stdio.h>
 #include <string.h>
@@ -32,7 +32,6 @@
 #include <locale.h>
 #include <wchar.h>
 #include "zlib.h"
-//#include "mycontentqueuelist.h"
 #include "scanner.h"
 
 #define BYTE uint8_t
@@ -92,4 +91,4 @@ int PaethPredictor(int a, int b, int c);
 unsigned char* ManageDecodeParams(const unsigned char *pszDecodedStream, unsigned long int DecodedStreamSize, unsigned char *outBuf, unsigned long int *pOutBufSize, int predictor, int columns, int colors, int bits);
 unsigned char* DecodeStream(unsigned char *pszEncodedStream, unsigned long int EncodedStreamSize, MyContent_t *pContent, FILE *fpErrors, unsigned char *pszDecodedStream, unsigned long int *pDecodedStreamSize);
 
-#endif /* __MYDECODE__ */
+#endif // MYDECODE_INCLUDED

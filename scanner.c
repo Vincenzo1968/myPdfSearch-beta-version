@@ -1,5 +1,5 @@
 /*
-   Copyright (C) 2019 Vincenzo Lo Cicero
+   Copyright (C) 2026 Vincenzo Lo Cicero
 
    Author: Vincenzo Lo Cicero.
    e-mail: vincenzolocicero68@gmail.com
@@ -34,7 +34,6 @@
 #include "myoctal.h"
 #include "scanner.h"
 
-
 #define MY_BYTE  uint8_t
 #define MY_WORD  uint16_t
 #define MY_DWORD uint32_t
@@ -49,19 +48,16 @@
 #define MY_LOBYTE(w) ((MY_BYTE)((MY_DWORD)(w) & 0xFF))
 #define MY_HIBYTE(w) ((MY_BYTE)((MY_DWORD)(w) >> 8))
 
+// typedef uint32_t* MY_DWORD_PTR;
 
-/*
-typedef uint32_t* MY_DWORD_PTR;
+// #define MY_MAKEWORD(a, b) ((MY_WORD)(((MY_BYTE)((MY_DWORD_PTR)(a) & 0xff)) | ((MY_WORD)((MY_BYTE)((MY_DWORD_PTR)(b) & 0xff))) << 8))
 
-#define MY_MAKEWORD(a, b) ((MY_WORD)(((MY_BYTE)((MY_DWORD_PTR)(a) & 0xff)) | ((MY_WORD)((MY_BYTE)((MY_DWORD_PTR)(b) & 0xff))) << 8))
+// #define MY_MAKELONG(a, b) ((MY_LONG)(((MY_WORD)((MY_DWORD_PTR)(a) & 0xffff)) | ((MY_DWORD)((MY_WORD)((MY_DWORD_PTR)(b) & 0xffff))) << 16))
 
-#define MY_MAKELONG(a, b) ((MY_LONG)(((MY_WORD)((MY_DWORD_PTR)(a) & 0xffff)) | ((MY_DWORD)((MY_WORD)((MY_DWORD_PTR)(b) & 0xffff))) << 16))
-
-#define MY_LOWORD(l) ((MY_WORD)((MY_DWORD_PTR)(l) & 0xFFFF))
-#define MY_HIWORD(l) ((MY_WORD)((MY_DWORD_PTR)(l) >> 16))
-#define MY_LOBYTE(w) ((MY_BYTE)((MY_DWORD_PTR)(w) & 0xFF))
-#define MY_HIBYTE(w) ((MY_BYTE)((MY_DWORD_PTR)(w) >> 8))
-*/
+// #define MY_LOWORD(l) ((MY_WORD)((MY_DWORD_PTR)(l) & 0xFFFF))
+// #define MY_HIWORD(l) ((MY_WORD)((MY_DWORD_PTR)(l) >> 16))
+// #define MY_LOBYTE(w) ((MY_BYTE)((MY_DWORD_PTR)(w) & 0xFF))
+// #define MY_HIBYTE(w) ((MY_BYTE)((MY_DWORD_PTR)(w) >> 8))
 
 static int read_pdf_literal_string(const unsigned char *input, int *pIndex, unsigned char **outBytes, size_t *outLen)
 {
@@ -115,7 +111,7 @@ static int read_pdf_literal_string(const unsigned char *input, int *pIndex, unsi
                 case '\\': out = '\\'; break;
 
                 case '\r':
-                    /* continuazione di riga: \r[\n] rimosso */
+                    // continuazione di riga: \r[\n] rimosso 
                     cursor++;
                     if (input[cursor] == '\n')
                         cursor++;
@@ -123,7 +119,7 @@ static int read_pdf_literal_string(const unsigned char *input, int *pIndex, unsi
                     break;
 
                 case '\n':
-                    /* continuazione di riga: \n rimosso */
+                    // continuazione di riga: \n rimosso 
                     cursor++;
                     bEmit = 0;
                     break;
@@ -155,8 +151,8 @@ static int read_pdf_literal_string(const unsigned char *input, int *pIndex, unsi
                     }
                     else
                     {
-                        /* backslash davanti a carattere sconosciuto:
-                           il backslash si ignora, si tiene il carattere */
+                        // backslash davanti a carattere sconosciuto:
+                        // il backslash si ignora, si tiene il carattere 
                         out = ch;
                     }
                     break;
@@ -352,7 +348,6 @@ int myCodepointToUtf8(uint32_t codepoint, uint32_t *pUtf8)
 	}
 
 	bytes[0] |= (uint8_t) codepoint;
-
 
 	*pUtf8 = 0;
 
@@ -999,9 +994,7 @@ static int hex_digit_value(unsigned char c)
     return -1;
 }
 
-/*
- * Riconosce i caratteri di spaziatura PDF più comuni.
- */
+// Riconosce i caratteri di spaziatura PDF più comuni.
 static int is_pdf_whitespace(unsigned char c)
 {
     return c == ' '  ||
@@ -1011,21 +1004,16 @@ static int is_pdf_whitespace(unsigned char c)
            c == '\f';
 }
 
-/*
- * Decodifica una stringa esadecimale PDF.
- *
- * All'ingresso, *pIndex punta al primo carattere
- * successivo al delimitatore '<'.
- *
- * All'uscita:
- *   - *outBytes contiene i byte decodificati;
- *   - *outLen contiene la lunghezza in byte;
- *   - *pIndex punta al carattere successivo a '>'.
- *
- * Restituisce 1 in caso di successo, 0 in caso di errore.
- *
- * Non aggiunge un terminatore NUL ai dati binari.
- */
+// Decodifica una stringa esadecimale PDF.
+// All'ingresso, *pIndex punta al primo carattere
+// successivo al delimitatore '<'.
+// All'uscita:
+//   - *outBytes contiene i byte decodificati;
+//   - *outLen contiene la lunghezza in byte;
+//   - *pIndex punta al carattere successivo a '>'.
+// Restituisce 1 in caso di successo, 0 in caso di errore.
+// Non aggiunge un terminatore NUL ai dati binari.
+
 static int read_pdf_hex_string(
     const unsigned char *input,
     int *pIndex,
@@ -1052,10 +1040,8 @@ static int read_pdf_hex_string(
     *outBytes = NULL;
     *outLen = 0;
 
-    /*
-     * Prima passata: verifica il contenuto e conta
-     * le cifre esadecimali fino al delimitatore '>'.
-     */
+    // Prima passata: verifica il contenuto e conta
+    // le cifre esadecimali fino al delimitatore '>'.
     cursor = *pIndex;
 
     while (input[cursor] != '\0' && input[cursor] != '>')
@@ -1071,33 +1057,27 @@ static int read_pdf_hex_string(
         hexDigits++;
     }
 
-    /*
-     * La stringa deve terminare con '>'.
-     */
+    // La stringa deve terminare con '>'.
     if (input[cursor] != '>')
         return 0;
 
-    /*
-     * Due cifre formano un byte.
-     * Se le cifre sono dispari, l'ultima cifra viene
-     * completata a destra con uno zero, come previsto
-     * dalla sintassi delle stringhe esadecimali PDF.
-     */
+    
+    // Due cifre formano un byte.
+    // Se le cifre sono dispari, l'ultima cifra viene
+    // completata a destra con uno zero, come previsto
+    // dalla sintassi delle stringhe esadecimali PDF.
+    
     byteLen = hexDigits / 2 + hexDigits % 2;
 
-    /*
-     * Allochiamo almeno un byte anche per una stringa
-     * vuota, così NULL continua a indicare un errore
-     * oppure un buffer non ancora inizializzato.
-     */
+    // Allochiamo almeno un byte anche per una stringa
+    // vuota, così NULL continua a indicare un errore
+    // oppure un buffer non ancora inizializzato.
     buffer = (unsigned char *)malloc(byteLen > 0 ? byteLen : 1);
 
     if (buffer == NULL)
         return 0;
 
-    /*
-     * Seconda passata: converte le cifre in byte reali.
-     */
+    // Seconda passata: converte le cifre in byte reali.
     for (i = *pIndex; i < cursor; i++)
     {
         unsigned char ch = input[i];
@@ -1127,19 +1107,15 @@ static int read_pdf_hex_string(
         }
     }
 
-    /*
-     * Se rimane una sola cifra, completa il byte
-     * con uno zero come nibble meno significativo.
-     */
+    // Se rimane una sola cifra, completa il byte
+    // con uno zero come nibble meno significativo.
     if (highNibble >= 0)
         buffer[outPos++] = (unsigned char)(highNibble << 4);
 
     *outBytes = buffer;
     *outLen = outPos;
 
-    /*
-     * Salta anche il delimitatore finale '>'.
-     */
+    // Salta anche il delimitatore finale '>'.
     *pIndex = cursor + 1;
 
     return 1;
@@ -1504,9 +1480,6 @@ ciclo2:
 			}
 			break;
 		case 'E':
-			/* NON impostare isEncrypted qui: potrebbe essere /Extensions,
-			   /Encoding, /EmbeddedFiles o simili. */
-
 			c = szInput[index++];
 			if ( c != 'n' )
 			{
@@ -1612,7 +1585,6 @@ ciclo2:
 				goto ciclo2;
 			}
 
-			/* Solo ORA possiamo dire che il file e' cifrato. */
 			pParams->isEncrypted = 1;
 			myState = S_Encrypt;
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ReadTrailer_FN)
@@ -1945,21 +1917,13 @@ ciclo2:
             int bID0IsHex = 0;
             int bID1IsHex = 0;
 
-            /*
-             * All'ingresso, c puo' essere:
-             *   '['  se /ID e' seguito da spazio e poi '[';
-             *   '<'  se /ID e' seguito direttamente da '<' (i.e. /ID<...);
-             *   '('  se /ID e' seguito direttamente da '(' (i.e. /ID(...);
-             *   ' '  whitespace generico.
-             */
-
-            /* Salta whitespace iniziali. */
+            // Salta whitespace iniziali.
             while (is_pdf_whitespace(c))
                 c = szInput[index++];
 
             if (c == '[')
             {
-                /* /ID [ ... ]: consuma '[' e passa al primo carattere di ID0. */
+                // /ID [ ... ]: consuma '[' e passa al primo carattere di ID0. 
                 while (szInput[index] != '\0' && is_pdf_whitespace(szInput[index]))
                     index++;
 
@@ -1982,14 +1946,14 @@ ciclo2:
             }
             else if (c == '<')
             {
-                /* /ID<...: c e' gia' il '<' di ID0. */
+                // /ID<...: c e' gia' il '<' di ID0. 
                 if (szInput[index] == '<')
                     goto id_error;
                 bID0IsHex = 1;
             }
             else if (c == '(')
             {
-                /* /ID(...: c e' gia' il '(' di ID0. */
+                // /ID(...: c e' gia' il '(' di ID0. 
                 bID0IsHex = 0;
             }
             else
@@ -1997,7 +1961,7 @@ ciclo2:
                 goto id_error;
             }
 
-            /* Legge ID0. */
+            // Legge ID0. 
             if (bID0IsHex)
             {
                 if (!read_pdf_hex_string(szInput, &index, &id0, &lenID0))
@@ -2009,7 +1973,7 @@ ciclo2:
                     goto id_error;
             }
 
-            /* Whitespace tra ID[0] e ID[1]. */
+            // Whitespace tra ID[0] e ID[1]. 
             while (szInput[index] != '\0' &&
                    is_pdf_whitespace(szInput[index]))
                 index++;
@@ -2031,7 +1995,7 @@ ciclo2:
                 goto id_error;
             }
 
-            /* Legge ID1. */
+            // Legge ID1. 
             if (bID1IsHex)
             {
                 if (!read_pdf_hex_string(szInput, &index, &id1, &lenID1))
@@ -2043,7 +2007,7 @@ ciclo2:
                     goto id_error;
             }
 
-            /* Whitespace e ']' di chiusura. */
+            // Whitespace e ']' di chiusura. 
             while (szInput[index] != '\0' &&
                    is_pdf_whitespace(szInput[index]))
                 index++;
@@ -2051,9 +2015,9 @@ ciclo2:
             if (szInput[index] != ']')
                 goto id_error;
 
-            index++;    /* consuma ']' */
+            index++;    // consuma ']' 
 
-            /* Conserva la prima coppia incontrata. */
+            // Conserva la prima coppia incontrata. 
             if (pParams->myPdfTrailer.pID0Bytes == NULL &&
                 pParams->myPdfTrailer.pID1Bytes == NULL)
             {
@@ -2110,23 +2074,21 @@ ciclo2:
             free(id0);
             free(id1);
 
-            /* /ID e' indispensabile solo se (a) il file e' cifrato e
-               (b) non abbiamo ancora gli ID dal trailer principale.
-               Un /ID malformato in un trailer di revisione precedente
-               non deve far fallire il parsing. */
+            // /ID e' indispensabile solo se (a) il file e' cifrato e
+            // (b) non abbiamo ancora gli ID dal trailer principale.
+            // Un /ID malformato in un trailer di revisione precedente
+            // non deve far fallire il parsing.
             if (pParams->isEncrypted &&
                 pParams->myPdfTrailer.pID0Bytes == NULL &&
                 pParams->myPdfTrailer.pID1Bytes == NULL)
             {
-                snprintf(pParams->szError, sizeof(pParams->szError),
-                         "Errore ReadTrailerBody: array /ID non valido "
-                         "o incompleto.\n");
+                snprintf(pParams->szError, sizeof(pParams->szError), "Errore ReadTrailerBody: array /ID non valido o incompleto.\n");
                 myShowErrorMessage(pParams, pParams->szError, 1);
                 return 0;
             }
 
-            /* Se arriviamo qui, o non e' cifrato, o abbiamo gia' gli ID:
-               salta l'array /ID malformato e prosegui. */
+            // Se arriviamo qui, o non e' cifrato, o abbiamo gia' gli ID:
+            //   salta l'array /ID malformato e prosegui. 
             while (szInput[index] != '\0' &&
                    szInput[index] != ']' &&
                    !(szInput[index] == '>' && szInput[index + 1] == '>'))
@@ -2141,16 +2103,14 @@ ciclo2:
             }
             else if (szInput[index] == '>' && szInput[index + 1] == '>')
             {
-                /* c = '>' e index punta al secondo '>': il flusso
-                   esterno proseguira' in ciclo3. */
+                // c = '>' e index punta al secondo '>': il flusso
+                //   esterno proseguira' in ciclo3. 
                 index++;
                 c = '>';
             }
             else
             {
-                snprintf(pParams->szError, sizeof(pParams->szError),
-                         "Errore ReadTrailerBody: array /ID malformato "
-                         "e fine buffer inattesa.\n");
+                snprintf(pParams->szError, sizeof(pParams->szError), "Errore ReadTrailerBody: array /ID malformato e fine buffer inattesa.\n");
                 myShowErrorMessage(pParams, pParams->szError, 1);
                 return 0;
             }
@@ -2216,7 +2176,6 @@ ciclo4:
 
 	return 1;
 }
-
 
 int GetLenNextInput(Params *pParams, int startxref, int *len)
 {
@@ -3955,13 +3914,6 @@ unsigned char GetHexChar(unsigned char c1, unsigned char c2)
 
 void IgnoreStreamChars(Params *pParams)
 {
-	/*
-	Nel caso la funzione GetNextToken abbia impostato
-		pParams->blockCurPos--;
-	pParams->blockCurPos potrebbe trovarsi con un valore inferiore a 0.
-	In questo caso dobbiamo leggere il blocco precedente e impostare
-	pParams->blockCurPos a pParams->blockLen - 1.
-	*/
 	if ( pParams->blockCurPos < 0 )
 	{
 		if ( pParams->dimFile >= BLOCK_SIZE )
@@ -4036,13 +3988,6 @@ int IsDelimiterChar(unsigned char c)
 
 unsigned char ReadNextChar(Params *pParams)
 {
-	/*
-	Nel caso la funzione GetNextToken abbia impostato
-		pParams->blockCurPos--;
-	pParams->blockCurPos potrebbe trovarsi con un valore inferiore a 0.
-	In questo caso dobbiamo leggere il blocco precedente e impostare
-	pParams->blockCurPos = (pParams->blockLen + pParams->blockCurPos).
-	*/
 	if ( pParams->blockCurPos < 0 )
 	{
 		if ( pParams->dimFile >= BLOCK_SIZE )
@@ -4106,19 +4051,6 @@ unsigned char ReadNextChar(Params *pParams)
 
 	pParams->currentFileOffset++;
 
-	/*
-	//return pParams->myBlock[pParams->blockCurPos++];
-	if ( '\0' !=  pParams->myBlock[pParams->blockCurPos] )
-	{
-		return pParams->myBlock[pParams->blockCurPos++];
-	}
-	else
-	{
-		pParams->blockCurPos++;
-		return ' ';
-	}
-	*/
-
 	if ( pParams->bReadingStringState || '\0' != pParams->myBlock[pParams->blockCurPos] )
 	{
 		return pParams->myBlock[pParams->blockCurPos++];
@@ -4133,9 +4065,6 @@ unsigned char ReadNextChar(Params *pParams)
 void SetStringToken(Params *pParams, int k)
 {
 	pParams->myToken.Type = T_STRING;
-	//pParams->myToken.vString = (char*)malloc(sizeof(char) * k + sizeof(char));
-	//if (  pParams->myToken.vString != NULL )
-	//	strcpy(pParams->myToken.vString, pParams->lexeme);
 	pParams->myToken.vString = pParams->lexeme;
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_GetNextToken_FN)
@@ -4162,12 +4091,6 @@ void GetNextToken(Params *pParams)
 	int x;
 	int y;
 	int z;
-
-	//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-	//{
-	//	free(pParams->myToken.vString);
-	//	pParams->myToken.vString = NULL;
-	//}
 
 	pParams->bCurrTokenIsOperator = 0;
 
@@ -5282,9 +5205,6 @@ void GetNextToken(Params *pParams)
 				{
 					pParams->lexeme[k] = '\0';
 					pParams->myToken.Type = T_NAME;
-					//pParams->myToken.vString = (char*)malloc(sizeof(char) * k + sizeof(char));
-					//if (  pParams->myToken.vString != NULL )
-					//	strcpy(pParams->myToken.vString, pParams->lexeme);
 					pParams->myToken.vString = pParams->lexeme;
 
 					#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_GetNextToken_FN)
@@ -5974,19 +5894,11 @@ void GetNextToken(Params *pParams)
 					pParams->lexeme[k++] = c;
 				}
 				else if ( c == ' ' || c == '\t' || c == '\f' || c == '\0' || c == '\n' || c == '\r' || c == '\b' )
-				//else if ( c == '\n' || c == '\r' )
 				{
 					; // IGNORIAMO
 				}
 				else if ( c == '>' )
 				{
-					/*
-					if ( k % 2 > 0 )
-					{
-						k++;
-						pParams->lexeme[k] = '0';
-					}
-					*/
 					if ( k % 2 > 0 )
 					{
 						pParams->lexeme[k++] = '0';
@@ -6555,15 +6467,6 @@ void GetNextTokenLengthObj(Params *pParams)
 	int k = 0;
 	int nDelimChar;
 
-	//if ( (T_NAME == pParams->myTokenLengthObj.Type ||
-	// T_STRING == pParams->myTokenLengthObj.Type ||
-	// T_STRING_LITERAL == pParams->myTokenLengthObj.Type ||
-	// T_STRING_HEXADECIMAL == pParams->myTokenLengthObj.Type) && (NULL != pParams->myTokenLengthObj.vString) )
-	//{
-	//	free(pParams->myTokenLengthObj.vString);
-	//	pParams->myTokenLengthObj.vString = NULL;
-	//}
-
 	c = ReadNextCharLengthObj(pParams);
 	if ( pParams->myTokenLengthObj.Type == T_EOF )
 		return;
@@ -6828,12 +6731,6 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 	int x = 0;
 	int y = 0;
 	int z = 0;
-
-	//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
-	//{
-	//	free(pParams->myToken.vString);
-	//	pParams->myToken.vString = NULL;
-	//}
 
 	if ( pParams->blockCurPosToUnicode > pParams->blockLenToUnicode )
 	{
@@ -7127,9 +7024,6 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 						if ( k > 0 )
 						{
 							pParams->myToken.Type = T_STRING;
-							//pParams->myToken.vString = (char*)malloc(sizeof(char) * k + sizeof(char));
-							//if (  pParams->myToken.vString != NULL )
-							//	strcpy(pParams->myToken.vString, pParams->lexeme);
 							pParams->myToken.vString = pParams->lexeme;
 
 							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_GetNextTokenFromToUnicodeStream_FN)
@@ -7217,9 +7111,6 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 				{
 					pParams->lexeme[k] = '\0';
 					pParams->myToken.Type = T_NAME;
-					//pParams->myToken.vString = (char*)malloc(sizeof(char) * k + sizeof(char));
-					//if (  pParams->myToken.vString != NULL )
-					//	strcpy(pParams->myToken.vString, pParams->lexeme);
 					pParams->myToken.vString = pParams->lexeme;
 
 					#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_GetNextTokenFromToUnicodeStream_FN)
@@ -7288,9 +7179,6 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 							pParams->pEncodingString[k] = L'\0';
 							pParams->pUtf8String[k] = L'\0';
 							pParams->myToken.Type = T_STRING_LITERAL;
-							//pParams->myToken.vString = (char*)malloc(sizeof(char) * k + sizeof(char));
-							//if (  pParams->myToken.vString != NULL )
-							//	strcpy(pParams->myToken.vString, pParams->lexeme);
 							pParams->myToken.vString = pParams->lexeme;
 
 							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_GetNextTokenFromToUnicodeStream_FN)
@@ -7508,21 +7396,12 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 				{
 					pParams->lexeme[k++] = c;
 				}
-				//else if ( c == '\n' || c == '\r' )
 				else if ( c == ' ' || c == '\t' || c == '\f' || c == '\0' || c == '\n' || c == '\r' || c == '\b' )
 				{
 					; // IGNORIAMO
 				}
 				else if ( c == '>' )
 				{
-					/*
-					if ( k % 2 > 0 )
-					{
-						k++;
-						pParams->lexeme[k] = '0';
-					}
-					*/
-
 					if ( k % 2 > 0 )
 					{
 						pParams->lexeme[k++] = '0';
@@ -7668,9 +7547,6 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 					pParams->pUtf8String[z] = L'\0';
 					pParams->lexeme[k] = '\0';
 					pParams->myToken.Type = T_STRING_HEXADECIMAL;
-					//pParams->myToken.vString = (char*)malloc(sizeof(char) * k + sizeof(char));
-					//if (  pParams->myToken.vString != NULL )
-					//	strcpy(pParams->myToken.vString, pParams->lexeme);
 					pParams->myToken.vString = pParams->lexeme;
 
 					#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_GetNextTokenFromToUnicodeStream_FN)

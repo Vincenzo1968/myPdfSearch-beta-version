@@ -12507,12 +12507,97 @@ int ParseToUnicodeStream(Params *pParams, int objNum, unsigned char *pszDecodedS
 					fprintf(stderr, "\n[BFRANGE-ARRAY-BEGIN] OBJ=%d RANGE=%04X..%04X\n", objNum, (unsigned)bfRange1, (unsigned)bfRange2);
 					#endif
 
+					if ( bfRange1 <= 0xFFFF && bfRange2 <= 0xFFFF && bfRange2 >= bfRange1 )
+					{
+						uint32_t curCid = bfRange1;
+
+						GetNextTokenFromToUnicodeStream(pParams);   /* primo elemento array */
+
+						while ( T_STRING_HEXADECIMAL == pParams->myToken.Type && curCid <= bfRange2 )
+						{
+							size_t seqLen = 0;
+							wchar_t *seq = ParseUTF16BEHexToWcharSeq(pParams->myToken.vString, strnlen(pParams->myToken.vString, 1024), &seqLen);
+
+							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_TOUNICODE_STREAM)
+							if (curCid == 0x1AA5)
+							{
+								fprintf(stderr, "[BFRANGE-ARRAY] CID=%04X TOKEN=<%s> seqLen=%zu", (unsigned)curCid, pParams->myToken.vString, seqLen);
+								if (seq != NULL && seqLen > 0)
+									fprintf(stderr, " Unicode=U+%04X", (unsigned)seq[0]);
+								fprintf(stderr, "\n");
+							}
+							#endif
+
+							if ( seq != NULL && seqLen > 0 )
+							{
+								if ( seqLen == 1 && (seq[0] == 0xFFFF || seq[0] == 0xFFFE) )
+									seq[0] = L' ';
+
+								if ( pParams->sequences != NULL && pParams->sequences[curCid] != NULL )
+								{
+									free(pParams->sequences[curCid]);
+									pParams->sequences[curCid] = NULL;
+								}
+
+								pParams->paCustomizedFont_CharSet[curCid] = seq[0];
+
+								if ( seqLen > 1 )
+									pParams->sequences[curCid] = seq;
+								else
+								{
+									free(seq);
+									seq = NULL;
+								}
+							}
+							else
+							{
+								pParams->paCustomizedFont_CharSet[curCid] = 0xFFFD;
+								if (seq) { free(seq); seq = NULL; }
+							}
+
+							curCid++;
+							GetNextTokenFromToUnicodeStream(pParams);
+						}
+
+						bfRange1 = 0; bfRange2 = 0; bfRange3 = 0;
+						nCountBfRangeValues = 0;
+						// bBfRangeState NON va azzerato qui: siamo ancora dentro
+						// beginbfrange...endbfrange e potrebbero esserci altre
+						// entry (es. <1AA4> <1AA5> [<65E2> <65E5>]).
+						// Va azzerato solo in T_CONTENT_OP_endbfrange.
+
+						// Il token corrente e' gia' quello successivo all'array
+						// (tipicamente ']' oppure il prossimo bfRange1).
+						// Saltiamo il GetNextTokenFromToUnicodeStream in fondo al loop.
+						continue;
+					}
+					else
+					{
+						wprintf(L"ParseToUnicodeStream: BFRANGE array con range non valido [%u..%u], salto.\n", bfRange1, bfRange2);
+
+						// Range non valido: per evitare loop infiniti azzeriamo
+						// lo stato. Le eventuali entry successive nello stesso
+						// blocco andranno perse, ma il PDF e' malformato.
+						bfRange1 = 0; bfRange2 = 0; bfRange3 = 0;
+						nCountBfRangeValues = 0;
+						bBfRangeState = 0;
+					}
+				}
+				break;
+			/*
+			case T_QOPAREN:
+				if ( bBfRangeState )
+				{
+					#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_TOUNICODE_STREAM)
+					fprintf(stderr, "\n[BFRANGE-ARRAY-BEGIN] OBJ=%d RANGE=%04X..%04X\n", objNum, (unsigned)bfRange1, (unsigned)bfRange2);
+					#endif
+
 					// Siamo in bfrange con forma <lo> <hi> [ <dst1> <dst2> ... ]
 					// bfRange1 e bfRange2 sono gia' stati letti; ora leggiamo l'array.
 					if ( bfRange1 <= 0xFFFF && bfRange2 <= 0xFFFF && bfRange2 >= bfRange1 )
 					{
 						uint32_t curCid = bfRange1;
-						GetNextTokenFromToUnicodeStream(pParams);   /* primo elemento array */
+						GetNextTokenFromToUnicodeStream(pParams);   // primo elemento array 
 						while ( T_STRING_HEXADECIMAL == pParams->myToken.Type && curCid <= bfRange2 )
 						{
 							size_t seqLen = 0;
@@ -12574,6 +12659,7 @@ int ParseToUnicodeStream(Params *pParams, int objNum, unsigned char *pszDecodedS
 					bBfRangeState = 0;
 				}
 				break;
+			*/
 			case T_ERROR:
 			case T_VOID_STRING:
 				retValue = 0;

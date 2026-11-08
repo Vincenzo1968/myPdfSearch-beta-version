@@ -532,8 +532,6 @@ int mySplitWords(Params *pParams, wchar_t *pwszOption)
     size_t normalizedLength = 0;
 
     wchar_t c;
-    wchar_t wszTemp[MAX_LEN_STR + 1];
-    wchar_t cPrevAsian = L'\0';
 
     wchar_t *pwszNormalizedOption = NULL;
 
@@ -574,14 +572,14 @@ int mySplitWords(Params *pParams, wchar_t *pwszOption)
 
     // ============================================================
     // PASSAGGIO 2: suddivisione in parole e token CJK.
-    //
-    // Per le run CJK: emettiamo il singolo carattere e il bigramma
-    // (non la run completa). Cosi' la ricerca AND trova sia le run
-    // esatte sia le run piu' lunghe che contengono la parola cercata.
     // ============================================================
 
     {
+        wchar_t wszTemp[MAX_LEN_STR + 1];
+        wchar_t wszAsianRun[MAX_LEN_STR + 1];
         int y = 0;
+        int idxAsianRun = 0;
+        wchar_t cPrevAsian = L'\0';
 
         while ( 1 )
         {
@@ -605,7 +603,7 @@ int mySplitWords(Params *pParams, wchar_t *pwszOption)
                         y = 0;
                     }
 
-                    // Emette il singolo carattere come token.
+                    // 1. Emette il singolo carattere.
                     wszTemp[0] = cLower;
                     wszTemp[1] = L'\0';
                     if ( !AppendWordToSearchArray(pParams, wszTemp, 1) )
@@ -614,7 +612,7 @@ int mySplitWords(Params *pParams, wchar_t *pwszOption)
                         goto uscita;
                     }
 
-                    // Emette il bigramma (carattere precedente + corrente).
+                    // 2. Emette il bigramma.
                     if ( cPrevAsian != L'\0' )
                     {
                         wszTemp[0] = cPrevAsian;
@@ -627,11 +625,28 @@ int mySplitWords(Params *pParams, wchar_t *pwszOption)
                         }
                     }
 
+                    // 3. Accumula nella run completa.
+                    if ( idxAsianRun < MAX_LEN_STR )
+                    {
+                        wszAsianRun[idxAsianRun++] = cLower;
+                        wszAsianRun[idxAsianRun] = L'\0';
+                    }
+
                     cPrevAsian = cLower;
                 }
                 else
                 {
-                    // Carattere occidentale: reset dello stato CJK.
+                    // Carattere occidentale: flush della run CJK e reset.
+                    if ( idxAsianRun > 0 )
+                    {
+                        if ( !AppendWordToSearchArray(pParams, wszAsianRun, (size_t)idxAsianRun) )
+                        {
+                            retValue = 0;
+                            goto uscita;
+                        }
+                        idxAsianRun = 0;
+                    }
+
                     if ( cPrevAsian != L'\0' )
                     {
                         cPrevAsian = L'\0';
@@ -644,7 +659,17 @@ int mySplitWords(Params *pParams, wchar_t *pwszOption)
             }
             else
             {
-                // Separatore o fine stringa: flush della parola occidentale.
+                // Separatore o fine stringa: flush di entrambi i buffer.
+                if ( idxAsianRun > 0 )
+                {
+                    if ( !AppendWordToSearchArray(pParams, wszAsianRun, (size_t)idxAsianRun) )
+                    {
+                        retValue = 0;
+                        goto uscita;
+                    }
+                    idxAsianRun = 0;
+                }
+
                 if ( y > 0 && cPrevAsian == L'\0' )
                 {
                     wszTemp[y] = L'\0';

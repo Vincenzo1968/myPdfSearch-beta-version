@@ -12487,16 +12487,6 @@ int ParseToUnicodeStream(Params *pParams, int objNum, unsigned char *pszDecodedS
 							size_t seqLen = 0;
 							wchar_t *seq = ParseUTF16BEHexToWcharSeq(pParams->myToken.vString, strnlen(pParams->myToken.vString, 1024), &seqLen);
 
-							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_TOUNICODE_STREAM)
-							if (curCid == 0x1AA5)
-							{
-								fprintf(stderr, "[BFRANGE-ARRAY] CID=%04X TOKEN=<%s> seqLen=%zu", (unsigned)curCid, pParams->myToken.vString, seqLen);
-								if (seq != NULL && seqLen > 0)
-									fprintf(stderr, " Unicode=U+%04X", (unsigned)seq[0]);
-								fprintf(stderr, "\n");
-							}
-							#endif
-
 							if ( seq != NULL && seqLen > 0 )
 							{
 								if ( seqLen == 1 && (seq[0] == 0xFFFF || seq[0] == 0xFFFE) )

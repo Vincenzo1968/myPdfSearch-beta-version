@@ -1266,39 +1266,45 @@ static int ReadPasswordFromTerminal(char *pszPassword, size_t capacity, size_t *
     return 1;
 }
 
-// Dichiarazione (se la funzione ReadPasswordFromTerminal è in un altro file,
-// basta includere il suo header. Altrimenti incolla qui la sua implementazione).
-// Nota: se era static in parser.c, ora deve essere visibile in main.c.
-
 static int MyConsolePasswordCallback(const char *pdf_filename,
                                      const char *error_msg,
                                      char *out_password,
                                      size_t max_len,
                                      size_t *out_len)
 {
-    // Mostra l'eventuale errore del tentativo precedente
-    if (error_msg != NULL)
+    // Se stdin non e' un terminale interattivo, non c'e' modo di
+    // chiedere una password. Annulla subito, senza prompt.
+    // Questo copre la modalita' BATCH (es. `mypdfsearch ... < /dev/null`,
+    // esecuzione da pipe, cron, script di test).
+#if !defined(_WIN64) && !defined(_WIN32)
+    if ( !isatty(STDIN_FILENO) )
     {
-        fprintf(stderr, "%s\n", error_msg);
+        if ( error_msg != NULL )
+            fprintf(stderr, "%s\n", error_msg);
+        return 0;
     }
+#else
+    if ( !_isatty(_fileno(stdin)) )
+    {
+        if ( error_msg != NULL )
+            fprintf(stderr, "%s\n", error_msg);
+        return 0;
+    }
+#endif
 
-    // Mostra il prompt su stderr (non bufferizzato)
+    if ( error_msg != NULL )
+        fprintf(stderr, "%s\n", error_msg);
+
     fprintf(stderr, "Inserisci la password utente per '%s' (invio a vuoto per annullare): ", pdf_filename);
     fflush(stderr);
 
-    // Legge la password nascondendo l'input
-    if (!ReadPasswordFromTerminal(out_password, max_len, out_len))
-    {
-        return 0; // Fallimento lettura -> annulla
-    }
-
-    // Se l'utente ha premuto solo Invio (stringa vuota), annulla
-    if (*out_len == 0)
-    {
+    if ( !ReadPasswordFromTerminal(out_password, max_len, out_len) )
         return 0;
-    }
 
-    return 1; // Successo
+    if ( *out_len == 0 )
+        return 0;
+
+    return 1;
 }
 
 #if defined(__linux__)

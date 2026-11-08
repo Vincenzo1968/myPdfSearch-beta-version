@@ -5296,13 +5296,11 @@ void GetNextToken(Params *pParams)
 						pParams->lexeme[k++] = c;
 					}
 
-					// Da qui in poi lascia invariato il tuo codice.
-
 					if ( c == ')' )
 					{
-						pParams->nStackStringOpenParen--; // POP
+						pParams->nStackStringOpenParen = 0;
 
-						if ( pParams->nStackStringOpenParen <= 0 )
+						if ( 1 )
 						{
 							pParams->lexeme[--k] = '\0';
 
@@ -5640,16 +5638,16 @@ void GetNextToken(Params *pParams)
 
 							return;
 						}
-						else
-						{
-							pParams->nStackStringOpenParen--; // POP
-						}
+						//else
+						//{
+						//	pParams->nStackStringOpenParen--; // POP
+						//}
 					}
 
-					if ( c == '(' )
-					{
-						pParams->nStackStringOpenParen++; // PUSH
-					}
+					//if ( c == '(' )
+					//{
+					//	pParams->nStackStringOpenParen++; // PUSH
+					//}
 				}
 				else
 				{

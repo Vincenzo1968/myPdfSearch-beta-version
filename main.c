@@ -490,19 +490,6 @@ static int IsWordSeparator(wchar_t c)
     return 0;
 }
 
-#ifndef IS_ASIAN_SCRIPT
-#define IS_ASIAN_SCRIPT(c) ( \
-    ((c) >= 0x3040 && (c) <= 0x309F) || /* Hiragana */ \
-    ((c) >= 0x30A0 && (c) <= 0x30FF) || /* Katakana */ \
-    ((c) >= 0x3400 && (c) <= 0x4DBF) || /* CJK Extension A */ \
-    ((c) >= 0x4E00 && (c) <= 0x9FFF) || /* CJK Unified Ideographs */ \
-    ((c) >= 0xAC00 && (c) <= 0xD7AF) || /* Hangul Syllables */ \
-    ((c) >= 0x20000 && (c) <= 0x2FA1F) || /* CJK Extension B-F */ \
-    ((c) >= 0x0E00 && (c) <= 0x0E7F)    /* Thai */ \
-)
-#endif
-
-
 int mySplitWords(Params *pParams, wchar_t *pwszOption)
 {
     int retValue = 1;
@@ -1989,6 +1976,10 @@ void PrintHardwareInfo(void)
 // IMPORTANTE,  ATTENZIONE!!!
 // compilare su Windows con MINGW64, richiede di specificare '-liconv' alla fine, dopo '-lz'
 // altrimenti il linker dà errore.
+
+// ./configure CFLAGS="-DMYPDFSEARCH_SHOW_TIME=1"
+// make
+// sudo make install
 
 int main(int argc, char **argv)
 {

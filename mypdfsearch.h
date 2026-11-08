@@ -47,6 +47,22 @@
 
 #define UNUSED(x) (void)(x)
 
+// Range degli script CJK gestiti con tokenizzazione a bigrammi.
+// NOTA: il Thai (U+0E00 - U+0E7F) e' stato rimosso intenzionalmente,
+// perche' il Thai separa le parole con spazi e va gestito nel ramo
+// "occidentale" (che a sua volta va esteso con il range Thai, vedi sotto).
+// Il "rejoining" verticale piu' sotto usa questo stesso macro, quindi
+// anche quella logica automaticamente non tocca piu' il Thai.
+#ifndef IS_ASIAN_SCRIPT
+#define IS_ASIAN_SCRIPT(c) ( \
+    ((c) >= 0x3040 && (c) <= 0x309F) || \
+    ((c) >= 0x30A0 && (c) <= 0x30FF) || \
+    ((c) >= 0x3400 && (c) <= 0x4DBF) || \
+    ((c) >= 0x4E00 && (c) <= 0x9FFF) || \
+    ((c) >= 0xAC00 && (c) <= 0xD7AF) || \
+    ((c) >= 0x20000 && (c) <= 0x2FA1F)    \
+)
+#endif
 
 typedef struct tagFilesList
 {

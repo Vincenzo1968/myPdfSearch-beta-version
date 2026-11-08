@@ -22,6 +22,7 @@
 
 #include "myUnicodeNFC.h"
 #include "unicode_nfc_data.h"
+#include "unicode_nfkc_arabic.h"
 
 #include <stdint.h>
 #include <stdlib.h>
@@ -87,6 +88,43 @@ static int myNfcAppend(MyNfcBuffer *buffer, uint32_t cp)
     if (!myNfcReserve(buffer, 1u))
         return 0;
     buffer->data[buffer->length++] = cp;
+    return 1;
+}
+
+static const MyNfkcArabicEntry *myNfkcArabicFind(uint32_t cp)
+{
+    size_t low = 0;
+    size_t high = my_nfkc_arabic_count;
+
+    while (low < high) {
+        size_t mid = low + (high - low) / 2u;
+        if (my_nfkc_arabic[mid].codepoint < cp)
+            low = mid + 1u;
+        else
+            high = mid;
+    }
+
+    if (low < my_nfkc_arabic_count &&
+        my_nfkc_arabic[low].codepoint == cp)
+        return &my_nfkc_arabic[low];
+
+    return NULL;
+}
+
+static int myNfkcArabicDecompose(uint32_t cp, MyNfcBuffer *buffer)
+{
+    const MyNfkcArabicEntry *entry = myNfkcArabicFind(cp);
+    uint32_t i;
+
+    if (entry == NULL)
+        return 0;
+
+    for (i = 0; i < entry->length; ++i) {
+        int rc = myNfcAppend(buffer, entry->mapped[i]);
+        if (rc <= 0)
+            return rc;
+    }
+
     return 1;
 }
 
@@ -211,12 +249,21 @@ static MyUnicodeNFCStatus myNfcDecompose(uint32_t cp,
     const MyNfcDecompEntry *entry;
     uint32_t i;
     int hangul_rc;
+    int arabic_rc;
 
     if (!myNfcIsScalar(cp))
         return MY_UNICODE_NFC_INVALID_SCALAR;
 
     if (depth > MY_NFC_MAX_DECOMPOSITION_DEPTH)
         return MY_UNICODE_NFC_INVALID_TABLE;
+        
+    // NFKC-lite: mappa i presentation forms arabi alle forme base
+    // prima della decomposizione canonica.
+    arabic_rc = myNfkcArabicDecompose(cp, buffer);
+    if (arabic_rc > 0)
+        return MY_UNICODE_NFC_OK;
+    if (arabic_rc < 0)
+        return MY_UNICODE_NFC_OUT_OF_MEMORY;
 
     hangul_rc = myNfcDecomposeHangul(cp, buffer);
     if (hangul_rc > 0)

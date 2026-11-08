@@ -7895,6 +7895,69 @@ uscita:
 	return retValue;
 }
 
+// ============================================================
+// Helper per Bug C (CJK multi-carattere e caratteri singoli).
+// Devono stare PRIMA di ManageExtractedText e DOPO InsertWordIntoTst
+// (o comunque dopo che parser.h e' stato incluso, perche' la
+// dichiarazione di InsertWordIntoTst e' in parser.h).
+// ============================================================
+
+// Inserisce nel TST la run CJK corrente, scambiando temporaneamente
+// pParams->pwszCurrentWord / idxCurrentWordChar con pwszAsianRun / *pIdxAsianRun.
+// Necessario perche' InsertWordIntoTst legge sempre pParams->pwszCurrentWord.
+static void FlushAsianRunToTst(Params *pParams, wchar_t *pwszAsianRun, int *pIdxAsianRun)
+{
+    wchar_t *pSavedWord;
+    int nSavedIdx;
+
+    if ( NULL == pwszAsianRun || NULL == pIdxAsianRun )
+        return;
+
+    if ( *pIdxAsianRun <= 0 )
+        return;
+
+    pSavedWord = pParams->pwszCurrentWord;
+    nSavedIdx  = pParams->idxCurrentWordChar;
+
+    pwszAsianRun[*pIdxAsianRun] = L'\0';
+
+    pParams->pwszCurrentWord   = pwszAsianRun;
+    pParams->idxCurrentWordChar = *pIdxAsianRun;
+
+    InsertWordIntoTst(pParams);
+
+    pParams->pwszCurrentWord   = pSavedWord;
+    pParams->idxCurrentWordChar = nSavedIdx;
+
+    *pIdxAsianRun = 0;
+    pwszAsianRun[0] = L'\0';
+}
+
+// Inserisce nel TST un singolo carattere come token a se'.
+// Salva e ripristina lo stato di pwszCurrentWord / idxCurrentWordChar,
+// perche' InsertWordIntoTst li azzera.
+static void InsertSingleCharToTst(Params *pParams, wchar_t c)
+{
+    wchar_t *pSavedWord;
+    int nSavedIdx;
+    wchar_t wzSingle[2];
+
+    pSavedWord = pParams->pwszCurrentWord;
+    nSavedIdx  = pParams->idxCurrentWordChar;
+
+    wzSingle[0] = c;
+    wzSingle[1] = L'\0';
+
+    pParams->pwszCurrentWord   = wzSingle;
+    pParams->idxCurrentWordChar = 1;
+
+    InsertWordIntoTst(pParams);
+
+    pParams->pwszCurrentWord   = pSavedWord;
+    pParams->idxCurrentWordChar = nSavedIdx;
+}
+
+
 int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
 {
     int retValue = 1;
@@ -7909,6 +7972,28 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
     wchar_t *pSearchText = NULL;
 
     MyUnicodeNFCStatus nfcStatus;
+
+    // Buffer per la run CJK corrente (Bug C).
+    wchar_t *pwszAsianRun = NULL;
+    int idxAsianRun = 0;
+
+    pwszAsianRun = (wchar_t*)malloc(
+        MAX_STRING_LENTGTH_IN_CONTENT_STREAM + sizeof(wchar_t)
+    );
+
+    if ( NULL == pwszAsianRun )
+    {
+        snprintf(
+            pParams->szError,
+            8192,
+            "ERRORE ManageExtractedText: impossibile allocare la memoria per pwszAsianRun.\n"
+        );
+
+        myShowErrorMessage(pParams, pParams->szError, 1);
+        retValue = 0;
+        goto uscita;
+    }
+    pwszAsianRun[0] = L'\0';
 
     pParams->pwszCurrentWord = (wchar_t*)malloc(
         MAX_STRING_LENTGTH_IN_CONTENT_STREAM + sizeof(wchar_t)
@@ -7956,7 +8041,7 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
     // ============================================================
     // PASSAGGIO 1:
     // Preparazione del testo da indicizzare e normalizzazione NFC.
-     
+    //
     // Il testo originale pParams->pText NON viene modificato.
     // ============================================================
 
@@ -8001,7 +8086,7 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
 
         // Copia il testo originale, scartando gli stessi caratteri
         // che venivano già esclusi dalla funzione precedente:
-        
+        //
         // U+FFFD
         // U+D800 - U+DFFF
         // U+001F
@@ -8025,7 +8110,7 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
         pSearchInput[searchInputLength] = L'\0';
 
         // Normalizzazione Unicode NFC.
-        
+        //
         // pSearchText viene allocato dalla funzione NFC.
         // La sua lunghezza viene restituita in searchTextLength.
 
@@ -8057,14 +8142,15 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
         {
             c = pParams->pText[k];
 
-            // >>> NUOVA LOGICA: PULIZIA DEI CARATTERI DI CONTROLLO NON STAMPABILI <<<
-            // Esclude tutti i caratteri da 0x00 a 0x1F, MA preserva \t (0x09), \n (0x0A) e \r (0x0D)
-            if (c < 0x0020 && c != 0x0009 && c != 0x000A && c != 0x000D)
+            // PULIZIA DEI CARATTERI DI CONTROLLO NON STAMPABILI:
+            // esclude tutti i caratteri da 0x00 a 0x1F, MA preserva
+            // \t (0x09), \n (0x0A) e \r (0x0D).
+            if ( c < 0x0020 && c != 0x0009 && c != 0x000A && c != 0x000D )
             {
-                continue; // Salta il carattere fantasma (es. \030 o \027)
+                continue;
             }
-            
-            // Esclude anche il carattere di controllo DEL (127) e i rimpiazzi non validi
+
+            // Esclude anche il carattere di controllo DEL (127) e i rimpiazzi non validi.
             if (
                 c == 0xFFFD ||
                 (c >= 0xD800 && c <= 0xDFFF) ||
@@ -8073,7 +8159,6 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
             {
                 continue;
             }
-            // >>> FINE LOGICA PULIZIA <<<
 
             if ( NULL != pParams->fpOutput )
                 fwprintf(pParams->fpOutput, L"%lc", c);
@@ -8085,9 +8170,6 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
     // ============================================================
     // PASSAGGIO 3:
     // Indicizzazione del testo normalizzato NFC.
-    
-    // Da qui in avanti la logica di suddivisione delle parole
-    // rimane quella originale.
     // ============================================================
 
     if ( bSearch )
@@ -8096,23 +8178,30 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
         {
             c = pSearchText[k];
 
-            // >>> NUOVA LOGICA: RICONGIUNGIMENTO SCRITTURA VERTICALE ASIATICA <<<
-            // Se incontriamo un a capo o uno spazio isolato...
-            if ((c == L'\n' || c == L'\r' || c == L' ') && k > 0 && (k + 1) < searchTextLength)
+            // RICONGIUNGIMENTO SCRITTURA VERTICALE ASIATICA:
+            // se incontriamo un a capo o uno spazio isolato e sia il
+            // carattere prima che quello dopo sono glifi asiatici
+            // (CJK), saltiamo il separatore.
+            if ( (c == L'\n' || c == L'\r' || c == L' ') && k > 0 && (k + 1) < searchTextLength )
             {
                 wchar_t cPrev = pSearchText[k - 1];
                 wchar_t cNext = pSearchText[k + 1];
 
-                // ...e sia il carattere prima che quello dopo sono glifi asiatici (CJK/Thai)
-                if (IS_ASIAN_SCRIPT(cPrev) && IS_ASIAN_SCRIPT(cNext))
+                if ( IS_ASIAN_SCRIPT(cPrev) && IS_ASIAN_SCRIPT(cNext) )
                 {
-                    // Saltiamo l'a capo/spazio verticale, passando direttamente al glifo successivo
-                    continue; 
+                    continue;
                 }
             }
-            // >>> FINE LOGICA VERTICALE <<<
 
             c = towlower(c);
+
+            // BUG C: flush della run CJK prima di entrare in un ramo
+            // non-CJK. Copre in un solo punto i rami "occidentale",
+            // L'-' e l'else finale.
+            if ( !IS_ASIAN_SCRIPT(c) && idxAsianRun > 0 )
+            {
+                FlushAsianRunToTst(pParams, pwszAsianRun, &idxAsianRun);
+            }
 
             // Il danda (U+0964) e il double danda (U+0965)
             // sono separatori di parola, non parte della parola stessa.
@@ -8128,9 +8217,7 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
                 InsertWordIntoTst(pParams);
             }
 
-            // >>> LOGICA ASIATICA A BIGRAMMI (CJK + THAI) <<<
-
-			/*
+            // LOGICA ASIATICA (CJK): bigrammi + singolo carattere + run completa.
             else if ( IS_ASIAN_SCRIPT(c) )
             {
                 // Se c'era una parola occidentale accumulata
@@ -8146,71 +8233,50 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
                     InsertWordIntoTst(pParams);
                 }
 
+                // Bigramma (comportamento esistente).
                 if ( pParams->idxCurrentWordChar == 0 )
                 {
                     pParams->pwszCurrentWord[pParams->idxCurrentWordChar++] = c;
                 }
                 else
                 {
-                    // Se c'era già un carattere asiatico prima,
-                    // formiamo la coppia (Bigramma).
-
                     pParams->pwszCurrentWord[pParams->idxCurrentWordChar++] = c;
 
                     pParams->pwszCurrentWord[pParams->idxCurrentWordChar] = L'\0';
-
-                    // Inserisce la coppia (es. "世界") nel TST.
 
                     InsertWordIntoTst(pParams);
 
                     // Fa scivolare il carattere corrente in posizione
                     // iniziale 0 per permettere al ciclo successivo
                     // di fare coppia con lui.
-
                     pParams->pwszCurrentWord[0] = c;
 
                     pParams->idxCurrentWordChar = 1;
                 }
-            }
-            */
-            
-			else if ( IS_ASIAN_SCRIPT(c) )
-			{
-				// Se c'era una parola occidentale accumulata precedentemente,
-				// la salviamo prima di passare allo script asiatico.
-				// InsertWordIntoTst azzera idxCurrentWordChar (assunzione del codice
-				// attuale: il resto del loop si basa su questo comportamento).
-				if (
-					pParams->idxCurrentWordChar > 0 &&
-					!IS_ASIAN_SCRIPT(pParams->pwszCurrentWord[0])
-				)
-				{
-					pParams->pwszCurrentWord[pParams->idxCurrentWordChar] = L'\0';
-					InsertWordIntoTst(pParams);
-				}
 
-				if ( pParams->idxCurrentWordChar == 0 )
-				{
-					// Primo carattere asiatico della run: lo accodiamo senza
-					// emettere bigrammi. Serve solo come "primo" per la coppia
-					// che si formerà al carattere successivo.
-					pParams->pwszCurrentWord[pParams->idxCurrentWordChar++] = c;
-				}
-				else
-				{
-					// Secondo carattere asiatico (o successivo): formiamo il
-					// bigramma (carattere precedente + corrente), lo inseriamo
-					// nel TST, poi facciamo scivolare il carattere corrente
-					// in posizione 0 per permettere al ciclo successivo di
-					// formare la coppia con il prossimo carattere.
-					pParams->pwszCurrentWord[pParams->idxCurrentWordChar++] = c;
-					pParams->pwszCurrentWord[pParams->idxCurrentWordChar] = L'\0';
-					InsertWordIntoTst(pParams);
-					pParams->pwszCurrentWord[0] = c;
-					pParams->idxCurrentWordChar = 1;
-				}
-			}
-            
+                // BUG C: emette anche il singolo carattere e accumula
+                // nella run CJK. InsertSingleCharToTst e FlushAsianRunToTst
+                // salvano/ripristinano lo stato di pwszCurrentWord, quindi
+                // il carry-over (idx=1, pwsz[0]=c) resta valido per il
+                // prossimo giro.
+                {
+                    int nSavedIdx = pParams->idxCurrentWordChar;
+                    wchar_t cSavedFirst = (nSavedIdx > 0) ? pParams->pwszCurrentWord[0] : L'\0';
+
+                    InsertSingleCharToTst(pParams, c);
+
+                    if ( idxAsianRun < MAX_STRING_LENTGTH_IN_CONTENT_STREAM )
+                    {
+                        pwszAsianRun[idxAsianRun++] = c;
+                        pwszAsianRun[idxAsianRun] = L'\0';
+                    }
+
+                    pParams->idxCurrentWordChar = nSavedIdx;
+                    if ( nSavedIdx > 0 )
+                        pParams->pwszCurrentWord[0] = cSavedFirst;
+                }
+            }
+
             // RAMO OCCIDENTALE / MEDIORIENTALE STANDARD
             // (Rimosse le lingue CJK/Thai da qui)
 
@@ -8340,118 +8406,6 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
                 pParams->pwszCurrentWord[pParams->idxCurrentWordChar++] = c;
             }
 
-			/*
-            else if (
-                 (c >= 0x0041 && c <= 0x007A) ||
-                 (c >= 0x00C0 && c <= 0x00FF) ||
-                 (c >= 0x0100 && c <= 0x017F) ||
-                 (c >= 0x0180 && c <= 0x024F) ||
-                 (c >= 0x0250 && c <= 0x02AF) ||
-                 (c >= 0x1D00 && c <= 0x1DBF) ||
-                 (c >= 0x1E00 && c <= 0x1EFF) ||
-                 (c >= 0x2C60 && c <= 0x2C7F) ||
-                 (c >= 0xA720 && c <= 0xA7FF) ||
-                 (c >= 0xAB30 && c <= 0xAB7F) ||
-                 (c >= 0xFB00 && c <= 0xFB06) ||
-                 (c >= 0x0370 && c <= 0x03FF) ||
-                 (c >= 0x1F00 && c <= 0x1FFF) ||
-                 (c >= 0x0400 && c <= 0x04FF) ||
-                 (c >= 0x0500 && c <= 0x052F) ||
-                 (c >= 0x2DE0 && c <= 0x2DFF) ||
-                 (c >= 0xA640 && c <= 0xA69F) ||
-                 (c >= 0x1C80 && c <= 0x1C8F) ||
-                 (c >= 0x0530 && c <= 0x058F) ||
-                 (c >= 0x10A0 && c <= 0x10FF) ||
-                 (c >= 0x1C90 && c <= 0x1CBF) ||
-                 (c >= 0x2D00 && c <= 0x2D2F) ||
-                 (c >= 0x02B0 && c <= 0x02FF) ||
-                 (c >= 0xA700 && c <= 0xA71F) ||
-                 (c >= 0x0300 && c <= 0x036F) ||
-                 (c >= 0x1AB0 && c <= 0x1AFF) ||
-                 (c >= 0x1DC0 && c <= 0x1DFF) ||
-                 (c >= 0x20D0 && c <= 0x20FF) ||
-                 (c >= 0xFE20 && c <= 0xFE2F) ||
-                 (c >= 0x16A0 && c <= 0x16F0) ||
-                 (c >= 0x1680 && c <= 0x169F) ||
-                 (c >= 0x0590 && c <= 0x05FF) ||
-                 (c >= 0xFB1D && c <= 0xFB4F) ||
-                 (c >= 0x0600 && c <= 0x06FF) ||
-                 (c >= 0x0750 && c <= 0x077F) ||
-                 (c >= 0x08A0 && c <= 0x08FF) ||
-                 (c >= 0xFB50 && c <= 0xFDFF) ||
-                 (c >= 0xFE70 && c <= 0xFEFF) ||
-                 (c >= 0x0700 && c <= 0x074F) ||
-                 (c >= 0x0800 && c <= 0x083F) ||
-                 (c >= 0x0840 && c <= 0x085F) ||
-                 (c >= 0x0900 && c <= 0x097F) ||
-                 (c >= 0x0980 && c <= 0x09FF) ||
-                 (c >= 0x0A00 && c <= 0x0A7F) ||
-                 (c >= 0x0A80 && c <= 0x0AFF) ||
-                 (c >= 0x0B00 && c <= 0x0B7F) ||
-                 (c >= 0x0B80 && c <= 0x0BFF) ||
-                 (c >= 0x0C00 && c <= 0x0C7F) ||
-                 (c >= 0x0C80 && c <= 0x0CFF) ||
-                 (c >= 0x0D00 && c <= 0x0D7F) ||
-                 (c >= 0x0780 && c <= 0x07BF) ||
-                 (c >= 0x0D80 && c <= 0x0DFF) ||
-                 (c >= 0x0F00 && c <= 0x0FFF) ||
-                 (c >= 0x1800 && c <= 0x18AF) ||
-                 (c >= 0x1900 && c <= 0x194F) ||
-                 (c >= 0xABC0 && c <= 0xABFF) ||
-                 (c >= 0x1C50 && c <= 0x1C7F) ||
-                 (c >= 0x1C00 && c <= 0x1C4F) ||
-                 (c >= 0xA880 && c <= 0xA8DF) ||
-                 (c >= 0xA840 && c <= 0xA87F) ||
-                 (c >= 0xA800 && c <= 0xA82F) ||
-                 (c >= 0x0E80 && c <= 0x0EFF) ||
-                 (c >= 0x1000 && c <= 0x109F) ||
-                 (c >= 0x1780 && c <= 0x17FF) ||
-                 (c >= 0x1950 && c <= 0x197F) ||
-                 (c >= 0x1980 && c <= 0x19DF) ||
-                 (c >= 0x1A20 && c <= 0x1AAF) ||
-                 (c >= 0xAA80 && c <= 0xAADF) ||
-                 (c >= 0xA900 && c <= 0xA92F) ||
-                 (c >= 0xAA00 && c <= 0xAA5F) ||
-                 (c >= 0x1700 && c <= 0x171F) ||
-                 (c >= 0x1720 && c <= 0x173F) ||
-                 (c >= 0x1740 && c <= 0x175F) ||
-                 (c >= 0x1760 && c <= 0x177F) ||
-                 (c >= 0x1A00 && c <= 0x1A1F) ||
-                 (c >= 0x1B00 && c <= 0x1B7F) ||
-                 (c >= 0xA980 && c <= 0xA9DF) ||
-                 (c >= 0xA930 && c <= 0xA95F) ||
-                 (c >= 0x1BC0 && c <= 0x1BFF) ||
-                 (c >= 0x1B80 && c <= 0x1BBF) ||
-                 (c >= 0xF900 && c <= 0xFAFF) ||
-                 (c >= 0x3190 && c <= 0x319F) ||
-                 (c >= 0x2E80 && c <= 0x2FD5) ||
-                 (c >= 0x31C0 && c <= 0x31EF) ||
-                 (c >= 0x1200 && c <= 0x137F) ||
-                 (c >= 0x2D30 && c <= 0x2D7F) ||
-                 (c >= 0x07C7 && c <= 0x07FF) ||
-                 (c >= 0xA500 && c <= 0xA63F) ||
-                 (c >= 0xA6A0 && c <= 0xA6FF) ||
-                 (c >= 0x13A0 && c <= 0x13FF) ||
-                 (c >= 0xAB70 && c <= 0xABBF) ||
-                 (c >= 0x1400 && c <= 0x167F) ||				 
-                 (c >= 0x2800 && c <= 0x28FF)
-               )
-            {
-                // Se passiamo repentinamente da uno script asiatico
-                // a uno occidentale, azzeriamo l'indice.
-
-                if (
-                    pParams->idxCurrentWordChar > 0 &&
-                    IS_ASIAN_SCRIPT(pParams->pwszCurrentWord[0])
-                )
-                {
-                    pParams->idxCurrentWordChar = 0;
-                }
-
-                pParams->pwszCurrentWord[pParams->idxCurrentWordChar++] = c;
-            }
-            */
-
             // Gestione della sillabazione:
             // il trattino separa la parola tra due righe.
 
@@ -8497,6 +8451,9 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
         }
     }
 
+    // BUG C: flush finale della run CJK, se il testo termina con CJK.
+    FlushAsianRunToTst(pParams, pwszAsianRun, &idxAsianRun);
+
     // NECESSARIO PER INSERIRE L'ULTIMA PAROLA NEL TST.
     // Manteniamo la chiamata nella stessa posizione logica
     // della funzione originale.
@@ -8521,6 +8478,11 @@ uscita:
         pSearchText = NULL;
     }
 
+    if ( NULL != pwszAsianRun )
+    {
+        free(pwszAsianRun);
+        pwszAsianRun = NULL;
+    }
 
     // Rilascio dei buffer utilizzati per la costruzione
     // delle parole.

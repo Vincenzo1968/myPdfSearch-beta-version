@@ -490,13 +490,44 @@ static int IsWordSeparator(wchar_t c)
     return 0;
 }
 
+// Aggiunge una parola all'array di ricerca, evitando duplicati.
+// Ritorna 1 se OK (aggiunta o gia' presente), 0 su errore di allocazione.
+static int AppendWordToSearchArray(Params *pParams, const wchar_t *pwszWord, size_t len)
+{
+    int i;
+
+    // Deduplica: se la parola e' gia' presente, non la riaggiungo.
+    for ( i = 0; i < pParams->countWordsToSearch; i++ )
+    {
+        if ( pParams->pWordsToSearchArray[i] != NULL &&
+             wcslen(pParams->pWordsToSearchArray[i]) == len &&
+             wcsncmp(pParams->pWordsToSearchArray[i], pwszWord, len) == 0 )
+        {
+            return 1;
+        }
+    }
+
+    if ( pParams->countWordsToSearch >= MAX_WORDS_TO_SEARCH )
+        return 0;
+
+    pParams->pWordsToSearchArray[pParams->countWordsToSearch] =
+        (wchar_t*)malloc(sizeof(wchar_t) * len + sizeof(wchar_t));
+
+    if ( NULL == pParams->pWordsToSearchArray[pParams->countWordsToSearch] )
+        return 0;
+
+    wcsncpy(pParams->pWordsToSearchArray[pParams->countWordsToSearch], pwszWord, len);
+    pParams->pWordsToSearchArray[pParams->countWordsToSearch][len] = L'\0';
+    pParams->countWordsToSearch++;
+
+    return 1;
+}
+
 int mySplitWords(Params *pParams, wchar_t *pwszOption)
 {
     int retValue = 1;
 
     size_t x = 0;
-    size_t y = 0;
-
     size_t queryLength = 0;
     size_t normalizedLength = 0;
 
@@ -508,253 +539,134 @@ int mySplitWords(Params *pParams, wchar_t *pwszOption)
 
     MyUnicodeNFCStatus nfcStatus;
 
-
-    /*
-     * Controllo degli argomenti.
-     */
-
     if ( NULL == pParams || NULL == pwszOption )
     {
-        fprintf(
-            stderr,
-            "ERRORE mySplitWords: argomento NULL.\n"
-        );
-
+        fprintf(stderr, "ERRORE mySplitWords: argomento NULL.\n");
         return 0;
     }
 
-
-    /*
-     * ============================================================
-     * PASSAGGIO 1:
-     * Normalizzazione NFC della stringa da cercare.
-     *
-     * pwszOption rimane invariata.
-     * ============================================================
-     */
+    // ============================================================
+    // PASSAGGIO 1: normalizzazione NFC della query.
+    // ============================================================
 
     queryLength = wcslen(pwszOption);
 
     nfcStatus = myUnicodeNFC_Normalize(
-        pwszOption,
-        queryLength,
-        &pwszNormalizedOption,
-        &normalizedLength
+        pwszOption, queryLength,
+        &pwszNormalizedOption, &normalizedLength
     );
 
     if ( MY_UNICODE_NFC_OK != nfcStatus )
     {
-        fprintf(
-            stderr,
-            "ERRORE mySplitWords: normalizzazione NFC fallita: %s.\n",
-            myUnicodeNFC_StatusString(nfcStatus)
-        );
-
+        fprintf(stderr, "ERRORE mySplitWords: normalizzazione NFC fallita: %s.\n",
+                myUnicodeNFC_StatusString(nfcStatus));
         retValue = 0;
         goto uscita;
     }
-
-
-    /*
-     * La dimensione di wszTemp è MAX_LEN_STR + 1.
-     *
-     * NFC può, in alcuni casi particolari, aumentare il numero
-     * di code point. Evitiamo quindi di superare la capacità
-     * del buffer utilizzato per accumulare le parole.
-     */
 
     if ( normalizedLength > MAX_LEN_STR )
     {
-        fprintf(
-            stderr,
-            "ERRORE mySplitWords: la query normalizzata NFC supera MAX_LEN_STR (%d caratteri).\n",
-            MAX_LEN_STR
-        );
-
+        fprintf(stderr, "ERRORE mySplitWords: la query normalizzata NFC supera MAX_LEN_STR (%d caratteri).\n",
+                MAX_LEN_STR);
         retValue = 0;
         goto uscita;
     }
 
+    // ============================================================
+    // PASSAGGIO 2: suddivisione in parole e token CJK.
+    //
+    // Per le run CJK: emettiamo il singolo carattere e il bigramma
+    // (non la run completa). Cosi' la ricerca AND trova sia le run
+    // esatte sia le run piu' lunghe che contengono la parola cercata.
+    // ============================================================
 
-    /*
-     * ============================================================
-     * PASSAGGIO 2:
-     * Suddivisione della query normalizzata in parole e bigrammi.
-     *
-     * La logica di ricerca rimane quella originale.
-     * ============================================================
-     */
-
-    while ( 1 )
     {
-        c = pwszNormalizedOption[x];
+        int y = 0;
 
-        if ( L'\0' != c && L' ' != c && !IsWordSeparator(c) )
+        while ( 1 )
         {
-            wchar_t cLower = towlower(c);
+            c = pwszNormalizedOption[x];
 
-            if ( IS_ASIAN_SCRIPT(cLower) )
+            if ( L'\0' != c && L' ' != c && !IsWordSeparator(c) )
             {
-                /*
-                 * Se avevamo accumulato caratteri occidentali
-                 * prima, salviamoli subito.
-                 */
+                wchar_t cLower = towlower(c);
 
-                if ( y > 0 && cPrevAsian == L'\0' )
+                if ( IS_ASIAN_SCRIPT(cLower) )
                 {
-                    wszTemp[y] = L'\0';
+                    // Se c'era una parola occidentale accumulata, salviamola.
+                    if ( y > 0 && cPrevAsian == L'\0' )
+                    {
+                        wszTemp[y] = L'\0';
+                        if ( !AppendWordToSearchArray(pParams, wszTemp, (size_t)y) )
+                        {
+                            retValue = 0;
+                            goto uscita;
+                        }
+                        y = 0;
+                    }
 
-                    pParams->pWordsToSearchArray[pParams->countWordsToSearch] =
-                        (wchar_t*)malloc(
-                            sizeof(wchar_t) * y + sizeof(wchar_t)
-                        );
-
-                    if (
-                        NULL ==
-                        pParams->pWordsToSearchArray[pParams->countWordsToSearch]
-                    )
+                    // Emette il singolo carattere come token.
+                    wszTemp[0] = cLower;
+                    wszTemp[1] = L'\0';
+                    if ( !AppendWordToSearchArray(pParams, wszTemp, 1) )
                     {
                         retValue = 0;
                         goto uscita;
                     }
 
-                    wcsncpy(
-                        pParams->pWordsToSearchArray[pParams->countWordsToSearch],
-                        wszTemp,
-                        y
-                    );
+                    // Emette il bigramma (carattere precedente + corrente).
+                    if ( cPrevAsian != L'\0' )
+                    {
+                        wszTemp[0] = cPrevAsian;
+                        wszTemp[1] = cLower;
+                        wszTemp[2] = L'\0';
+                        if ( !AppendWordToSearchArray(pParams, wszTemp, 2) )
+                        {
+                            retValue = 0;
+                            goto uscita;
+                        }
+                    }
 
-                    pParams->pWordsToSearchArray[pParams->countWordsToSearch][y] =
-                        L'\0';
-
-                    pParams->countWordsToSearch++;
-
-                    y = 0;
-                }
-
-
-                if ( cPrevAsian == L'\0' )
-                {
                     cPrevAsian = cLower;
                 }
                 else
                 {
-                    /*
-                     * Creiamo il bigramma da cercare.
-                     * Esempio: due caratteri CJK consecutivi.
-                     */
-
-                    wszTemp[0] = cPrevAsian;
-                    wszTemp[1] = cLower;
-                    wszTemp[2] = L'\0';
-
-                    pParams->pWordsToSearchArray[pParams->countWordsToSearch] =
-                        (wchar_t*)malloc(
-                            sizeof(wchar_t) * 2 + sizeof(wchar_t)
-                        );
-
-                    if (
-                        NULL ==
-                        pParams->pWordsToSearchArray[pParams->countWordsToSearch]
-                    )
+                    // Carattere occidentale: reset dello stato CJK.
+                    if ( cPrevAsian != L'\0' )
                     {
-                        retValue = 0;
-                        goto uscita;
+                        cPrevAsian = L'\0';
+                        y = 0;
                     }
 
-                    wcsncpy(
-                        pParams->pWordsToSearchArray[pParams->countWordsToSearch],
-                        wszTemp,
-                        2
-                    );
-
-                    pParams->pWordsToSearchArray[pParams->countWordsToSearch][2] =
-                        L'\0';
-
-                    pParams->countWordsToSearch++;
-
-                    /*
-                     * Facciamo scivolare il carattere per
-                     * la ricerca continua.
-                     */
-
-                    cPrevAsian = cLower;
+                    if ( y < MAX_LEN_STR )
+                        wszTemp[y++] = cLower;
                 }
             }
             else
             {
-                /*
-                 * Carattere occidentale/standard:
-                 * se prima eravamo su uno script asiatico,
-                 * resettiamo il flag.
-                 */
-
-                if ( cPrevAsian != L'\0' )
+                // Separatore o fine stringa: flush della parola occidentale.
+                if ( y > 0 && cPrevAsian == L'\0' )
                 {
-                    cPrevAsian = L'\0';
-                    y = 0;
+                    wszTemp[y] = L'\0';
+                    if ( !AppendWordToSearchArray(pParams, wszTemp, (size_t)y) )
+                    {
+                        retValue = 0;
+                        goto uscita;
+                    }
                 }
 
-                wszTemp[y++] = cLower;
-            }
-        }
-        else
-        {
-            /*
-             * Abbiamo incontrato uno spazio, un separatore
-             * oppure la fine della stringa.
-             */
+                cPrevAsian = L'\0';
+                y = 0;
 
-            if ( y > 0 && cPrevAsian == L'\0' )
-            {
-                wszTemp[y] = L'\0';
-
-                pParams->pWordsToSearchArray[pParams->countWordsToSearch] =
-                    (wchar_t*)malloc(
-                        sizeof(wchar_t) * y + sizeof(wchar_t)
-                    );
-
-                if (
-                    NULL ==
-                    pParams->pWordsToSearchArray[pParams->countWordsToSearch]
-                )
-                {
-                    retValue = 0;
+                if ( L'\0' == c )
                     goto uscita;
-                }
-
-                wcsncpy(
-                    pParams->pWordsToSearchArray[pParams->countWordsToSearch],
-                    wszTemp,
-                    y
-                );
-
-                pParams->pWordsToSearchArray[pParams->countWordsToSearch][y] =
-                    L'\0';
-
-                pParams->countWordsToSearch++;
             }
 
-            /*
-             * Reset dello stato asiatico alla fine del blocco.
-             */
-
-            cPrevAsian = L'\0';
-            y = 0;
-
-            if ( L'\0' == c )
-                goto uscita;
+            x++;
         }
-
-        x++;
     }
 
-
 uscita:
-
-    /*
-     * Rilascio del buffer temporaneo NFC.
-     */
 
     if ( NULL != pwszNormalizedOption )
     {
@@ -764,99 +676,6 @@ uscita:
 
     return retValue;
 }
-
-/*
-int mySplitWords(Params *pParams, wchar_t *pwszOption)
-{
-	int retValue = 1;
-
-	unsigned long int x = 0;
-	unsigned long int y = 0;
-	wchar_t c;
-	wchar_t wszTemp[MAX_LEN_STR + 1];
-	wchar_t cPrevAsian = L'\0';
-
-	while ( 1 )
-	{
-		c = pwszOption[x];
-
-		if ( L'\0' != c && L' ' != c && !IsWordSeparator(c) )
-		{
-			wchar_t cLower = towlower(c);
-
-			if ( IS_ASIAN_SCRIPT(cLower) )
-			{
-				// Se avevamo accumulato caratteri occidentali prima, salviamoli subito
-				if ( y > 0 && cPrevAsian == L'\0' )
-				{
-					wszTemp[y] = L'\0';
-					pParams->pWordsToSearchArray[pParams->countWordsToSearch] = (wchar_t*)malloc(sizeof(wchar_t) * y + sizeof(wchar_t));
-					if ( NULL == pParams->pWordsToSearchArray[pParams->countWordsToSearch] ) { retValue = 0; goto uscita; }
-					wcsncpy(pParams->pWordsToSearchArray[pParams->countWordsToSearch], wszTemp, y);
-					pParams->pWordsToSearchArray[pParams->countWordsToSearch][y] = L'\0';
-					pParams->countWordsToSearch++;
-					y = 0;
-				}
-
-				if ( cPrevAsian == L'\0' )
-				{
-					cPrevAsian = cLower;
-				}
-				else
-				{
-					// Creiamo il bigramma da cercare (es. "ShiJie")
-					wszTemp[0] = cPrevAsian;
-					wszTemp[1] = cLower;
-					wszTemp[2] = L'\0';
-
-					pParams->pWordsToSearchArray[pParams->countWordsToSearch] = (wchar_t*)malloc(sizeof(wchar_t) * 2 + sizeof(wchar_t));
-					if ( NULL == pParams->pWordsToSearchArray[pParams->countWordsToSearch] ) { retValue = 0; goto uscita; }
-					wcsncpy(pParams->pWordsToSearchArray[pParams->countWordsToSearch], wszTemp, 2);
-					pParams->pWordsToSearchArray[pParams->countWordsToSearch][2] = L'\0';
-					pParams->countWordsToSearch++;
-
-					// Facciamo scivolare per la ricerca continua
-					cPrevAsian = cLower;
-				}
-			}
-			else
-			{
-				// Carattere occidentale/standard: se prima eravamo su uno script asiatico, resettiamo il flag
-				if ( cPrevAsian != L'\0' )
-				{
-					cPrevAsian = L'\0';
-					y = 0;
-				}
-				wszTemp[y++] = cLower;
-			}
-		}
-		else
-		{
-			// Abbiamo incontrato uno spazio, un separatore o fine stringa
-			if ( y > 0 && cPrevAsian == L'\0' )
-			{
-				wszTemp[y] = L'\0';
-				pParams->pWordsToSearchArray[pParams->countWordsToSearch] = (wchar_t*)malloc(sizeof(wchar_t) * y + sizeof(wchar_t));
-				if ( NULL == pParams->pWordsToSearchArray[pParams->countWordsToSearch] ) { retValue = 0; goto uscita; }
-				wcsncpy(pParams->pWordsToSearchArray[pParams->countWordsToSearch], wszTemp, y);
-				pParams->pWordsToSearchArray[pParams->countWordsToSearch][y] = L'\0';
-				pParams->countWordsToSearch++;
-			}
-
-			// Reset dello stato asiatico alla fine del blocco di testo
-			cPrevAsian = L'\0';
-			y = 0;
-
-			if ( L'\0' == c )
-				goto uscita;
-		}
-		x++;
-	}
-
-uscita:
-	return retValue;
-}
-*/
 
 int myParseOption(Params *pParams, char *pszOption)
 {

@@ -3745,6 +3745,8 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 	double prevXCoordNext;
 
 	vlrbtTreeNode *pPredecessor;
+	
+	double sogliaSpazio;
 
 	vlrbtTreeNode *pMyCurrNode = (vlrbtTreeNode*)pCurrNode;
 
@@ -3812,8 +3814,51 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 	int bPrevCJK = IS_CJK(prevChar);
 	int bCurrCJK = IS_CJK(pMyData->c);
 
-	double sogliaSpazio;
+	if ( pMyData->nCurrentCIDFontSubtype != 0 && (bCurrCJK || bPrevCJK) )
+	{
+		sogliaSpazio = pMyData->Tfs * 0.5;   // font CID/CJK effettivo: soglia più alta
+	}
+	else
+	{
+		// Per il testo occidentale (o latino dentro un font CID), usa la larghezza dello spazio del font
+		// o una stima proporzionale se dFontSpaceWidth non è disponibile
+		if ( dFontSpaceWidth > 0.0 )
+			sogliaSpazio = dFontSpaceWidth;
+		else
+			sogliaSpazio = pMyData->Tfs * 0.25; // fallback sicuro per lo spazio latino
 
+		// Margine di sicurezza: un kerning tipografico puo' produrre un gap
+		// fino a ~1.5x la larghezza dello spazio senza essere un vero word-break.
+		// Gli spazi "reali" sono caratteri L' ' nel testo e vengono gestiti
+		// dal ramo "prevChar == L' '" (che salta questo controllo); qui
+		// filtriamo solo i gap invisibili da kerning TJ, che sono
+		// tipicamente ~1x la larghezza dello spazio (mai >1.5x).
+		sogliaSpazio *= 1.5;
+	}
+
+	/*
+	if ( pMyData->nCurrentCIDFontSubtype != 0 && (bCurrCJK || bPrevCJK) )
+	{
+		sogliaSpazio = pMyData->Tfs * 0.5;   // font CID/CJK effettivo: soglia più alta
+	}
+	else
+	{
+		// Per il testo occidentale (o latino dentro un font CID), usa la larghezza dello spazio del font
+		// o una stima proporzionale se dFontSpaceWidth non è disponibile
+		if ( dFontSpaceWidth > 0.0 )
+			sogliaSpazio = dFontSpaceWidth;
+		else
+			sogliaSpazio = pMyData->Tfs * 0.25; // fallback sicuro per lo spazio latino
+
+		// Soglia minima: evita che un kerning TJ (tipicamente < 0.1 * Tfs punti)
+		// venga interpretato come spazio. Un vero spazio tipografico e' ~0.25 em,
+		// quindi 0.1 * Tfs punti e' un limite conservativo.
+		if ( sogliaSpazio < pMyData->Tfs * 0.1 )
+			sogliaSpazio = pMyData->Tfs * 0.1;
+	}
+	*/
+		
+	/*
 	// Usa la soglia CJK alta SOLO se il font è CID E i caratteri coinvolti sono effettivamente CJK
 	if ( pMyData->nCurrentCIDFontSubtype != 0 && (bCurrCJK || bPrevCJK) )
 	{
@@ -3828,14 +3873,7 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 		else
 			sogliaSpazio = pMyData->Tfs * 0.25; // fallback sicuro per lo spazio latino
 	}
-
-	/*
-	if ( pMyData->nCurrentCIDFontSubtype != 0 )
-		sogliaSpazio = pMyData->Tfs * 0.5;   // font CID/CJK: soglia più alta
-	else
-		sogliaSpazio = dFontSpaceWidth;      // font occidentali: come prima
 	*/
-
 
 	double rowDiff = pMyKey->row - prevRow;
 	if ( rowDiff < 0 )
@@ -3891,6 +3929,18 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 
 		xDiff = 0.0;
 	}
+	
+	/*
+	// >>> DEBUG TEMPORANEO per Bug D: rimuovere dopo la diagnosi <<<
+	//if ( pMyData->c == L'r' && prevChar == L'r' )
+	if ( pMyData->c == L'r' && (prevChar == L'r' || prevChar == L'i' || prevChar == L'g') )
+	{
+		wprintf(L"\n[DEBUG RR] xDiff=%f sogliaSpazio=%f dFontSpaceWidth=%f Tfs=%f bCurrCJK=%d bPrevCJK=%d col=%f prevXCoordNext=%f widthScaled=%f\n",
+			xDiff, sogliaSpazio, dFontSpaceWidth, pMyData->Tfs,
+			bCurrCJK, bPrevCJK, pMyKey->col, prevXCoordNext, pMyData->widthScaled);
+	}
+	// >>> FINE DEBUG <<<
+	*/
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_SINGLE_CHAR_COORD3)
 	wprintf(L"[%lc](row = %f; col = %f; ord = %d); width = [%f Scaled %f]; nextXCoord = %f\n", pMyData->c, pMyKey->row, pMyKey->col, pMyKey->ord, pMyData->width, pMyData->widthScaled, pMyKey->col + pMyData->widthScaled);

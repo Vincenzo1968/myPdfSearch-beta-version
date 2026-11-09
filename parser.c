@@ -3772,20 +3772,18 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 		#endif
 		TcPrev = pMyDataPredecessor->Tc;
 		FontObjRefPrev = pMyDataPredecessor->currFontObjRef;
+		
 		// --- INIZIO DEDUPLICAZIONE GLIFI SOVRAPPOSTI ---
-		// Alcuni PDF (es. per simulare il grassetto/faux bold) disegnano
-		// lo stesso glifo due volte alle stesse coordinate. Il RBT li
-		// memorizza come nodi separati (per via del campo 'ord').
-		// Qui scartiamo il nodo corrente se ha lo stesso carattere,
-		// la stessa riga e una coordinata X praticamente identica
-		// (tolleranza 0.01 punti).
+		// Se due glifi sono disegnati praticamente nello stesso punto
+		// (stessa riga e coordinata X a meno di 0.01 punti), il secondo
+		// è un artefatto visivo (faux bold, ombra, overprinting).
+		// Lo scartiamo a prescindere dal carattere.
 		{
 			double colDiff = pMyKey->col - pMyKeyPredecessor->col;
 			if ( colDiff < 0.0 )
 				colDiff = -colDiff;
 
-			if ( pMyData->c == pMyDataPredecessor->c &&
-			     pMyKey->row == pMyKeyPredecessor->row &&
+			if ( pMyKey->row == pMyKeyPredecessor->row &&
 			     colDiff < 0.01 )
 			{
 				return 1;

@@ -555,6 +555,8 @@ typedef struct tagParams
 {
 	Token myToken;
 	Token myTokenLengthObj;
+	
+	int nLastParsedFontObjNum;
 
 	int bCurrTokenIsOperator;
 

@@ -1330,7 +1330,12 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 							lenNumberLexeme = idxNumberLexeme;
 							idxNumberLexeme = 0;
 
-							Number = atoi((char*)lexeme);
+							//Number = atoi((char*)lexeme);
+							Number = 0;
+							for ( int i = 0; i < lenNumberLexeme; i++ )
+							{
+								Number = Number * 10 + (lexeme[i] - '0');
+							}
 							state = S_PP2;
 						}
 						else
@@ -1353,7 +1358,12 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 								{
 									lexeme[k] = '\0';
 									k = 0;
-									Generation = atoi((char*)lexeme);
+									//Generation = atoi((char*)lexeme);
+									Generation = 0;
+									for ( uint32_t i = 0; i < k; i++ )
+									{
+										Generation = Generation * 10 + (lexeme[i] - '0');
+									}
 									state = S_PP3;
 								}
 								// else: whitespace extra -> resta in S_PP2
@@ -2116,6 +2126,8 @@ int Parse(Params *pParams, FilesList* myFilesList)
 	#endif
 
 	int retReadTrailer;
+	
+	pParams->nLastParsedFontObjNum = -1;
 
 	pParams->pReadNextChar = ReadNextChar;
 
@@ -6572,6 +6584,15 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_FN) || defined(MYDEBUG_PRINT_ON_ManageContent_FN_ShowFontSelected) || defined(MYDEBUG_PRINT_DECODED_CONTENT_TOKENS)
 							wprintf(L"\tVado a fare il parsing dell'oggetto FONT %d 0 R e torno subito.\n", nTemp);
 							#endif
+							
+							// *** CACHE ULTIMO FONT ***
+							if ( nTemp == pParams->nLastParsedFontObjNum )
+							{
+								// Stesso font dell'ultima volta: lo stato globale è già corretto.
+								strncpy(szPrevFontResName, szName, len);
+								break; // Esce dal case senza fare nulla!
+							}
+							// *** FINE CACHE ***
 
 							pParams->bStreamState = 0;
 							pParams->bStringIsDecoded = 0;
@@ -6582,6 +6603,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 							//#endif
 
 							pParams->bCurrParsingFontIsCIDFont = 0;
+							
 							if ( !ParseFontObject(pParams, nTemp) )
 							{
 								snprintf(pParams->szError, 8192, "ERRORE ManageDecodedContent ParseFontObject.\n");
@@ -6600,6 +6622,8 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 								retValue = 0;
 								goto uscita;
 							}
+							
+							pParams->nLastParsedFontObjNum = nTemp;
 
 							pParams->pCurrFontGlyphsWidths = pParams->myObjsTable[nTemp]->pGlyphsWidths;
 							//pParams->dCurrFontSpaceWidth = pParams->pCurrFontGlyphsWidths->dFontSpaceWidth/1000.0;
@@ -6644,7 +6668,6 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 							wprintf(L"\tRISORSA FONT '%s' NON TROVATA!!!\n", szName);
 						}
 						#endif
-					//}
 					}
 					else
 					{

@@ -1637,9 +1637,13 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 								{
 									char c1, c2;
 
+									//c1 = myPrevBlock[BLOCK_SIZE + nTemp];
+									//nTemp++;
+									//c2 = myPrevBlock[BLOCK_SIZE + (nTemp + 1)];
+									
 									c1 = myPrevBlock[BLOCK_SIZE + nTemp];
-									nTemp++;
-									c2 = myPrevBlock[BLOCK_SIZE + (nTemp + 1)];
+									c2 = myPrevBlock[BLOCK_SIZE + nTemp + 1];
+
 									if ( '\r' == c1 )
 										myHT_Data.StreamLength -= 2;
 									else if ( '\n' == c2 )

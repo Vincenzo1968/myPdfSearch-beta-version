@@ -2127,8 +2127,6 @@ int Parse(Params *pParams, FilesList* myFilesList)
 
 	int retReadTrailer;
 	
-	pParams->nLastParsedFontObjNum = -1;
-
 	pParams->pReadNextChar = ReadNextChar;
 
 	pParams->nCurrentParsingLengthObj = 0;
@@ -2346,6 +2344,8 @@ int Parse(Params *pParams, FilesList* myFilesList)
 	n = myFilesList;
 	while( n != NULL )
 	{
+		pParams->nLastParsedFontObjNum = -1;
+		
 		pParams->isEncrypted = 0;
 		pParams->bSkipCurrentPdf = 0;
 

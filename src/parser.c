@@ -8154,10 +8154,73 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
                 continue;
             }
 
-            if ( NULL != pParams->fpOutput )
-                fwprintf(pParams->fpOutput, L"%lc", c);
-            else
+            //if ( NULL != pParams->fpOutput )
+            //    fwprintf(pParams->fpOutput, L"%lc", c);
+            //else
+            //    wprintf(L"%lc", c);
+
+            // FILTRO DI OUTPUT FINALE: Pulisce i caratteri di controllo non stampabili 
+            // e i residui ottali prima di scrivere a schermo o su file, azzerando le regressioni.
+            if ( c < 32 && c != L'\n' && c != L'\r' && c != L'\t' )
+            {
+                c = L' ';
+            }
+
+            //if ( NULL != pParams->fpOutput )
+            //    fwprintf(pParams->fpOutput, L"%lc", c);
+            //wprintf(L"%lc", c);
+            
+            // FILTRO DEGLI ESCAPE OTTALI LETTERALI (es. \030, \027)
+            static int stateOctal = 0; // 0: normale, 1: trovata \, 2: prima cifra, 3: seconda cifra
+            int bSkipWrite = 0;
+
+            if (stateOctal == 0 && c == L'\\')
+            {
+                stateOctal = 1;
+                bSkipWrite = 1; // Mette in pausa la scrittura per verificare se segue un numero ottale
+            }
+            else if (stateOctal == 1)
+            {
+                if (c >= L'0' && c <= L'7') stateOctal = 2;
+                else { stateOctal = 0; if (NULL != pParams->fpOutput) fwprintf(pParams->fpOutput, L"\\"); wprintf(L"\\"); }
+            }
+            else if (stateOctal == 2)
+            {
+                if (c >= L'0' && c <= L'7') stateOctal = 3;
+                else { stateOctal = 0; if (NULL != pParams->fpOutput) fwprintf(pParams->fpOutput, L"\\ "); wprintf(L"\\ "); }
+            }
+            else if (stateOctal == 1)
+            {
+                if (c >= L'0' && c <= L'7') stateOctal = 2;
+                else { 
+                    stateOctal = 0; 
+                    if (NULL != pParams->fpOutput) fwprintf(pParams->fpOutput, L"\\"); 
+                    wprintf(L"\\"); 
+                }
+            }
+            else if (stateOctal == 2)
+            {
+                if (c >= L'0' && c <= L'7') stateOctal = 3;
+                else { 
+                    stateOctal = 0; 
+                    if (NULL != pParams->fpOutput) fwprintf(pParams->fpOutput, L"\\"); 
+                    wprintf(L"\\"); 
+                }
+            }
+            else if (stateOctal == 3)
+            {
+                stateOctal = 0;
+                bSkipWrite = 1;
+                if (NULL != pParams->fpOutput) fwprintf(pParams->fpOutput, L" "); 
+                wprintf(L" ");
+            }
+
+            if (!bSkipWrite)
+            {
+                if ( NULL != pParams->fpOutput )
+                    fwprintf(pParams->fpOutput, L"%lc", c);
                 wprintf(L"%lc", c);
+            }
         }
     }
 

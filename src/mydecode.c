@@ -1264,6 +1264,15 @@ wchar_t* FromPdfDocEncodingToUtf8WideCharString_NEW(const BYTE *pszPdf, size_t m
     for ( k = 0; k < mbslen; k++ )
     {
         c = wcs[k];
+
+        // FILTRO DI SICUREZZA: Intercetta qualsiasi carattere di controllo ottale non stampabile
+        // inferiore a 32 (escludendo i ritorni a capo e le tabulazioni) prima dello switch,
+        // neutralizzando il bug alla radice in modo uniforme.
+        if ( c < 32 && c != L'\n' && c != L'\r' && c != L'\t' )
+        {
+            c = L' '; 
+        }
+
         switch ( c )
         {
             case 23:  wcs2[k] = 9239;  break;
@@ -1308,6 +1317,7 @@ wchar_t* FromPdfDocEncodingToUtf8WideCharString_NEW(const BYTE *pszPdf, size_t m
             case 158: wcs2[k] = 382;   break;
             case 160: wcs2[k] = 8364;  break;
             case 181: wcs2[k] = 956;   break;
+
             default:
                 if ( c == 127 || c == 159 || c == 173 )
                 {
@@ -1319,6 +1329,7 @@ wchar_t* FromPdfDocEncodingToUtf8WideCharString_NEW(const BYTE *pszPdf, size_t m
                 break;
         }
     }
+
     wcs2[k] = L'\0';
     free(wcs);
 

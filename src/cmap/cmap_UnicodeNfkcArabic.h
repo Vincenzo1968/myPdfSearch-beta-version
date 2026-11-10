@@ -1,4 +1,11 @@
-/* Generato da Python unicodedata */
+/*
+ * Unicode NFC data tables.
+ * Generated from Unicode Character Database 18.0.0.
+ * Source files: UnicodeData.txt and DerivedNormalizationProps.txt.
+ * Generated automatically; do not edit by hand.
+ * See the accompanying Unicode license and source-data notices.
+*/
+
 #ifndef UNICODE_NFKC_ARABIC_H
 #define UNICODE_NFKC_ARABIC_H
 

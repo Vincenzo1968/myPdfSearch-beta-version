@@ -36,15 +36,15 @@ vgcore.*
 Thumbs.db
 
 # Autotools: local configuration and build artifacts
-/Makefile
-/config.log
-/config.status
-/config.cache
-/config.status.lineno
-/configure.lineno
-/autom4te.cache/
-/.deps/
-/.libs/
+Makefile
+config.log
+config.status
+config.cache
+config.status.lineno
+configure.lineno
+autom4te.cache/
+.deps/
+.libs/
 
 # Additional compiler and linker artifacts
 *.lo

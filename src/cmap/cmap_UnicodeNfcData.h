@@ -4,7 +4,8 @@
  * Source files: UnicodeData.txt and DerivedNormalizationProps.txt.
  * Generated automatically; do not edit by hand.
  * See the accompanying Unicode license and source-data notices.
- */
+*/
+
 #ifndef MY_UNICODE_NFC_DATA_H
 #define MY_UNICODE_NFC_DATA_H
 

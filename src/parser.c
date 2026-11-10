@@ -39,15 +39,15 @@
 
 #include "myUnicodeNFC.h"
 
-#include "cmap_Adobe-Japan1-7.h"   // #include "cmap_aj1_full.h"
-#include "cmap_Adobe-CNS1-7.h"
-#include "cmap_Adobe-GB1-6.h"
-#include "cmap_Adobe-Korea1-2.h"
-#include "cmap_Adobe-KR-9.h"
-#include "cmap_Adobe-Manga1-0.h"
-#include "cmap_Adobe-Japan2-0.h"
+#include "cmap/cmap_Adobe-Japan1-7.h"   // #include "cmap_aj1_full.h"
+#include "cmap/cmap_Adobe-CNS1-7.h"
+#include "cmap/cmap_Adobe-GB1-6.h"
+#include "cmap/cmap_Adobe-Korea1-2.h"
+#include "cmap/cmap_Adobe-KR-9.h"
+#include "cmap/cmap_Adobe-Manga1-0.h"
+#include "cmap/cmap_Adobe-Japan2-0.h"
 
-#include "cmap_kangxi.h"
+#include "cmap/cmap_kangxi.h"
 
 
 

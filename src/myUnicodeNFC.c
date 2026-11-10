@@ -21,8 +21,8 @@
 */
 
 #include "myUnicodeNFC.h"
-#include "unicode_nfc_data.h"
-#include "unicode_nfkc_arabic.h"
+#include "cmap/cmap_UnicodeNfcData.h"
+#include "cmap/cmap_UnicodeNfkcArabic.h"
 
 #include <stdint.h>
 #include <stdlib.h>

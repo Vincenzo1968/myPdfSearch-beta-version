@@ -4963,7 +4963,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 	int nMarkedContentStackTop = -1;
 
 	double dNumbersStack[1024];
-	int nNumsStackTop = -1;
+	int nNumsStackTop = -1;	
 
 	//double xCoordPrev = 0.0;
 	//double yCoordPrev = 0.0;
@@ -4977,7 +4977,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 	TransMatrix tempTextMatrixA;
 	//TransMatrix tempTextMatrixB;
 
-	TJStackItem TJStack[1024];
+	TJStackItem TJStack[1024] = {0}; // Inizializza l'intero array a NULL/0 al momento della creazione
 	int nTJStackTop = -1;
 
 	pParams->nCurrentPageNum = nPageNumber;

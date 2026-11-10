@@ -51,3 +51,6 @@ autom4te.cache/
 *.la
 *.Po
 *.Plo
+
+src/mypdfsearch
+

@@ -3812,7 +3812,7 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 		prevChar = L'\0';
 		prevRow = 0;
 		prevXCoordNext = 0;
-		dFontSpaceWidthPrev = pMyData->currFontSpaceWidth;
+		dFontSpaceWidthPrev = pMyData->currFontSpaceWidthScaled;
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_SINGLE_CHAR_COORD3)
 		dFontSpaceWidthPrevScaled = pMyData->currFontSpaceWidthScaled;
 		#endif
@@ -3823,7 +3823,7 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 	TcCurr = pMyData->Tc;
 	FontObjRefCurr = pMyData->currFontObjRef;
 
-	dFontSpaceWidthCurr = pMyData->currFontSpaceWidth;
+	dFontSpaceWidthCurr = pMyData->currFontSpaceWidthScaled;
 
 	if ( dFontSpaceWidthCurr != dFontSpaceWidthPrev )
 	{
@@ -3842,7 +3842,7 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 
 	if ( dFontSpaceWidth <= 0.0 )
 	{
-		dFontSpaceWidth = pMyData->Tfs * 0.1;
+		dFontSpaceWidth = pMyData->Tfs * 0.25;
 	}
 
 	int bPrevCJK = IS_CJK(prevChar);
@@ -3856,10 +3856,13 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 	{
 		// Per il testo occidentale (o latino dentro un font CID), usa la larghezza dello spazio del font
 		// o una stima proporzionale se dFontSpaceWidth non è disponibile
+		// Per il testo occidentale: usiamo il 50% della larghezza dello spazio scalato.
+		// Il kerning (es. 'rt') produce un gap tipicamente <= 0.25x spazio,
+		// mentre un vero word-break produce un gap >= 0.75x spazio.
 		if ( dFontSpaceWidth > 0.0 )
-			sogliaSpazio = dFontSpaceWidth;
+			sogliaSpazio = dFontSpaceWidth * 0.5;
 		else
-			sogliaSpazio = pMyData->Tfs * 0.25; // fallback sicuro per lo spazio latino
+			sogliaSpazio = pMyData->Tfs * 0.15;
 
 		// Margine di sicurezza: un kerning tipografico puo' produrre un gap
 		// fino a ~1.5x la larghezza dello spazio senza essere un vero word-break.
@@ -3867,7 +3870,7 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 		// dal ramo "prevChar == L' '" (che salta questo controllo); qui
 		// filtriamo solo i gap invisibili da kerning TJ, che sono
 		// tipicamente ~1x la larghezza dello spazio (mai >1.5x).
-		sogliaSpazio *= 1.5;
+		//sogliaSpazio *= 1.5;
 	}
 
 	double rowDiff = pMyKey->row - prevRow;

@@ -24392,6 +24392,31 @@ int InitializeCharSetHashTable(Params *pParams)
 	sizekey = strlen(szKey) + sizeof(char);
 	nData = 0xFB04;
 	htInsert(&(pParams->myCharSetHashTable), szKey, sizekey, &nData, sizeof(nData), 0);
+	
+	strcpy(szKey, "f_f");
+	sizekey = strlen(szKey) + sizeof(char);
+	nData = 0xFB00;
+	htInsert(&(pParams->myCharSetHashTable), szKey, sizekey, &nData, sizeof(nData), 0);
+
+	strcpy(szKey, "f_i");
+	sizekey = strlen(szKey) + sizeof(char);
+	nData = 0xFB01;
+	htInsert(&(pParams->myCharSetHashTable), szKey, sizekey, &nData, sizeof(nData), 0);
+
+	strcpy(szKey, "f_l");
+	sizekey = strlen(szKey) + sizeof(char);
+	nData = 0xFB02;
+	htInsert(&(pParams->myCharSetHashTable), szKey, sizekey, &nData, sizeof(nData), 0);
+
+	strcpy(szKey, "f_f_i");
+	sizekey = strlen(szKey) + sizeof(char);
+	nData = 0xFB03;
+	htInsert(&(pParams->myCharSetHashTable), szKey, sizekey, &nData, sizeof(nData), 0);
+
+	strcpy(szKey, "f_f_l");
+	sizekey = strlen(szKey) + sizeof(char);
+	nData = 0xFB04;
+	htInsert(&(pParams->myCharSetHashTable), szKey, sizekey, &nData, sizeof(nData), 0);
 
 	strcpy(szKey, "fifteencircle");
 	sizekey = strlen(szKey) + sizeof(char);

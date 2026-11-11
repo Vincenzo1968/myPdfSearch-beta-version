@@ -3791,16 +3791,17 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 		
 		// --- INIZIO DEDUPLICAZIONE GLIFI SOVRAPPOSTI ---
 		// Se due glifi sono disegnati praticamente nello stesso punto
-		// (stessa riga e coordinata X a meno di 0.01 punti), il secondo
-		// è un artefatto visivo (faux bold, ombra, overprinting).
-		// Lo scartiamo a prescindere dal carattere.
+		// ed è lo STESSO carattere, è un artefatto visivo (faux bold, ombra).
+		// Se i caratteri sono diversi, non è un duplicato!
 		{
 			double colDiff = pMyKey->col - pMyKeyPredecessor->col;
 			if ( colDiff < 0.0 )
 				colDiff = -colDiff;
 
 			if ( pMyKey->row == pMyKeyPredecessor->row &&
-			     colDiff < 0.01 )
+			     colDiff < 0.01 &&
+			     pMyData->c == prevChar &&
+			     !pMyData->bFromActualText )
 			{
 				return 1;
 			}
@@ -3972,6 +3973,30 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 			if (pMyData->pParams->pTextFromActualText != NULL)
 				pMyData->pParams->pTextFromActualText[pMyData->pParams->TextLength] = 0;
 			pMyData->pParams->TextLength++;
+		}
+	}
+
+	if ( pMyData->c >= 0xFB00 && pMyData->c <= 0xFB04 )
+	{
+		const wchar_t *lig = NULL;
+		switch ( pMyData->c )
+		{
+			case 0xFB00: lig = L"ff";  break;
+			case 0xFB01: lig = L"fi";  break;
+			case 0xFB02: lig = L"fl";  break;
+			case 0xFB03: lig = L"ffi"; break;
+			case 0xFB04: lig = L"ffl"; break;
+		}
+		if ( lig != NULL )
+		{
+			for ( size_t lk = 0; lig[lk] != 0; lk++ )
+			{
+				pMyData->pParams->pText[pMyData->pParams->TextLength] = lig[lk];
+				if (pMyData->pParams->pTextFromActualText != NULL)
+					pMyData->pParams->pTextFromActualText[pMyData->pParams->TextLength] = pMyData->bFromActualText ? 1 : 0;
+				pMyData->pParams->TextLength++;
+			}
+			return 1;
 		}
 	}
 
@@ -4856,17 +4881,18 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
                 pParams->actualTextLastKey = pParams->myRedBlackTreeKey;
                 pParams->actualTextLastData = pParams->myRedBlackTreeData;
             }
-            else if (pParams->sequences != NULL)
+			else if (pParams->sequences != NULL)
             {
                 wchar_t seqCid = cEncoding;
                 int cidIdx = (int)seqCid;
                 if (cidIdx >= 0 && cidIdx < 0x10000 && pParams->sequences[cidIdx] != NULL)
                 {
                     wchar_t *seq = pParams->sequences[cidIdx];
-                    // seq[0] dovrebbe coincidere con finalChar: saltiamolo.
+                    // seq[0] coincide con finalChar: inseriamo i successivi
                     for (size_t sk = 1; seq[sk] != 0; sk++)
                     {
                         pParams->myRedBlackTreeKey.ord++;
+                        pParams->myRedBlackTreeKey.col = xCoordCurrent + (sk * 0.05);
                         pParams->myRedBlackTreeData.c = seq[sk];
                         pParams->myRedBlackTreeData.bFromActualText = 0;
                         pParams->pLastNode = vlrbtInsertNode(&(pParams->myRedBlackTree),

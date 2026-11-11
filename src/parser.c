@@ -12919,6 +12919,32 @@ int ParseFontObject(Params *pParams, int objNum)
 		//fwprintf(pParams->fpErrors, L"Errore ParseFontObject: objNum non valido -> %d\n", objNum);
 		goto uscita;
 	}
+	
+    // >>> AGGIUNTA CONSIGLIATA: Pulizia delle sequenze del font precedente <<<
+    if (pParams->sequences != NULL)
+    {
+        for (int s = 0; s < 0x10000; s++)
+        {
+            if (pParams->sequences[s] != NULL)
+            {
+                free(pParams->sequences[s]);
+                pParams->sequences[s] = NULL;
+            }
+        }
+    }
+    else
+    {
+        pParams->sequences = (wchar_t**)calloc(0x10000, sizeof(wchar_t*));
+        if (pParams->sequences == NULL)
+        {
+			retValue = 0;
+			snprintf(pParams->szError, 8192, "Errore ParseFontObject: pParams->sequences = (wchar_t**)calloc(0x10000, sizeof(wchar_t*)); FAILED\n");
+			myShowErrorMessage(pParams, pParams->szError, 1);
+			//wprintf(L"Errore ParseFontObject: objNum non valido -> %d\n", objNum);
+			//fwprintf(pParams->fpErrors, L"Errore ParseFontObject: objNum non valido -> %d\n", objNum);
+			goto uscita;
+		}
+    }
 
 	pParams->pReadNextChar = ReadNextChar;
 

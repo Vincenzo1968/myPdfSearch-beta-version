@@ -5287,9 +5287,22 @@ void GetNextToken(Params *pParams)
 						pParams->lexeme[k++] = c;
 					}
 
-					if ( c == ')' )
+					// PDF 32000-1, 7.3.4.2: le parentesi bilanciate non precedute da '\'
+					// fanno parte della stringa. nStackStringOpenParen vale 1 dopo la '(' iniziale.
+					int bNestedParen = 0;
+					if ( c == '(' )
 					{
-						pParams->nStackStringOpenParen = 0; // In PDF le stringhe non si annidano
+						pParams->nStackStringOpenParen++;
+					}
+					else if ( c == ')' && pParams->nStackStringOpenParen > 1 )
+					{
+						pParams->nStackStringOpenParen--;
+						bNestedParen = 1;
+					}
+
+					if ( c == ')' && !bNestedParen )
+					{
+						pParams->nStackStringOpenParen = 0;
 
 						pParams->lexeme[--k] = '\0';
 
@@ -7186,10 +7199,7 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 							#endif
 							return;
 						}
-						else
-						{
-							pParams->nStackStringOpenParen--; // POP
-						}
+						// Altrimenti e' una ')' annidata: un solo POP (gia' fatto sopra).
 					}
 
 					if ( c == '(' )

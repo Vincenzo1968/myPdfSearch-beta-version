@@ -5255,7 +5255,7 @@ void GetNextToken(Params *pParams)
 				}
 				break;
 			case S5:
-				if ( (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'f' && c <= 'f') )
+				if ( (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f') )
 				{
 					c2 = c;
 					pParams->lexeme[k++] = GetHexChar(c1, c2);
@@ -5754,6 +5754,10 @@ void GetNextToken(Params *pParams)
 				}
 				else
 				{
+					// retract: il carattere che chiude l'escape ottale breve va rielaborato da S6
+					pParams->blockCurPos--;
+					pParams->nNumBytesReadFromCurrentStream--;
+					pParams->currentFileOffset--;
 					if ( !GetOctalChar(c1, '\0', '\0', &cOctal, &bOctalOverflow) )
 					{
 						if ( bOctalOverflow )
@@ -5832,6 +5836,10 @@ void GetNextToken(Params *pParams)
 				}
 				else
 				{
+					// retract: il carattere che chiude l'escape ottale breve va rielaborato da S6
+					pParams->blockCurPos--;
+					pParams->nNumBytesReadFromCurrentStream--;
+					pParams->currentFileOffset--;
 					if ( !GetOctalChar(c1, c2, '\0', &cOctal, &bOctalOverflow) )
 					{
 						if ( bOctalOverflow )
@@ -7135,7 +7143,7 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 				}
 				break;
 			case S5:
-				if ( (c >= '0' && c >= '9') || (c >= 'A' && c <= 'F') || (c >= 'f' && c <= 'f') )
+				if ( (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f') )
 				{
 					c2 = c;
 					pParams->lexeme[k++] = GetHexChar(c1, c2);
@@ -7274,11 +7282,11 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 				// Backslash + CR: continuazione di riga. Vedi il commento nella
 				// copia di GetNextToken: il carattere dopo il CR (se non e' LF)
 				// va rielaborato da S6, non aggiunto alla stringa.
+				// Qui si legge da myBlockToUnicode: il retract riguarda solo
+				// blockCurPosToUnicode.
 				if ( c != '\n' )
 				{
-					pParams->blockCurPos--;
-					pParams->nNumBytesReadFromCurrentStream--;
-					pParams->currentFileOffset--;
+					pParams->blockCurPosToUnicode--;
 				}
 				state = S6;
 				break;
@@ -7290,6 +7298,8 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 				}
 				else
 				{
+					// retract: il carattere che chiude l'escape ottale breve va rielaborato da S6
+					pParams->blockCurPosToUnicode--;
 					if ( !GetOctalChar(c1, '\0', '\0', &cOctal, &bOctalOverflow) )
 					{
 						if ( bOctalOverflow )
@@ -7350,6 +7360,8 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 				}
 				else
 				{
+					// retract: il carattere che chiude l'escape ottale breve va rielaborato da S6
+					pParams->blockCurPosToUnicode--;
 					if ( !GetOctalChar(c1, c2, '\0', &cOctal, &bOctalOverflow) )
 					{
 						if ( bOctalOverflow )

@@ -6528,6 +6528,14 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 										pParams->bStreamState = pParams->myStreamsStack[pParams->nStreamsStackTop].bStreamState;
 										pParams->bStringIsDecoded = pParams->myStreamsStack[pParams->nStreamsStackTop].bStringIsDecoded;
 										pParams->blockCurPos = pParams->myStreamsStack[pParams->nStreamsStackTop].blockCurPos;
+
+										// Un'immagine non mette nulla sullo stack degli stream, quindi nessun
+										// "libera:" farà il pop degli scope pushati sopra: lo facciamo qui,
+										// altrimenti gli scope si sfasano e, alla fine di un Form XObject, viene
+										// tolto lo scope sbagliato (le risorse del form "sporcano" quelle della pagina).
+										scopePop(&(pParams->pPagesArray[nPageNumber].myScopeHT_XObjRef));
+										scopePop(&(pParams->pPagesArray[nPageNumber].myScopeHT_FontsRef));
+										scopePop(&(pParams->pPagesArray[nPageNumber].myScopeHT_GsRef));
 									}
 
 									mystringqueuelist_Free(&(pParams->CurrentContent.queueFilters));

@@ -30973,7 +30973,7 @@ void MakeDifferencesArrayCodes(Params *pParams)
 
 	pParams->aSTD_CharSet[0261]  =  (int)L'–';   // endash
 	pParams->aWIN_CharSet[0320]  =  (int)L'–';   // endash
-	pParams->aMAC_CharSet[0226]  =  (int)L'–';   // endash
+	pParams->aMAC_CharSet[0320]  =  (int)L'–';   // endash
 	pParams->aPDF_CharSet[0205]  =  (int)L'–';   // endash
 
 	pParams->aMAC_CharSet[0301]  =  (int)L'¡';   // exclamdown

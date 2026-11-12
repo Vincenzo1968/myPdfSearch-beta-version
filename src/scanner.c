@@ -5734,14 +5734,15 @@ void GetNextToken(Params *pParams)
 				}
 				break;
 			case S8:
+				// Backslash + CR: continuazione di riga (PDF 32000-1, 7.3.4.2).
+				// Se dopo il CR c'e' un LF (CRLF) lo consumiamo; altrimenti il
+				// carattere letto appartiene alla stringa e va rielaborato
+				// normalmente da S6 (puo' essere un altro escape '\', un ')' ecc.).
 				if ( c != '\n' )
 				{
-					if ( pParams->nCurrentFontSubtype != FONT_SUBTYPE_Type0 )
-					{
-						pParams->pEncodingString[k] = c;
-						pParams->pUtf8String[k] = pParams->pCurrentEncodingArray[c];
-					}
-					pParams->lexeme[k++] = c;
+					pParams->blockCurPos--;
+					pParams->nNumBytesReadFromCurrentStream--;
+					pParams->currentFileOffset--;
 				}
 				state = S6;
 				break;
@@ -7270,11 +7271,14 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 				}
 				break;
 			case S8:
+				// Backslash + CR: continuazione di riga. Vedi il commento nella
+				// copia di GetNextToken: il carattere dopo il CR (se non e' LF)
+				// va rielaborato da S6, non aggiunto alla stringa.
 				if ( c != '\n' )
 				{
-					pParams->pEncodingString[k] = c;
-					pParams->pUtf8String[k] = pParams->pCurrentEncodingArray[c];
-					pParams->lexeme[k++] = c;
+					pParams->blockCurPos--;
+					pParams->nNumBytesReadFromCurrentStream--;
+					pParams->currentFileOffset--;
 				}
 				state = S6;
 				break;

@@ -6,9 +6,9 @@ MyPdfSearch is a command-line program written in C. It can extract text from PDF
 
 ## Project status
 
-**Beta release — version 0.1.1**
+**Beta release — version 1.0.0**
 
-MyPdfSearch is under active development. This beta is made available for testing and feedback. PDF parsing, text extraction, font and character-encoding support, and the handling of complex document structures are still being improved. Some PDF files may not yet be processed correctly.
+MyPdfSearch is under active development. MyPdfSearch is under active development. PDF parsing, text extraction, font and character-encoding support, and the handling of complex document structures are still being improved. Some PDF files may not yet be processed correctly.
 
 MyPdfSearch is a text parser, not a PDF page renderer. It does not reproduce the original visual layout of a page. The reading order of text in complex layouts (for example, newspapers with multiple columns, mixed text and images, or unusual writing modes) may require further improvement. It is not an OCR application, so image-only pages without an embedded text layer cannot be read as text.
 
@@ -58,7 +58,7 @@ To display the available command-line options:
 mypdfsearch --help
 ```
 
-The beta has been built and tested on Ubuntu 24.04 LTS with GCC 13.3.0. Other platforms have not yet been fully validated for this release.
+MyPdfSearch has been built and tested on Ubuntu 24.04 LTS with GCC 13.3.0. Other platforms have not yet been fully validated for this release.
 
 ## Usage
 
@@ -138,7 +138,7 @@ The parsing engine was stress-tested against the industry-standard **Isartor Tes
 
 ## Feedback and bug reports
 
-This is a beta release. Bug reports, PDF test cases that can be shared legally, and suggestions for improvement are welcome. Please include the command used, the relevant output, and a short description of the expected result. Do not upload documents containing private or confidential information.
+Bug reports, PDF test cases that can be shared legally, and suggestions for improvement are welcome. Please include the command used, the relevant output, and a short description of the expected result. Do not upload documents containing private or confidential information.
 
 ## License
 

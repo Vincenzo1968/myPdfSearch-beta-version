@@ -1,6 +1,6 @@
 AC_PREREQ([2.69])
 
-AC_INIT([mypdfsearch],[ 0.1.1],[vincenzolocicero68@gmail.com])
+AC_INIT([mypdfsearch],[ 1.0.0],[vincenzolocicero68@gmail.com])
 AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_FILES([Makefile src/Makefile])
 

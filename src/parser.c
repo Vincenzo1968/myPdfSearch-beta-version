@@ -3792,7 +3792,7 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 		prevChar = pMyDataPredecessor->c;
 		prevRow = pMyKeyPredecessor->row;
 		prevXCoordNext = pMyDataPredecessor->xCoordNext;
-		dFontSpaceWidthPrev = pMyDataPredecessor->currFontSpaceWidth;
+		dFontSpaceWidthPrev = pMyDataPredecessor->currFontSpaceWidthScaled;
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_SINGLE_CHAR_COORD3)
 		dFontSpaceWidthPrevScaled = pMyDataPredecessor->currFontSpaceWidthScaled;
 		#endif
@@ -3966,7 +3966,20 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 	// For other characters the normal estimate of the spaces from the coordinates remains active.
 	//(pMyData->c!= L' && prevChar!= L' && prevChar!= L'\0' && !bAtLineStart &&!IsIndicCombiningMark(pMyData->c) & !IsIndicCombiningMark(prevChar) )
 	//If (pMyData->c!= The ' && prevChar!= The ' && prevChar!= The \0' && !bAtLineStart && !IsIndicVirama(prevChar) )
-	if ( pMyData->c != L' ' && prevChar != L' ' && prevChar != L'\0' && !bAtLineStart && !bActualTextBengaliCombiningMark )
+	// Un virama indico (es. U+09CD '্' in bengalese) lega sempre la consonante
+	// precedente a quella successiva: non può mai esserci uno spazio dopo di esso.
+	int bPrevIsVirama =
+		(prevChar == 0x09CD) || // Bengalese
+		(prevChar == 0x094D) || // Devanagari
+		(prevChar == 0x0A4D) || // Gurmukhi
+		(prevChar == 0x0ACD) || // Gujarati
+		(prevChar == 0x0B4D) || // Oriya
+		(prevChar == 0x0BCD) || // Tamil
+		(prevChar == 0x0C4D) || // Telugu
+		(prevChar == 0x0CCD) || // Kannada
+		(prevChar == 0x0D4D);   // Malayalam
+
+	if ( pMyData->c != L' ' && prevChar != L' ' && prevChar != L'\0' && !bAtLineStart && !bActualTextBengaliCombiningMark && !bPrevIsVirama )
 	{
 		if ( bPrevCJK != bCurrCJK )
 		{
@@ -4255,7 +4268,7 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
     double fontSpaceWidth, fontSpaceWidthScaled;
     double fontLmWidth, fontLmWidthScaled;
     double fontUmWidth, fontUmWidthScaled;
-    double dFontSize10;
+    //double dFontSize10;
 
     size_t i = 0;
 
@@ -4464,9 +4477,11 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
     fontLmWidth    = pParams->pCurrFontGlyphsWidths->dFontLmWidth;
     fontUmWidth    = pParams->pCurrFontGlyphsWidths->dFontUmWidth;
 
-    dFontSize10 = pParams->dsTextState.Tfs * 0.1;
-    if (fontSpaceWidth < dFontSize10) fontSpaceWidth = dFontSize10;
-
+	if (fontSpaceWidth <= 0.0)
+        fontSpaceWidth = (avgWidth > 0.0) ? (avgWidth * 0.5) : 0.25;
+    else if (fontSpaceWidth < 0.1)
+        fontSpaceWidth = 0.1;
+        
     for (i = 0; i < lenString; i++)
     {
         int bInsertCurrentGlyph = 1;

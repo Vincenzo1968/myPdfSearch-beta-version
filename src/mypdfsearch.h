@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #ifndef MYPDFSEARCH_INCLUDED
 #define MYPDFSEARCH_INCLUDED
@@ -33,9 +31,9 @@
 #include <wctype.h>
 #include <stdint.h>
 
-//#define HT_SIZE 8191
+//#define HT SIZE 8191
 #define BLOCK_SIZE 4096
-//#define BLOCK_SIZE 4096 * 21
+//#define BLOCK SIZE 4096 #21
 
 #ifndef MAX_LEN_STR
 	#define MAX_LEN_STR 1024
@@ -47,12 +45,12 @@
 
 #define UNUSED(x) (void)(x)
 
-// Range degli script CJK gestiti con tokenizzazione a bigrammi.
-// NOTA: il Thai (U+0E00 - U+0E7F) e' stato rimosso intenzionalmente,
-// perche' il Thai separa le parole con spazi e va gestito nel ramo
-// "occidentale" (che a sua volta va esteso con il range Thai, vedi sotto).
-// Il "rejoining" verticale piu' sotto usa questo stesso macro, quindi
-// anche quella logica automaticamente non tocca piu' il Thai.
+// Range of CJK scripts managed with bigram tokenization.
+// NOTE: Thai (U+0E00 - U+0E7F) has been removed intentionally,
+// because Thai separates words with spaces and is to be managed in the branch
+// "Western" (which in turn should be extended with the Thai range, see below).
+// The vertical "rejoining" below uses this same macro, so
+// Even that logic automatically doesn't touch Thai anymore.
 #ifndef IS_ASIAN_SCRIPT
 #define IS_ASIAN_SCRIPT(c) ( \
     ((c) >= 0x3040 && (c) <= 0x309F) || \
@@ -70,7 +68,7 @@ typedef struct tagFilesList
 	char myPathName[PATH_MAX + 1];
 	#endif
 	char myFileName[PATH_MAX + 1];
-	//char relativeName[PATH_MAX + 1];
+	//char relativeName[PATH MAX + 1];
 	struct tagFilesList *next;
 } FilesList;
 

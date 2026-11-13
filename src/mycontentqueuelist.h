@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #ifndef	MYCONTENTQUEUELIST_INCLUDED
 #define	MYCONTENTQUEUELIST_INCLUDED
@@ -26,10 +24,10 @@
 #ifdef __cplusplus
 #  define BEGIN_C_DECLS extern "C" {
 #  define END_C_DECLS   }
-#else // !__cplusplus 
+#else // ! 
 #  define BEGIN_C_DECLS
 #  define END_C_DECLS
-#endif // __cplusplus 
+#endif //  
 
 #ifndef MAX_STRLEN
 #define MAX_STRLEN 4096
@@ -44,19 +42,19 @@
 //compressed using the LZW compression method and then encoded in ASCII base-85 representation.
 
 // 1 0 obj
-// << /Length 534
-// /Filter [ /ASCII85Decode /LZWDecode ]
+// < /Length 534
+// /Filter [ /ASCII85Decode /LZWDecode]
 // >>
 
-// Se ci sono più filtri e uno qualsiasi dei filtri ha parametri impostati su valori non predefiniti,
-// DecodeParms deve essere un array con una voce per ciascun filtro: il dizionario dei parametri per quel filtro
-// o l'oggetto null se quel filtro non ha parametri (o se tutti i suoi parametri hanno i loro valori di default).
+// If there are multiple filters and any of the filters has parameters set on undefined values,
+// DecodeParms must be an array with a voice for each filter: the parameter dictionary for that filter
+// or the null object if that filter does not have parameters (or if all its parameters have their default values).
 
 typedef struct _myContent
 {
 	int bExternalFile;
 
-    // Identificativo dell'oggetto PDF che contiene lo stream.
+    // Identifying the PDF object containing the stream.
     uint32_t ObjectNumber;
     uint32_t GenerationNumber;
 
@@ -64,7 +62,7 @@ typedef struct _myContent
 	//unsigned long int Length;
 	unsigned long int Offset;
 	MyStringQueueList_t queueFilters;
-	MyDictionaryQueueList_t decodeParms; // Vedi "Stream extent" a pag. 20 di PDF3000_2008.pdf
+	MyDictionaryQueueList_t decodeParms; // See "Stream extension" on page 20 of PDF3000 2008. pdf
 } MyContent_t;
 
 typedef struct _MyContentQueueItem

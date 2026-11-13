@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #ifndef	MY_ENCODING_INCLUDED
 #define	MY_ENCODING_INCLUDED
@@ -26,20 +24,20 @@
 #ifdef __cplusplus
 #  define BEGIN_C_DECLS extern "C" {
 #  define END_C_DECLS   }
-#else // !__cplusplus 
+#else // ! 
 #  define BEGIN_C_DECLS
 #  define END_C_DECLS
-#endif // __cplusplus 
+#endif //  
 
 #ifdef _MSC_VER
-#define INLINE __forceinline // use __forceinline (VC++ specific) 
+#define INLINE __forceinline // use   forceinline (VC++ specific) 
 #else
 #define INLINE inline        // use standard inline 
 #endif
 
 #include <stdint.h>
 
-//#include "mypdfsearch.h"
+//#includes mypdfsearch. h"
 
 #define SwapTwoBytes(data) \
 ( (((data) >> 8) & 0x00FF) | (((data) << 8) & 0xFF00) )
@@ -57,7 +55,7 @@
 #define BIT_SET(byte,nbit)   ((byte) |=  (1 << (nbit)))
 #define BIT_UNSET(byte,nbit) ((byte) &= ~(1 << (nbit)))
 #define BIT_CHECK(byte,nbit) ((byte) &   (1 << (nbit)))
-#define BIT_FLIP(byte,nbit)  ((byte) ^=  (1 << (nbit))) // Se l'ennesimo bit(nbit) è zero, lo imposta a uno; e viceversa.
+#define BIT_FLIP(byte,nbit)  ((byte) ^=  (1 << (nbit))) // If the new bit(nbit) is zero, it sets it to one; and vice versa.
 
 #define UNUSED(x) (void)(x)
 
@@ -98,16 +96,16 @@
 #define DEFAULT_MAX_BITS   12
 
 #define M_CLR 256 // clear table marker
-#define M_EOD 257 // end-of-data marker
+#define M_EOD 257 // end-of-date marker
 #define M_NEW 258 // new code index
 
 
 
 // Dictionary structures.
-// For encoding, entry at code index is a list of indices that follow current one.
-// For example, if code 99 is 'c', code 481 is 'ci', code 1034 is 'cia', and code 2001 is 'ciao',
+// For encoding, entry at code index is a list of indexes that follow current one.
+// For example, if code 99 is 'c', code 481 is 'ci', code 1034 is 'cia', and code 2001 is 'hello',
 // then
-//   dict[99].next['i'] =  481,
+//   dict[99].next['i'] = 481,
 //  dict[481].next['a'] = 1034,
 // dict[1034].next['o'] = 2001,
 // etc.
@@ -116,12 +114,12 @@ typedef struct tag_lzw_enc
 	uint16_t next[256];
 } lzw_enc_t;
 
-// For decoding, dictionary contains index of whatever prefix index plus trailing byte. For example, like previous:
+// For decoding, dictionary contains index of whatever prefix plus trailing byte. For example, like previous:
 // dict[2001] = { c: 'o', prev: 1034 },
-// dict[1034] = { c: 'a', prev:  481 },
-//  dict[481] = { c: 'i', prev:   99 },
-//   dict[99] = { c: 'c', prev:    0 }
-// "back" is used for temporarily chaining indices when resolving a code to bytes
+// dict[1034] = {c: 'a', prev: 481 },
+//  dict[481] = {c: 'i', prev: 99 },
+//   dict[99] = {c: 'c', prev: 0 }
+// "back" is used for chaining indexes when resolving a code to bytes
 typedef struct tag_lzw_dec
 {
 	uint16_t prev;
@@ -131,7 +129,7 @@ typedef struct tag_lzw_dec
 
 BEGIN_C_DECLS
 
-// ----------------------------------------------- Public Interface Functions -------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 int IsLittleEndian(void);
 int IsBigEndian(void);

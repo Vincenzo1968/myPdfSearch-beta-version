@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #define _FILE_OFFSET_BITS 64
 
@@ -455,7 +453,7 @@ int StringCompareFunc(const void* pKey1, uint32_t keysize1, const void* pKey2, u
 	return strncmp((char*)pKey1, (char*)pKey2, BLOCK_SIZE - 1);
 }
 
-// ----------------------------------------------------- Begin Scope Functions ---------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 int scopeInit(Scope *pScope)
 {
@@ -464,11 +462,11 @@ int scopeInit(Scope *pScope)
 
 	pScope->top = 0;
 
-	//pHT = (HashTable_t**)malloc(sizeof(HashTable_t*) * HT_SIZE);
+	//pHT = (HashTable t**)malloc(sizeof(HashTable t*) HT SIZE);
 	pHT = (HashTable_t**)malloc(sizeof(HashTable_t*) * SCOPE_TABLES_PER_LEVEL);
 	if ( pHT != NULL )
 	{
-		//for ( x = 0; x < HT_SIZE; x++ )
+		//for ( x = 0; x < HT SIZE; x++ )
 		for (x = 0; x < SCOPE_TABLES_PER_LEVEL; x++)
 		{
 			pHT[x] = (HashTable_t*)malloc(sizeof(HashTable_t));
@@ -505,16 +503,16 @@ int scopePush(Scope *pScope)
 	pScope->top++;
 	if ( pScope->top > SCOPE_SIZE - 1 )
 	{
-		//wprintf(L"\nERRORE scopePush: scope stack pieno!\n");
+		//wprintf(L"\nERRORE broomPush: broom full stack!\n");
 		pScope->top = SCOPE_SIZE - 1;
 		return 0;
 	}
 
-	//pHT = (HashTable_t**)malloc(sizeof(HashTable_t*) * HT_SIZE);
+	//pHT = (HashTable t**)malloc(sizeof(HashTable t*) HT SIZE);
 	pHT = (HashTable_t**)malloc(sizeof(HashTable_t*) * SCOPE_TABLES_PER_LEVEL);
 	if ( pHT != NULL )
 	{
-		//for ( x = 0; x < HT_SIZE; x++ )
+		//for ( x = 0; x < HT SIZE; x++ )
 		for (x = 0; x < SCOPE_TABLES_PER_LEVEL; x++)
 		{
 			pHT[x] = (HashTable_t*)malloc(sizeof(HashTable_t));
@@ -527,7 +525,7 @@ int scopePush(Scope *pScope)
 			}
 			if ( !(htInit(pHT[x], HT_SIZE, StringHashFunc, StringCompareFunc)) )
 			{
-				//wprintf(L"\nErrore scopePush -> htInit.\n");
+				//wprintf(L"\nErrore discoveredPush -> htInit.\n");
 				return -1;
 			}
 		}
@@ -552,7 +550,7 @@ int scopePop(Scope *pScope)
 		return pScope->top;
 
 	pHT = pScope->stack[pScope->top];
-	//for ( x = 0; x < HT_SIZE; x++)
+	//for ( x = 0; x < HT SIZE; x++)
 	for (x = 0; x < SCOPE_TABLES_PER_LEVEL; x++)
 	{
 		htFree(pHT[x]);
@@ -578,7 +576,7 @@ void scopeFree(Scope* pScope)
 	{
 		if ( NULL != pScope->stack[pScope->top] )
 		{
-			//for ( x = 0; x < HT_SIZE; x++ )
+			//for ( x = 0; x < HT SIZE; x++ )
 			for (x = 0; x < SCOPE_TABLES_PER_LEVEL; x++)
 			{
 				htFree(pScope->stack[pScope->top][x]);
@@ -597,7 +595,7 @@ void scopeFree(Scope* pScope)
 
 int scopeFind(Scope* pScope, void* pKey, uint32_t keysize, void* pData, uint32_t* datasize, uint32_t* bContentAlreadyProcessed, int bOnlyTop)
 {
-	int retValue = -1; // NOT FOUND - NON TROVATO
+	int retValue = -1; // NOT FOUND - NOT FIND
 
 	HashTable_t** pHT = NULL;
 	int x;
@@ -651,7 +649,7 @@ int scopeInsert(Scope* pScope, void* pKey, uint32_t keysize, void* pData, uint32
 
 		if ( !bOK )
 		{
-			//wprintf(L"\nErrore scopeInsert: la KEY '%s' e' gia' stata inserita nello scope %d\n", (char*)pKey, pScope->top);
+			//wprintf(L"\nError discoveredInsert: the KEY '%s' has already been inserted in the broom %d\n", (char*)pKey, pScope->top);
 			return 0;
 		}
 	}
@@ -676,13 +674,13 @@ int scopeUpdateValue(Scope* pScope, const void* pKey, uint32_t keysize, const vo
 
 		if ( NULL == pHT )
 		{
-			//wprintf(L"\nERRORE scopeUpdateValue: KEY '%s'; pHT E' NULL\n", (char*)pKey);
+			//wprintf(L"\nERRORE DISUpdateValue: KEY '%s'; pHT E' NULL\n", (char*)pKey);
 			return 0;
 		}
 
 		if ( NULL == *pHT )
 		{
-			//wprintf(L"\nERRORE scopeUpdateValue: KEY '%s'; *pHT E' NULL\n", (char*)pKey);
+			//wprintf(L"\nERRORE DISUpdateValue: KEY '%s'; *pHT E' NULL\n", (char*)pKey);
 			return 0;
 		}
 
@@ -695,7 +693,7 @@ int scopeUpdateValue(Scope* pScope, const void* pKey, uint32_t keysize, const vo
 			break;
 	}
 
-	//wprintf(L"ERRORE scopeUpdateValue: variabile '%s' non presente nello scope\n", (char*)pKey);
+	//wprintf(L"ERRORE DISUpdateValue: variable '%s' not present in the broom\n", (char*)pKey);
 
 	return 0;
 }

@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #include <math.h>
 #include "mypdfsearch.h"
@@ -139,7 +137,7 @@ unsigned char* ManageDecodeParams(const unsigned char *pszDecodedStream, unsigne
 		switch ( algorithm )
 		{
 			case 0:
-				// none
+				// not
 				break;
 			case 1:
 				// get the number of bytes per sample
@@ -286,7 +284,7 @@ unsigned char* DecodeStream(unsigned char *pszEncodedStream,
 
 	if ( pContent->queueFilters.count <= 0 )
 	{
-		// Nessun filtro: la lunghezza effettiva dei dati è EncodedStreamSize.
+		// No filter: the actual length of data is EncodedStreamSize.
 
 		*pDecodedStreamSize = EncodedStreamSize + sizeof(unsigned char);
 
@@ -313,7 +311,7 @@ unsigned char* DecodeStream(unsigned char *pszEncodedStream,
 			{
 				if ( bFirstDecoding )
 				{
-					// Il primo filtro riceve EncodedStreamSize byte effettivi.
+					// The first filter receives EncodedStreamSize bytes.
 
 					*pDecodedStreamSize =
 						( EncodedStreamSize * sizeof(unsigned char) ) * 55
@@ -718,7 +716,7 @@ unsigned char* DecodeStream(unsigned char *pszEncodedStream,
 							else if ( strncmp(myDataTemp.pszKey, "Colors", 4096) == 0 )
 								dpColors = myDataTemp.tok.vInt;
 							//else if ( strncmp(myDataTemp.pszKey, "EarlyChange", 4096) == 0 )
-							//	dpEarlyChange = myDataTemp.tok.vInt;
+							// dpEarlyChange = myDataTemp.tok. vInt;
 
 							free(myDataTemp.pszKey);
 							myDataTemp.pszKey = NULL;
@@ -823,10 +821,10 @@ unsigned char* DecodeStream(unsigned char *pszEncodedStream,
 
 uscita:
 
-	// Non liberare la memoria restituita al chiamante.
+	// Do not release the memory returned to the caller.
 	//
-	// Se retValue coincide con uno dei puntatori,
-	// quella memoria deve rimanere valida.
+	// If retValue matches one of the pointers,
+	// That memory must remain valid.
 
 	if ( NULL != pszDecodedStreamTemp &&
 		 pszDecodedStreamTemp != pszDecodedStream &&
@@ -865,7 +863,7 @@ uint32_t getDecimalValue(uint32_t nMachineEndianness, unsigned char *pStream, ui
 				retValue |= myDecimalValueSwap;
 
 				myDecimalValueSwap = pStream[y + 1];
-				//myDecimalValueSwap <<= 0;
+				//myDecimalValueSwap <= 0;
 				retValue |= myDecimalValueSwap;
 				break;
 			case 3:
@@ -957,7 +955,7 @@ uint32_t ConvertHexadecimalToDecimal(char *pszHexVal)
 {
 	int len = strnlen(pszHexVal, 1024);
 
-	// Initializing base value to 1, i.e 16^0
+	// Initializing base value to 1, i.e. 16^0
 	int base = 1;
 	uint32_t dec_val = 0;
 	int i;
@@ -965,22 +963,22 @@ uint32_t ConvertHexadecimalToDecimal(char *pszHexVal)
 	// Extracting characters as digits from last character
 	for ( i = len - 1; i >= 0; i-- )
 	{
-		// if character lies in '0'-'9', converting
+		// if character lies in '0'-'9',
 		// it to integral 0-9 by subtracting 48 from
 		// ASCII value.
 		if ( pszHexVal[i] >= '0' && pszHexVal[i] <= '9' )
 		{
 			dec_val += (pszHexVal[i] - 48) * base;
-			// incrementing base by power
+			// basic increment by power
 			base = base * 16;
 		}
-		// if character lies in 'A'-'F' , converting
+		// if character lies in 'A'-'F', converting
 		// it to integral 10 - 15 by subtracting 55
 		// from ASCII value
 		else if ( ( toupper(pszHexVal[i]) >= 'A' ) && ( toupper(pszHexVal[i]) <= 'F' ) )
 		{
 			dec_val += (pszHexVal[i] - 55) * base;
-			// incrementing base by power
+			// basic increment by power
 			base = base * 16;
 		}
 	}
@@ -1046,7 +1044,7 @@ wchar_t* FromUnicodeToUtf8WideCharString(const char *inbuf, size_t InbufSize, co
 
 	OutbufSize = (InbufSize + 1) * sizeof(wchar_t);
 
-	//cd = iconv_open ("UTF-8", charset);
+	//cd = iconv open ("UTF-8", charset);
 	cd = iconv_open(OutbufCharset, InbufCharset);
 	if ( (iconv_t) -1 == cd)
 	{
@@ -1073,12 +1071,12 @@ wchar_t* FromUnicodeToUtf8WideCharString(const char *inbuf, size_t InbufSize, co
 			memmove((void*)inbuf, (void*)inptr, insize);
 	}
 
-	// Terminate the output string.
+	// Finish the output string.
 	if ( OutbufSize >= sizeof (wchar_t) )
 		*((wchar_t*) wrptr) = L'\0';
 
-	// >>> NUOVO: chiudi il descrittore di conversione iconv
-	// per liberare la memoria allocata da iconv_open.
+	// >>> NEW: close iconv conversion descriptor
+	// to free the memory allocated by iconv open.
 	iconv_close(cd);
 
 	return pMyWideString;
@@ -1104,7 +1102,7 @@ wchar_t* FromPdfDocEncodingToUtf8WideCharString_NEW(const BYTE *pszPdf, size_t m
         return NULL;
     }
 
-    // Costruzione del buffer UTF-8
+    // Building the buffer UTF-8
     x = 0;
     for ( k = 0; k < mbslen; k++ )
     {
@@ -1245,7 +1243,7 @@ wchar_t* FromPdfDocEncodingToUtf8WideCharString_NEW(const BYTE *pszPdf, size_t m
     }
     myByteString[x] = '\0';
 
-    // Conversione UTF-8 -> wchar_t via iconv (indipendente dal locale)
+    // Conversion UTF-8 -> wchar t via iconv (independent by local)
     wcs = FromUnicodeToUtf8WideCharString((const char*)myByteString, x, "UTF-8");
 
     free(myByteString);
@@ -1265,9 +1263,9 @@ wchar_t* FromPdfDocEncodingToUtf8WideCharString_NEW(const BYTE *pszPdf, size_t m
     {
         c = wcs[k];
 
-        // FILTRO DI SICUREZZA: Intercetta qualsiasi carattere di controllo ottale non stampabile
-        // inferiore a 32 (escludendo i ritorni a capo e le tabulazioni) prima dello switch,
-        // neutralizzando il bug alla radice in modo uniforme.
+        // SAFETY FILTER: Intercept any non-printable optical control character
+        // less than 32 (excluding return and tabs) before the switch,
+        // neutralizing the bug at the root evenly.
         if ( c < 32 && c != L'\n' && c != L'\r' && c != L'\t' )
         {
             c = L' '; 
@@ -1336,7 +1334,7 @@ wchar_t* FromPdfDocEncodingToUtf8WideCharString_NEW(const BYTE *pszPdf, size_t m
     return wcs2;
 }
 
-// report a zlib or i/o error
+// zlib or i/o error report
 void zerr(int ret, FILE *fpErrors)
 {
 	if ( NULL == fpErrors )
@@ -1384,7 +1382,7 @@ int myInflate(unsigned char **dest, unsigned long int *destLen, const unsigned c
 
     destLenNew = *destLen;
 
-    // allocate inflate state
+    // allocate inflated state
     strm.zalloc = Z_NULL;
     strm.zfree = Z_NULL;
     strm.opaque = Z_NULL;
@@ -1436,7 +1434,7 @@ int myInflate(unsigned char **dest, unsigned long int *destLen, const unsigned c
             strm.avail_out = CHUNK;
             strm.next_out = out;
             ret = inflate(&strm, Z_NO_FLUSH);
-            assert(ret != Z_STREAM_ERROR);  // state not clobbered
+            assert(ret != Z_STREAM_ERROR);  // you have not seen
             switch (ret)
             {
 				case Z_NEED_DICT:
@@ -1492,17 +1490,17 @@ wchar_t* DecodePdfTextString(const unsigned char *pBytes, size_t nLen)
     if (nLen == 0 || pBytes == NULL)
         return NULL;
 
-    // 1. PDF 2.0: UTF-8 con BOM (EF BB BF)
+    // 1. PDF 2.0: UTF-8 with BOM (EF BB BF)
     if (nLen >= 3 && pBytes[0] == 0xEF && pBytes[1] == 0xBB && pBytes[2] == 0xBF)
     {
-        // Salta i 3 byte di BOM e converti da UTF-8 a wchar_t con iconv
+        // Skip the 3 bytes of BOM and convert from UTF-8 to wchar t with iconv
         return FromUnicodeToUtf8WideCharString((const char*)(pBytes + 3), nLen - 3, "UTF-8");
     }
 
-    // 2. UTF-16BE con BOM (FE FF)
+    // 2. UTF-16BE with BOM (FFF)
     if (nLen >= 2 && pBytes[0] == 0xFE && pBytes[1] == 0xFF)
     {
-        // Salta i 2 byte di BOM e converti da UTF-16BE a wchar_t con iconv
+        // Skip the 2 bytes of BOM and convert from UTF-16BE to wchar t with iconv
         return FromUnicodeToUtf8WideCharString((const char*)(pBytes + 2), nLen - 2, "UTF-16BE");
     }
 

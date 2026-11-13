@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #define _FILE_OFFSET_BITS 64
 
@@ -192,12 +190,12 @@ int genhtFind_OLD(GenHashTable_t* p, const void* pKey, uint32_t keysize, void* p
 		wprintf(L"\n\n\tERRORE genhtFind: p È NULL!!!\n\n");
 		return -2;
 	}
-	//wprintf(L"\n\n\tOK! genhtFind: p NON È NULL!!! -> KEY = <%s>\n\n", (char*)pKey);
+	//wprintf(L"\n\n\tOK! genhtFind: p NOT NULL!!! -> KEY = <%s>\n\n", (char*)pKey);
 
 	if ( NULL == p->HashFunc )
 		wprintf(L"\n\n\tERRORE genhtFind: p->HashFunc È NULL!!! -> KEY = <%s>\n\n", (char*)pKey);
 	//else
-	//	wprintf(L"\n\n\tOK! genhtFind: p->HashFunc NON È NULL!!! -> KEY = <%s>\n\n", (char*)pKey);
+	// wprintf(L"\n\n\tOK! genhtFind: p->HashFunc IS NOT NULL!!! -> KEY = <%s>\n\n", (char*)pKey);
 
 	index = p->HashFunc(p, pKey, keysize);
 
@@ -342,7 +340,7 @@ int genhtInsert(GenHashTable_t* p, const void* pKey, uint32_t keysize, const voi
 		}
 		if ( t->next == NULL )
 		{
-			//wprintf(L"\nINDICE USATO PIÙ DI UNA VOLTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA -> %d\n", index);
+			//wprintf(L"\nINDICE UATH MORE A VOLTAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA -> %d\n", index);
 			t->next = genhtNewNode(pKey, keysize, pData, datasize);
 			return index;
 		}
@@ -543,7 +541,7 @@ int GenWideStringCompareFunc(const void* pKey1, uint32_t keysize1, const void* p
 	UNUSED(keysize1);
 	UNUSED(keysize2);
 
-	//wprintf(L"GenWideStringCompareFunc -> KEY1[%ls](keysize1 = %u) <> KEY2[%ls](keysize2 = %u)\n", (wchar_t*)pKey1, keysize1, (wchar_t*)pKey2, keysize2);
+	//wprintf(L)GenWideStringCompareFunc -> KEY1[%ls](keysize1=%u) <> KEY2[%ls](keysize2=%u)\n", (wchar t*)pKey1, keysize1, (wchar t*)pKey2, keysize2);
 
 	return wcsncmp((wchar_t*)pKey1, (wchar_t*)pKey2, BLOCK_SIZE - 1);
 }

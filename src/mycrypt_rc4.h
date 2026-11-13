@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #ifndef MY_RC4_CRYPT_H
 #define MY_RC4_CRYPT_H
@@ -30,8 +28,8 @@
 extern "C" {
 #endif
 
-// Contesto dello stato RC4.
-// Ogni operazione indipendente deve utilizzare il proprio contesto.
+// Context of the RC4 state.
+// Each independent operation must use its context.
 
 typedef struct
 {
@@ -40,31 +38,31 @@ typedef struct
     uint8_t j;
 } my_rc4_ctx_t;
 
-// Inizializza il contesto RC4.
-// Restituisce 1 in caso di successo, 0 in caso di errore.
-// Se ctx è valido ma la chiave non lo è, il contesto viene azzerato.
+// It initiates the RC4 context.
+// Returns 1 in case of success, 0 in case of error.
+// If ctx is valid but the key is not, the context is reset.
 
 int my_rc4_init(my_rc4_ctx_t *ctx, const uint8_t *key, size_t key_len);
 
-// Cifra o decifra i dati.
-// Restituisce 1 in caso di successo, 0 in caso di errore.
-// Richiede un contesto inizializzato correttamente.
-// Supporta input e output coincidenti.
-// Se len è zero, non modifica il contesto e restituisce 1,
-// purché ctx non sia NULL.
+// Cipher or decrypt data.
+// Returns 1 in case of success, 0 in case of error.
+// Requires an initialized context correctly.
+// Supports coin input and output.
+// If len is zero, it does not change the context and returns 1,
+// provided ctx is not NULL.
 
 int my_rc4_crypt(my_rc4_ctx_t *ctx,
                  const uint8_t *in,
                  uint8_t *out,
                  size_t len);
 
-// Azzera il contesto in memoria.
-// Se ctx è NULL, non esegue alcuna operazione.
+// Clear the context in memory.
+// If ctx is NULL, it does not perform any operation.
 
 void my_rc4_reset(my_rc4_ctx_t *ctx);
 
-// Inizializza, cifra/decifra e azzera il contesto.
-// Restituisce 1 in caso di successo, 0 in caso di errore.
+// Initialize, digit/decipher and reset the context.
+// Returns 1 in case of success, 0 in case of error.
 
 int my_rc4_process(const uint8_t *key,
                    size_t key_len,

@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modif
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modif
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +37,7 @@
 
 #include "myUnicodeNFC.h"
 
-#include "cmap/cmap_Adobe-Japan1-7.h"   // #include "cmap_aj1_full.h"
+#include "cmap/cmap_Adobe-Japan1-7.h"   // #includes "cmap aj1 full. h"
 #include "cmap/cmap_Adobe-CNS1-7.h"
 #include "cmap/cmap_Adobe-GB1-6.h"
 #include "cmap/cmap_Adobe-Korea1-2.h"
@@ -70,7 +68,7 @@ void SetOnUserPasswordCallback(Params *pParams, OnUserPasswordCallback callback)
     }
 }
 
-// Registra un warning senza classificarlo come errore di parsing.
+// Record a warning without placing it as a parsing error.
 static void ReportPasswordWarning(
     Params *pParams,
     const wchar_t *pszReason)
@@ -88,20 +86,20 @@ static void ReportPasswordWarning(
     wprintf(L"\nWARNING: %ls\n\n", pszReason);
 }
 
-/* ---------- RTL helpers ---------- */
+/* ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- */
 
 static int IsRTLCodepoint(wchar_t c)
 {
-    return (c >= 0x0590 && c <= 0x05FF) ||   // Ebraico 
-           (c >= 0x0600 && c <= 0x06FF) ||   // Arabo 
-           (c >= 0x0700 && c <= 0x074F) ||   // Siriaco 
-           (c >= 0x0750 && c <= 0x077F) ||   // Arabo Supplementare 
-           (c >= 0x08A0 && c <= 0x08FF) ||   // Arabo Esteso-A 
+    return (c >= 0x0590 && c <= 0x05FF) ||   // Hebrew 
+           (c >= 0x0600 && c <= 0x06FF) ||   // Arabic 
+           (c >= 0x0700 && c <= 0x074F) ||   // Syria 
+           (c >= 0x0750 && c <= 0x077F) ||   // Arabic Supplement 
+           (c >= 0x08A0 && c <= 0x08FF) ||   // Foreign Arab A 
            (c >= 0xFB1D && c <= 0xFDFF) ||   // Present. Forms-A 
            (c >= 0xFE70 && c <= 0xFEFF);     // Present. Forms-B 
 }
 
-// Inverte in-place ogni run contiguo di caratteri RTL in s[0..len-1]. 
+// In-place reverse each contiguous run of RTL characters in s[0..len-1]. 
 static void ReverseRTLRuns(wchar_t *s, size_t len)
 {
     size_t i = 0;
@@ -122,8 +120,8 @@ static void ReverseRTLRuns(wchar_t *s, size_t len)
     }
 }
 
-// ---------- Voto visivo/logico per riga (decisione da col/ord) ---------- 
-static int   *s_bidiLineVisual = NULL;  // per riga: 1 = visivo, 0 = logico, -1 = ignoto 
+// ------------ Visual/logical Vote per line (Decision by col/ord) ------------ 
+static int   *s_bidiLineVisual = NULL;  // per line: 1 = visual, 0 = logical, -1 = unknown 
 static size_t s_bidiLines = 0, s_bidiCap = 0;
 static int    s_bidiVis = 0, s_bidiLog = 0;
 
@@ -135,7 +133,7 @@ static void BidiReset(void)
     s_bidiVis = s_bidiLog = 0;
 }
 
-// Chiude la riga corrente e ne registra il verdetto. 
+// Closes the current line and records the verdict. 
 static void BidiEndLine(void)
 {
     if (s_bidiLines == s_bidiCap)
@@ -151,7 +149,7 @@ static void BidiEndLine(void)
     s_bidiVis = s_bidiLog = 0;
 }
 
-// Voto: due glifi RTL consecutivi nello stream. col cresce -> ordine visivo. 
+// Vote: two consecutive RTL glifi in the stream. with growing -> visual order. 
 static void BidiVote(wchar_t prev, wchar_t cur, double prevCol, double curCol)
 {
     if (!IsRTLCodepoint(prev) || !IsRTLCodepoint(cur)) return;
@@ -159,12 +157,12 @@ static void BidiVote(wchar_t prev, wchar_t cur, double prevCol, double curCol)
     else if (curCol + 0.5 < prevCol) s_bidiLog++;
 }
 
-static void ReverseRange(wchar_t *s, size_t a, size_t b)   // estremi inclusi 
+static void ReverseRange(wchar_t *s, size_t a, size_t b)   // extremes included 
 {
     while (a < b) { wchar_t t = s[a]; s[a] = s[b]; s[b] = t; a++; b--; }
 }
 
-// Dopo l'inversione di una riga intera, rimette dritti numeri e latino. 
+// After the reversal of a whole line, it puts straight numbers and Latin. 
 static void ReverseLtrRuns(wchar_t *s, size_t len)
 {
     size_t i = 0;
@@ -182,8 +180,8 @@ static void ReverseLtrRuns(wchar_t *s, size_t len)
     }
 }
 
-// Riga mista in ordine visivo: inverte ogni "frase" RTL, spazi interni inclusi,
-// cosi' cambia anche l'ordine delle parole. 
+// Mixed row in visual order: reverse each "frase" RTL, indoor spaces included,
+// so the order of words changes. 
 static void ReverseRTLPhrases(wchar_t *s, size_t len)
 {
     size_t i = 0;
@@ -206,7 +204,7 @@ static void ReverseRTLRunsInText(wchar_t *text)
 {
     if (text == NULL) return;
 
-    // I verdetti valgono solo se il numero di righe coincide. 
+    // The verdicts only apply if the number of rows coincides. 
     size_t nl = 1;
     for (wchar_t *p = text; *p; p++) if (*p == L'\n') nl++;
     int useVotes = (s_bidiLineVisual != NULL && nl == s_bidiLines);
@@ -246,7 +244,7 @@ static void ReverseRTLRunsInText(wchar_t *text)
         {
             if (verdict == 0)
             {
-                // stream gia' in ordine logico: non toccare 
+                // stream already in logical order: do not touch 
             }
             else if (verdict == 1)
             {
@@ -260,7 +258,7 @@ static void ReverseRTLRunsInText(wchar_t *text)
             }
             else if (rtlCount > ltrCount)
             {
-                /* nessun voto: euristica precedente sulla punteggiatura */
+                /* no vote: previous punctuation */
                 wchar_t firstCh = (first < len) ? lineStart[first] : 0;
                 wchar_t lastCh  = (last  < len) ? lineStart[last]  : 0;
                 int firstIsPunct = (firstCh == L'.' || firstCh == L'!' || firstCh == L'?' ||
@@ -335,9 +333,9 @@ wchar_t ConvertCIDToUnicode(Params *pParams, int cid)
     const CidToUnicodeMap *map = NULL;
     size_t n = 0;
 
-    // 0xFFFD (65533) e' il carattere di sostituzione Unicode: se arriva qui,
-    // significa che stiamo cercando di convertire un "notdef" gia' sostituito.
-    // Lo restituiamo silenziosamente senza emettere il warning. 
+    // 0xFFFD (65533) is the Unicode replacement character: if it comes here,
+    // means we're trying to convert a "notdef" already replaced.
+    // We return it silently without warning. 
     if (cid == 0xFFFD)
     {
         return 0xFFFD;
@@ -374,7 +372,7 @@ wchar_t ConvertCIDToUnicode(Params *pParams, int cid)
 }
 
 
-// Riconosce gli encoding UTF-16 (H o V), Uni*UTF16*.
+// It recognizes UTF-16 (H or V), Uni*UTF16*.
 int IsUTF16Encoding(const char *szEncoding)
 {
     if (NULL == szEncoding) return 0;
@@ -503,15 +501,13 @@ fontobjcontentkeyarray : T_QOPAREN { T_INT_LITERAL | T_REAL_LITERAL} T_QCPAREN;
 fontobjcontentkeydict  : T_DICT_BEGIN { T_NAME fontobjcontentkeyvalue } T_DICT_END;
 */
 
-/*
-encodingobj                   : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ encodingobjbody T_KW_ENDOBJ;
-encodingobjbody               : T_NAME | T_DICT_BEGIN encodingobjdictitems T_DICT_END;
-encodingobjdictitems          : {T_NAME encodingobjdictitemskeyvalues};
-encodingobjdictitemskeyvalues : T_NAME
-                              | encodingobjarray
-                              ;
-encodingobjarray              : T_QOPAREN { T_INT_LITERAL T_NAME {T_NAME} } T_QCPAREN;
-*/
+/* encodingobj: T INT LITERAL T INT LITERAL T KW OBJ encodingobjbody T KW ENDOBJ;
+encodingobjbody: T NAME | T DICT BEGIN encodingobjdictitems T DICT END;
+encodingobjdictitems:
+encodingobjdictitemskeyvalues: T NAME
+| encodingobjarray
+;
+encodingobjarray: T QOPAREN {T INT LITERAL T NAME {T NAME} T QCPAREN; */
 
 // -----------------------------------------------------------------------------------------------------------
 
@@ -1127,15 +1123,15 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 	char keyImageObj[256];
 	uint32_t keyImageObjLength;
 
-	//  Gestione delle stringhe letterali PDF.
+	//  PDF Literal string management.
 
-	//  literalStringDepth: profondita' delle parentesi annidate.
+	//  literalStringDepth: depth of nested parentheses.
 
-	//  bLiteralStringEscape: indica che il carattere precedente era un backslash.
+	//  bLiteralStringEscape: indicates that the previous character was a backslash.
 
 	//  bSkipLexical:
-	//      impedisce alla macchina a stati di interpretare
-	//      i caratteri contenuti nelle stringhe letterali.
+	//      prevents the machine from interpreting
+	//      the characters contained in the literal strings.
 	int literalStringDepth = 0;
 	int bLiteralStringEscape = 0;
 	int bSkipLexical = 0;
@@ -1178,9 +1174,9 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 		{
 			c = myBlock[curPos];
 
-			// Gestione delle stringhe letterali PDF.
-			// La gestione viene effettuata soltanto fuori dagli
-			// stream, per non interpretare i dati binari.
+			// PDF Literal string management.
+			// Management is carried out only outside the
+			// stream, not to interpret binary data.
 
 			bSkipLexical = 0;
 
@@ -1214,8 +1210,8 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 
 					bSkipLexical = 1;
 
-					// Una stringa letterale interrompe
-					// qualsiasi riconoscimento parziale.
+					// A literal string interrupts
+					// any partial recognition.
 					state = S_PP0;
 					k = 0;
 				}
@@ -1296,12 +1292,12 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 						{
 							if ( !bSubtypeState )
 							{
-								//wprintf(L"OK, sono in S_PP0; TROVATO '/'; vado in state S_PP19\n");
+								//wprintf(L"OK, are in S PP0; TROVATO '/'; I go to S PP19\n state);
 								state = S_PP19;
 							}
 							else
 							{
-								//wprintf(L"OK, sono in S_PP0; TROVATO '/'; vado in state S_PP27\n");
+								//wprintf(L"OK, are in S PP0; TROVATO '/'; I go to S PP27\n state);
 								state = S_PP27;
 							}
 						}
@@ -1330,7 +1326,7 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 							lenNumberLexeme = idxNumberLexeme;
 							idxNumberLexeme = 0;
 
-							//Number = atoi((char*)lexeme);
+							//Number = atoi(char*)lexeme);
 							Number = 0;
 							for ( int i = 0; i < lenNumberLexeme; i++ )
 							{
@@ -1358,7 +1354,7 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 								{
 									lexeme[k] = '\0';
 									k = 0;
-									//Generation = atoi((char*)lexeme);
+									//Generation = atoi(char*)lexeme);
 									Generation = 0;
 									for ( uint32_t i = 0; i < k; i++ )
 									{
@@ -1366,7 +1362,7 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 									}
 									state = S_PP3;
 								}
-								// else: whitespace extra -> resta in S_PP2
+								// else: extra whitespace -> remains in S PP2
 							}
 							else
 							{
@@ -1384,7 +1380,7 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 						{
 							state = S_PP0;
 						}
-						// else: whitespace -> resta in S_PP3
+						// else: whitespace -> remains in S PP3
 						break;
 
 					case S_PP4:
@@ -1396,7 +1392,7 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 						{
 							state = S_PP0;
 						}
-						// else: whitespace -> resta in S_PP4
+						// else: whitespace -> remains in S PP4
 						break;
 
 					case S_PP5:
@@ -1408,7 +1404,7 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 						{
 							state = S_PP0;
 						}
-						// else: whitespace -> resta in S_PP5
+						// else: whitespace -> remains in S PP5
 						break;
 
 					case S_PP6:
@@ -1564,7 +1560,7 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 					case S_PP12:
 						if ( IsDelimiterChar(c) )
 						{
-							if ( !bStreamState ) // stream
+							if ( !bStreamState ) // stream stream
 							{
 								myHT_Data.StreamOffset = Offset + 1;
 								bStreamState = 1;
@@ -1637,9 +1633,9 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 								{
 									char c1, c2;
 
-									//c1 = myPrevBlock[BLOCK_SIZE + nTemp];
+									//c1 = myPrevBlock[BLOCK SIZE + nTemp];
 									//nTemp++;
-									//c2 = myPrevBlock[BLOCK_SIZE + (nTemp + 1)];
+									//c2 = myPrevBlock[BLOCK SIZE + (nTemp + 1)];
 									
 									c1 = myPrevBlock[BLOCK_SIZE + nTemp];
 									c2 = myPrevBlock[BLOCK_SIZE + nTemp + 1];
@@ -1682,12 +1678,12 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 						}
 						else if ( 'e' == c )
 						{
-							// Il carattere corrente può essere l'inizio
-							// di una nuova keyword "endstream" o "endobj".
-							// Esempio: ... eendstream
+							// The current character can be the beginning
+							// of a new "endstream" or "endobj" keyword.
+							// Example: ... eendstream
 							//          ^ ^
-							//           | +-- nuova keyword
-							//           +---- ultimo byte dello stream
+							//           | +-- new keyword
+							//           +------ last byte of the stream
 							state = S_PP13;
 						}
 						else
@@ -1837,7 +1833,7 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 					case S_PP19:
 						if ( 'S' == c )
 						{
-							//wprintf(L"OK, sono in S_PP19; TROVATO 'S'; vado in state S_PP20\n");
+							//wprintf(L"OK, are in S PP19; TROVATO 'S'; I go to state S PP20\n');
 							state = S_PP20;
 						}
 						else
@@ -1895,7 +1891,7 @@ int getObjsOffsets(Params *pParams, char *pszFileName)
 						}
 						else if ( cDelim == '/' )
 						{
-							//wprintf(L"OK, sono in S_PP27; TROVATO '/'; vado in state S_PP27\n");
+							//wprintf(L"OK, are in S PP27; TROVATO '/'; I go in state S PP27\n');
 							state = S_PP27;
 						}
 						else
@@ -2078,7 +2074,7 @@ uscita:
 	return retValue;
 }
 
-// Libera le copie delle stringhe binarie del dizionario Encrypt.
+// Free copies of the binary strings of the Encrypt dictionary.
 static void FreeCryptoInputBuffers(Params *pParams)
 {
     if (pParams == NULL)
@@ -2211,9 +2207,9 @@ int Parse(Params *pParams, FilesList* myFilesList)
 
 	//pParams->pCurrentEncodingArray = &(pParams->aUtf8CharSet[0]);
 	pParams->pCurrentEncodingArray = &(pParams->aSTD_CharSet[0]);
-	//pParams->pCurrentEncodingArray = &(pParams->aWIN_CharSet[0]);
-	//pParams->pCurrentEncodingArray = &(pParams->aMAC_CharSet[0]);
-	//pParams->pCurrentEncodingArray = &(pParams->aPDF_CharSet[0]);
+	//pParams->pCurrentEncodingArray = &(pParams->aWIN CharSet[0]);
+	//pParams->pCurrentEncodingArray = &(pParams->aMAC CharSet[0]);
+	//pParams->pCurrentEncodingArray = &(pParams->aPDF CharSet[0]);
 
 	InitializeUnicodeArray(pParams);
 	InitializeCharSetArrays(pParams);
@@ -2224,7 +2220,7 @@ int Parse(Params *pParams, FilesList* myFilesList)
 	pParams->pText = NULL;
 	pParams->pTextFromActualText = NULL;
 
-	// Alloca la struttura crittografica, se non è già disponibile.
+	// Place the cryptographic structure if it is not already available.
 	if (pParams->pCryptoParams == NULL)
 	{
 		pParams->pCryptoParams = (PdfCryptoParams *)calloc(1, sizeof(*pParams->pCryptoParams));
@@ -2239,7 +2235,7 @@ int Parse(Params *pParams, FilesList* myFilesList)
 		}
 	}
 
-	// Inizializza il puntatore alla lunghezza dell'output.
+	// Start the pointer to the output length.
 	pParams->pCryptoParams->lenStream = &pParams->pCryptoParams->lenStreamValue;
 
 	pParams->myPdfTrailer.pID0Bytes = NULL;
@@ -2257,13 +2253,13 @@ int Parse(Params *pParams, FilesList* myFilesList)
 		goto uscita;
 	}
 
-	//#if defined(MYPDFSEARCH_USE_TST)
+	//#if defined(MYPDFSEARCH USE TST)
 	//tstInit(&(pParams->myTST));
 	//#else
 	//genhtInit(&(pParams->myHT), 0, GenWideStringHashFunc, GenWideStringCompareFunc);
 	//#endif
 
-	//genhtInit(&(pParams->myHT_EncodingArray), 0, GenStringHashFunc, GenStringCompareFunc);
+	//genhtInit(&(pParams->myHT EncodingArray), 0, GenStringHashFunc, GenStringCompareFunc);
 
 	myobjreflist_Init(&(pParams->myXObjRefList));
 	myobjreflist_Init(&(pParams->myFontsRefList));
@@ -2274,8 +2270,8 @@ int Parse(Params *pParams, FilesList* myFilesList)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE Parse 1: Memoria insufficiente.\n\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE Parse 1: Memoria insufficiente.\n\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE Parse 1: Memoria insufficiente.\n\n");
+		//wprintf(L)ERRORE Parse 1: Insufficient memory. \n\n);
+		//fwprintf(pParams->fpErrors, L"ERRORE Parse 1: Insufficient memory. \n\n);
 		retValue = 0;
 		goto uscita;
 	}
@@ -2288,8 +2284,8 @@ int Parse(Params *pParams, FilesList* myFilesList)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE Parse 1 bis: Memoria insufficiente.\n\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE Parse 1: Memoria insufficiente.\n\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE Parse 1 bis: Memoria insufficiente.\n\n");
+		//wprintf(L)ERRORE Parse 1: Insufficient memory. \n\n);
+		//fwprintf(pParams->fpErrors, L"ERRORE Parse 1 bis: Insufficient memory. \n\n);
 		retValue = 0;
 		goto uscita;
 	}
@@ -2302,8 +2298,8 @@ int Parse(Params *pParams, FilesList* myFilesList)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE Parse 2: Memoria insufficiente.\n\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE Parse 2: Memoria insufficiente.\n\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE Parse 2: Memoria insufficiente.\n\n");
+		//wprintf(L"ERRORE Parse 2: Insufficient memory. \n\n);
+		//fwprintf(pParams->fpErrors, L"ERRORE Parse 2: Insufficient memory. \n\n);
 		retValue = 0;
 		goto uscita;
 	}
@@ -2312,8 +2308,8 @@ int Parse(Params *pParams, FilesList* myFilesList)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE Parse 2 bis: Memoria insufficiente.\n\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE Parse 2: Memoria insufficiente.\n\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE Parse 2: Memoria insufficiente.\n\n");
+		//wprintf(L"ERRORE Parse 2: Insufficient memory. \n\n);
+		//fwprintf(pParams->fpErrors, L"ERRORE Parse 2: Insufficient memory. \n\n);
 		retValue = 0;
 		goto uscita;
 	}
@@ -2328,8 +2324,8 @@ int Parse(Params *pParams, FilesList* myFilesList)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE Parse 3: Memoria insufficiente.\n\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE Parse 3: Memoria insufficiente.\n\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE Parse 3: Memoria insufficiente.\n\n");
+		//wprintf(L'ERRORE Parse 3: Insufficient memory. \n\n);
+		//fwprintf(pParams->fpErrors, L"ERRORE Parse 3: Insufficient memory. \n\n);
 		retValue = 0;
 		goto uscita;
 	}
@@ -2339,8 +2335,8 @@ int Parse(Params *pParams, FilesList* myFilesList)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE Parse 4: Memoria insufficiente.\n\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE Parse 4: Memoria insufficiente.\n\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE Parse 4: Memoria insufficiente.\n\n");
+		//wprintf(L"ERRORE Parse 4: Insufficient memory. \n\n);
+		//fwprintf(pParams->fpErrors, L"ERRORE Parse 4: Insufficient memory. \n\n);
 		retValue = 0;
 		goto uscita;
 	}
@@ -2383,16 +2379,16 @@ int Parse(Params *pParams, FilesList* myFilesList)
 			pParams->pPagesArray = NULL;
 		}
 
-		// Libera le copie binarie del dizionario /Encrypt del PDF precedente.
+		// Free the binary copies of the /Encrypt dictionary of the previous PDF.
 		FreeCryptoInputBuffers(pParams);
 
-		// Libera l'eventuale output crittografico del PDF precedente.
+		// Free the cryptographic output of the previous PDF.
 		PdfCryptoParams_FreeOutput(pParams->pCryptoParams);
 
-		// Reinizializza i parametri crittografici per il nuovo PDF.
+		// Reinitialize cryptographic parameters for the new PDF.
 		memset(pParams->pCryptoParams, 0, sizeof(*pParams->pCryptoParams));
 
-		// Ripristina il puntatore alla lunghezza dell'output.
+		// Restore the pointer to the output length.
 		pParams->pCryptoParams->lenStream = &pParams->pCryptoParams->lenStreamValue;
 
 		if (pParams->myPdfTrailer.pID0Bytes != NULL)
@@ -2420,7 +2416,7 @@ int Parse(Params *pParams, FilesList* myFilesList)
 		strncpy(pParams->szFileName, n->myFileName, len + 1);
 		#endif
 
-		// Contatori di errori/warning del file corrente (per --show_errors / --show_warnings)
+		// Current file error/warning meters (for --show errors / --show warnings)
 		pParams->nFileErrorCount = 0;
 		pParams->nFileWarningCount = 0;
 
@@ -2435,8 +2431,8 @@ int Parse(Params *pParams, FilesList* myFilesList)
 		{
 			snprintf(pParams->szError, 8192, "ERRORE Parse 5: nell'apertura del file '%s'.\n\n", pParams->szFileName);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE Parse 5: nell'apertura del file '%s'.\n", pParams->szFileName);
-			//fwprintf(pParams->fpErrors, L"ERRORE Parse 5: nell'apertura del file '%s'.\n\n", pParams->szFileName);
+			//wprintf(L"ERRORE Parse 5: in the opening of the '%s' file. \n, pParams->szFileName);
+			//fwprintf(pParams->fpErrors, L"ERRORE Parse 5: in the opening of the '%s' file. \n\n, pParams->szFileName);
 
 			retValue = 0;
 			goto successivo;
@@ -2479,8 +2475,8 @@ int Parse(Params *pParams, FilesList* myFilesList)
 		{
 			snprintf(pParams->szError, 8192, "ERRORE Parse 5 tris nella lettura del file header '%s'.\n\n", pParams->szFileName);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE Parse 5 tris nella lettura del file header '%s'.\n\n", pParams->szFileName);
-			//fwprintf(pParams->fpErrors, L"ERRORE Parse 5 tris nella lettura del file header '%s'.\n\n", pParams->szFileName);
+			//wprintf(L"ERRORE Parse 5 tris in reading the header file '%s'. \n\n, pParams->szFileName);
+			//fwprintf(pParams->fpErrors, L"ERRORE Parse 5 tris in reading the header file '%s'. \n\n, pParams->szFileName);
 			retValue = 0;
 			goto successivo;
 		}
@@ -2527,15 +2523,15 @@ int Parse(Params *pParams, FilesList* myFilesList)
 			{
 				snprintf(pParams->szError, 8192, "Encrypted file '%s'.\n", pParams->szFileName);
 				myShowErrorMessage(pParams, pParams->szError, 1);
-				//wprintf(L"Encrypted file '%s'.\n", pParams->szFileName);
-				//fwprintf(pParams->fpErrors, L"Encrypted file '%s'.\n", pParams->szFileName);
+				//wprintf(L"Encrypted file '%s'. \n, pParams->szFileName);
+				//fwprintf(pParams->fpErrors, L"Encrypted file '%s'. \n, pParams->szFileName);
 			}
 			else
 			{
 				snprintf(pParams->szError, 8192, "ERRORE Parse 6 nella lettura del trailer del file '%s'.\n\n", pParams->szFileName);
 				myShowErrorMessage(pParams, pParams->szError, 1);
-				//wprintf(L"ERRORE Parse 6 nella lettura del trailer del file '%s'.\n\n", pParams->szFileName);
-				//fwprintf(pParams->fpErrors, L"ERRORE Parse 6 nella lettura del trailer del file '%s'.\n\n", pParams->szFileName);
+				//wprintf(L"ERRORE Parse 6 in the trailer reading of the '%s' file. \n\n, pParams->szFileName);
+				//fwprintf(pParams->fpErrors, L"ERRORE Parse 6 in the trailer reading of the '%s' file. \n\n, pParams->szFileName);
 			}
 
 			mynumstacklist_Free( &(pParams->myNumStack) );
@@ -2558,8 +2554,8 @@ int Parse(Params *pParams, FilesList* myFilesList)
 					{
 						snprintf(pParams->szError, 8192, "ERRORE Parse 6(CheckObjectType) nella lettura del trailer del file '%s'.\n\n", pParams->szFileName);
 						myShowErrorMessage(pParams, pParams->szError, 1);
-						//wprintf(L"ERRORE Parse 6 (CheckObjectType) nella lettura del trailer del file '%s'.\n\n", pParams->szFileName);
-						//fwprintf(pParams->fpErrors, L"ERRORE Parse 6(CheckObjectType) nella lettura del trailer del file '%s'.\n\n", pParams->szFileName);
+						//wprintf(L"ERRORE Parse 6 (CheckObjectType) in reading the trailer of the file '%s'. \n\n, pParams->szFileName);
+						//fwprintf(pParams->fpErrors, L"ERRORE Parse 6(CheckObjectType) in the trailer reading of the '%s' file. \n\n, pParams->szFileName);
 						PrintThisObject(pParams, k, 0, 0, NULL);
 						PrintThisObject(pParams, k, 0, 0, pParams->fpErrors);
 						retValue = 0;
@@ -2590,8 +2586,8 @@ int Parse(Params *pParams, FilesList* myFilesList)
 				{
 					snprintf(pParams->szError, 8192, "ERRORE Parse 6(ParseStmObj) nella lettura del trailer del file '%s'.\n\n", pParams->szFileName);
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"ERRORE Parse 6 (ParseStmObj) nella lettura del trailer del file '%s'.\n\n", pParams->szFileName);
-					//fwprintf(pParams->fpErrors, L"ERRORE Parse 6(ParseStmObj) nella lettura del trailer del file '%s'.\n\n", pParams->szFileName);
+					//wprintf(L"ERRORE Parse 6 (ParseStmObj) in reading the trailer of the file '%s'. \n\n, pParams->szFileName);
+					//fwprintf(pParams->fpErrors, L"ERRORE Parse 6(ParseStmObj) in the trailer reading of the '%s' file. \n\n, pParams->szFileName);
 					PrintThisObject(pParams, myObjNum, 0, 0, NULL);
 					PrintThisObject(pParams, myObjNum, 0, 0, pParams->fpErrors);
 					myintqueuelist_Free(&myObjsQueue);
@@ -2621,8 +2617,8 @@ int Parse(Params *pParams, FilesList* myFilesList)
 			{
 				snprintf(pParams->szError, 8192, "ERRORE Parse 6(ParseTrailerXRefStreamObject) nella lettura del trailer del file '%s'.\n\n", pParams->szFileName);
 				myShowErrorMessage(pParams, pParams->szError, 1);
-				//wprintf(L"ERRORE Parse 6 (ParseTrailerXRefStreamObject) nella lettura del trailer del file '%s'.\n\n", pParams->szFileName);
-				//fwprintf(pParams->fpErrors, L"ERRORE Parse 6(ParseTrailerXRefStreamObject) nella lettura del trailer del file '%s'.\n\n", pParams->szFileName);
+				//wprintf(L"ERRORE Parse 6 (ParseTrailerXRefStreamObject) in the trailer reading of the '%s' file. \n\n, pParams->szFileName);
+				//fwprintf(pParams->fpErrors, L"ERRORE Parse 6(ParseTrailerXRefStreamObject) in the trailer reading of the '%s' file. \n\n, pParams->szFileName);
 				retValue = 0;
 				goto successivo;
 			}
@@ -2640,7 +2636,7 @@ int Parse(Params *pParams, FilesList* myFilesList)
 		PrintThisObject(pParams, pParams->myPdfTrailer.Info.Number, 0, 0, NULL);
 		#endif
 
-		// 1. INIZIALIZZA LA CRITTOGRAFIA (se il PDF è cifrato)
+		// 1. INITIZATION CRITTOGRAPHY (if PDF is encrypted)
 		if (pParams->myPdfTrailer.Encrypt.Number > 0)
 		{
 			pParams->bOnParseEncryptObject = 1;
@@ -2652,20 +2648,20 @@ int Parse(Params *pParams, FilesList* myFilesList)
 			pParams->bOnParseEncryptObject = 0;
 		}
 
-		// 2. ORA LEGGI E DECIFRA I METADATI INFO
-		//if (pParams->myPdfTrailer.Info.Number > 0)
+		// 2.  
+		//if (pParams->myPdfTrailer. Info.Number
 		//{
-		//	ParseInfoObject(pParams, pParams->myPdfTrailer.Info.Number);
+		// ParseInfoObject(pParams, pParams->myPdfTrailer. Info.Number);
 		//}
 
-		// 2. ORA LEGGI E DECIFRA I METADATI INFO
+		// 2.  
 		if (pParams->myPdfTrailer.Info.Number > 0)
 		{
 			if (pParams->isEncrypted)
 			{
-				// PDF cifrato: la chiave non e' ancora disponibile (la password
-				// verra' chiesta in AuthenticateCurrentPdf, dentro ManageContent).
-				// I metadati saranno stampati li', dopo l'autenticazione riuscita.
+				// PDF encrypted: the key is not yet available (the password
+				// will be asked in AuthenticateCurrentPdf, within ManageContent).
+				// Metadata will be printed there after successful authentication.
 			}
 			else
 			{
@@ -2686,7 +2682,7 @@ int Parse(Params *pParams, FilesList* myFilesList)
 		//PrintThisObject(pParams, 1504, 1, 0, NULL);
 		//PrintThisObject(pParams, 1505, 1, 0, NULL);
 		//PrintThisObject(pParams, 1506, 1, 0, NULL);
-		//goto uscita;
+		//goto exit;
 		// *************************************************************
 
 
@@ -2695,21 +2691,21 @@ int Parse(Params *pParams, FilesList* myFilesList)
 
 		if (!ParseObject(pParams, pParams->myPdfTrailer.Root.Number))
 		{
-			// Un PDF saltato perché richiede una password utente
-			// non è un errore della ricerca multifile.
+			// A PDF jumped because it requires a user password
+			// is not a multifile search error.
 			if (!pParams->bSkipCurrentPdf)
 				retValue = 0;
 
 			goto successivo;
 		}
 
-		//#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ReadTrailer_FN) || defined(MYDEBUG_PRINT_COUNT_CONTENT_TYPE)
+		//#if defined(MYDEBUG PRINT ALL)
 		//wprintf(L"\n\nTotal number of Image Contents = %u;\nTotal number of content other than Image = %u\n\n", pParams->nCountImageContent, pParams->nCountNotImageContent);
 		//#endif
 
 successivo:
 
-		// Riepilogo a video (su stderr), solo se richiesto da riga di comando.
+		// Video Summary (on stderr), only if required by command line.
 		if ( pParams->bShowErrors && pParams->nFileErrorCount > 0 )
 		{
 			fprintf(stderr, "ERRORI (%d) durante l'elaborazione di '%s' (dettagli in AAA_mypdfsearch_parsing_errors.txt)\n",
@@ -2724,7 +2720,7 @@ successivo:
 //**********************************************************************************************************************************
 		if ( pParams->myObjsTable != NULL )
 		{
-			//for ( x = 0; x < pParams->myPdfTrailer.Size; x++ )
+			//for ( x = 0; x < pParams->myPdfTrailer. Size; x++ )
 			for ( x = 0; x < pParams->nObjsTableSizeFromPrescanFile; x++ )
 			{
 				if ( pParams->myObjsTable[x] != NULL )
@@ -2799,8 +2795,8 @@ successivo:
 			tstFreeRecursive(&(pParams->myTST), pParams->myTST.pRoot);
 		}
 
-		//if ( NULL != pParams->myRedBlackTree.pRoot )
-		//	vlrbtFree(&(pParams->myRedBlackTree));
+		//if ( NULL!= pParams->myRedBlackTree.pRoot)
+		// vlrbtFree(&(pParams->myRedBlackTree));
 
 		if ( NULL != pParams->pText )
 		{
@@ -2839,10 +2835,10 @@ successivo:
 
 		//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
 		//{
-		//	if ( NULL != pParams->myToken.vString )
+		// if ( NULL!= pParams->myToken.vString)
 		//	{
-		//		free(pParams->myToken.vString);
-		//		pParams->myToken.vString = NULL;
+		//  free(pParams->myToken.vString);
+		//  pParams->myToken. vString = NULL;
 		//	}
 		//}
 
@@ -2870,16 +2866,16 @@ uscita:
 	}
 
 
-	//if ( pParams->myToken.vString != NULL )
+	//if (pParams->myToken.vString!= NULL )
 	//{
-	//	free(pParams->myToken.vString);
-	//	pParams->myToken.vString = NULL;
+	// free(pParams->myToken.vString);
+	// pParams->myToken. vString = NULL;
 	//}
 
-	//if ( pParams->myTokenLengthObj.vString != NULL )
+	//if (pParams->myTokenLengthObj. VString!
 	//{
-	//	free(pParams->myTokenLengthObj.vString);
-	//	pParams->myTokenLengthObj.vString = NULL;
+	// free(pParams->myTokenLengthObj.vString);
+	// pParams->myTokenLengthObj. vString = NULL;
 	//}
 
 	if ( pParams->lexemeTemp != NULL )
@@ -2920,7 +2916,7 @@ uscita:
 
 	if ( pParams->myObjsTable != NULL )
 	{
-		//for ( x = 0; x < pParams->myPdfTrailer.Size; x++ )
+		//for ( x = 0; x < pParams->myPdfTrailer. Size; x++ )
 		for ( x = 0; x < pParams->nObjsTableSizeFromPrescanFile; x++ )
 		{
 			if ( pParams->myObjsTable[x] != NULL )
@@ -2997,8 +2993,8 @@ uscita:
 		tstFreeRecursive(&(pParams->myTST), pParams->myTST.pRoot);
 	}
 
-	//if ( NULL != pParams->myRedBlackTree.pRoot )
-	//	vlrbtFree(&(pParams->myRedBlackTree));
+	//if ( NULL!= pParams->myRedBlackTree.pRoot)
+	// vlrbtFree(&(pParams->myRedBlackTree));
 
 	if ( NULL != pParams->pText )
 	{
@@ -3037,10 +3033,10 @@ uscita:
 
 	//if ( (T_NAME == pParams->myToken.Type || T_STRING == pParams->myToken.Type || T_STRING_LITERAL == pParams->myToken.Type || T_STRING_HEXADECIMAL == pParams->myToken.Type) && (NULL != pParams->myToken.vString) )
 	//{
-	//	if ( NULL != pParams->myToken.vString )
+	// if ( NULL!= pParams->myToken.vString)
 	//	{
-	//		free(pParams->myToken.vString);
-	//		pParams->myToken.vString = NULL;
+	//  free(pParams->myToken.vString);
+	//  pParams->myToken. vString = NULL;
 	//	}
 	//}
 
@@ -3056,7 +3052,7 @@ uscita:
 		pParams->pArrayUnicode = NULL;
 	}
 
-	// cleanup di sequences
+	// cleanup of sequences
 	if ( NULL != pParams->sequences )
 	{
 		for ( int s = 0; s < 0x10000; s++ )
@@ -3122,7 +3118,7 @@ uscita:
 
 	FreeCryptoInputBuffers(pParams);
 
-	// Libera l'output crittografico eventualmente rimasto.
+	// Free the cryptographic output that you may have left.
 	if (pParams->pCryptoParams != NULL)
 	{
 		PdfCryptoParams_FreeOutput(pParams->pCryptoParams);
@@ -3134,7 +3130,7 @@ uscita:
 	return retValue;
 }
 
-//#define MYDEBUG_PRINT_ON_MATCH 1
+//#define MYDEBUG PRINT ON MATCH 1
 
 int match(Params *pParams, TokenTypeEnum ExpectedToken, char *pszFunctionName)
 {
@@ -3160,8 +3156,8 @@ int match(Params *pParams, TokenTypeEnum ExpectedToken, char *pszFunctionName)
 		{
 			snprintf(szError, 1024, "\nERROR(OBJ num = %d, gen = %d): FUNZIONE match -> errore di sintassi: Atteso token n° %d, trovato token n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, ExpectedToken, pParams->myToken.Type);
 			myShowErrorMessage(pParams, szError, 1);
-			//fwprintf(pParams->fpErrors, L"\nERROR(OBJ num = %lu, gen = %lu): FUNZIONE match -> errore di sintassi: Atteso token n° %d, trovato token n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, ExpectedToken, pParams->myToken.Type);
-			//wprintf(L"\nERROR(OBJ num = %lu, gen = %lu): FUNZIONE match -> errore di sintassi: Atteso token n° %d, trovato token n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, ExpectedToken, pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"\nERROR(OBJ num = %lu, gen = %lu): FUNTION match -> syntax error: Atteso token n° %d, found token n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]
+			//wprintf(L"\nERROR(OBJ num = %lu, gen = %lu): FUNTION match -> syntax error: Atteso token n° %d, found token n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]
 		}
 
 		PrintThisObject(pParams, pParams->nCurrentParsingObj, 0, 0, pParams->fpErrors);
@@ -3281,8 +3277,8 @@ int matchLengthObj(Params *pParams, TokenTypeEnum ExpectedToken, char *pszFuncti
 		{
 			snprintf(pParams->szError, 8192, "\nERROR(OBJ num = %d, gen = %d): FUNZIONE matchLengthObj -> errore di sintassi: Atteso token n° %d, trovato token n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingLengthObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingLengthObj]->Obj.Generation, ExpectedToken, pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//fwprintf(pParams->fpErrors, L"\nERROR(OBJ num = %lu, gen = %lu): FUNZIONE matchLengthObj -> errore di sintassi: Atteso token n° %d, trovato token n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingLengthObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingLengthObj]->Obj.Generation, ExpectedToken, pParams->myToken.Type);
-			//wprintf(L"\nERROR(OBJ num = %lu, gen = %lu): FUNZIONE matchLengthObj -> errore di sintassi: Atteso token n° %d, trovato token n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingLengthObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingLengthObj]->Obj.Generation, ExpectedToken, pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"\nERROR(OBJ num = %lu, gen = %lu): FUNTION matchLengthObj -> syntax error: Atteso token n° %d, found token n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingLengthObj]->Obj.Number, pParams-ObjsTable[pParams->nCurrentParsingLengthOb
+			//wprintf(L"\nERROR(OBJ num = %lu, gen = %lu): FUNTION matchLengthObj -> syntax error: Atteso token n° %d, found token n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingLengthObj]->Obj.Number, pParams-ObjsTable[pParams->nCurrentParsingLengthOb
 		}
 	}
 
@@ -3501,18 +3497,16 @@ int InsertWordIntoTst(Params *pParams)
 
 	pParams->pwszCurrentWord[pParams->idxCurrentWordChar] = L'\0';
 
-	/*
-	if ( pParams->bStateSillab )
-	{
-		wprintf(
+	/*  if (pParams->bStateSillab)
+{
+wprintf
 			L"\n[DBG-SILLAB-IN] Current='%ls' (idx=%u); Previous='%ls' (idx=%u)\n",
-			pParams->pwszCurrentWord,
-			pParams->idxCurrentWordChar,
-			pParams->pwszPreviousWord,
-			pParams->idxPreviousWordChar
-		);
-	}
-	*/
+pParams->pwszCurrentWord,
+pParams->idxCurrentWordChar,
+pParams->pwszPreviousWord,
+pParams->idxPreviousWordChar
+);
+?  */
 
 	if ( pParams->idxCurrentWordChar > 0 )
 	{
@@ -3540,7 +3534,7 @@ int InsertWordIntoTst(Params *pParams)
 			#endif
 
 			pParams->idxCurrentWordChar = 0;
-			//pParams->idxPreviousWordChar = 0; // QUI NON VA BENE.
+			//pParams->idxPreviousWordChar = 0; // HERE NOT GOOD.
 		}
 		else
 		{
@@ -3583,19 +3577,19 @@ int InsertWordIntoTst(Params *pParams)
 
 void MultiplyTransMatrix(TransMatrix *pA, TransMatrix *pB, TransMatrix *pRes)
 {
-	// [Aa Ab 0]   [Ba Bb 0]   [aNew bNew 0]
-	// [Ac Ad 0] X [Bc Bd 0] = [cNew dNew 0]
-	// [Ae Af 1]   [Be Bf 1]   [eNew fNew 1]
+	// [Aa Ab 0] [Ba Bb 0] [aNew bNew 0]
+	// [Ac Ad 0]
+	// [Ae Af 1]
 
-	// aNew  = (Aa * Ba) + (Ab * Bc) + (0 * Be)
-	// bNew  = (Aa * Bb) + (Ab * Bd) + (0 * Bf)
-	// 0     = (Aa * 0 ) + (Ab * 0 ) + (0 * 1 )
-	// cNew  = (Ac * Ba) + (Ad * Bc) + (0 * Be)
-	// dNew  = (Ac * Bb) + (Ad * Bd) + (0 * Bf)
-	// 0     = (Ac * 0 ) + (Ad * 0 ) + (0 * 1 )
-	// eNew  = (Ae * Ba) + (Af * Bc) + (1 * Be)
-	// fNew  = (Ae * Bb) + (Af * Bd) + (1 * Bf)
-	// 1     = (Ae * 0 ) + (Af * 0 ) + (1 * 1 )
+	// aNew = (Aa * Ba) + (Ab * Bc) + (0 * Be)
+	// bNew = (Aa * Bb) + (Ab * Bd) + (0 * Bf)
+	// 0 = (Aa * 0 ) + (Ab * 0 ) + (0 * 1 )
+	// cNew = (Ac * Ba) + (Ad * Bc) + (0 * Be)
+	// dNew = (Ac * Bb) + (Ad * Bd) + (0 * Bf)
+	// 0 = (Ac * 0 ) + (Ad * 0 ) + (0 * 1 )
+	// eNew = (Ae * Ba) + (Af * Bc) + (1 * Be)
+	// fNew = (Ae * Bb) + (Af * Bd) + (1 * Bf)
+	// 1 = (Ae * 0 ) + (Af * 0 ) + (1 * 1 )
 
 	pRes->a = (pA->a * pB->a) + (pA->b * pB->c);
 	pRes->b = (pA->a * pB->b) + (pA->b * pB->d);
@@ -3623,19 +3617,19 @@ int VlRbtCompareFuncCol(const void* pKey1, uint32_t keysize1, const void* pKey2,
 	{
 		return 1;
 	}
-	else // pMyKey1->col == pMyKey2->col; CONFRONTIAMO LE RIGHE.
+	else // pMyKey1->col ==pMyKey2->col; we CONFRONTIAMO LE RIGHE.
 	{
 		if ( pMyKey1->row > pMyKey2->row )
 		{
 			//return 1;
-			return -1;   // Perché le righe vanno dal basso in alto
+			return -1;   // Because the lines go from the bottom to the top
 		}
 		else if ( pMyKey1->row < pMyKey2->row )
 		{
 			//return -1;
-			return 1;    // Perché le righe vanno dal basso in alto
+			return 1;    // Because the lines go from the bottom to the top
 		}
-		else // pMyKey1->row == pMyKey2->row; CONFRONTIAMO L'ordine di lettura.
+		else // pMyKey1->row == pMyKey2->row; CONFRONTIAMO The reading order.
 		{
 			if ( pMyKey1->ord > pMyKey2->ord )
 			{
@@ -3653,7 +3647,7 @@ int VlRbtCompareFuncCol(const void* pKey1, uint32_t keysize1, const void* pKey2,
 	}
 }
 
-// https://scfbm.biomedcentral.com/articles/10.1186/1751-0473-7-7
+// https://scfbm.biomedcentral.com/articles/10.1186/1751-0473-7
 
 int VlRbtCompareFuncRow(const void* pKey1, uint32_t keysize1, const void* pKey2, uint32_t keysize2)
 {
@@ -3666,14 +3660,14 @@ int VlRbtCompareFuncRow(const void* pKey1, uint32_t keysize1, const void* pKey2,
 	if ( pMyKey1->row > pMyKey2->row )
 	{
 		//return 1;
-		return -1;   // Perché le righe vanno dal basso in alto
+		return -1;   // Because the lines go from the bottom to the top
 	}
 	else if ( pMyKey1->row < pMyKey2->row )
 	{
 		//return -1;
-		return 1;    // Perché le righe vanno dal basso in alto
+		return 1;    // Because the lines go from the bottom to the top
 	}
-	else // pMyKey1->row == pMyKey2->row; CONFRONTIAMO LE COLONNE.
+	else // pMyKey1->row == pMyKey2->row; we're CONFRONTIAMO LE COLONNE.
 	{
 		if ( pMyKey1->col < pMyKey2->col )
 		{
@@ -3683,7 +3677,7 @@ int VlRbtCompareFuncRow(const void* pKey1, uint32_t keysize1, const void* pKey2,
 		{
 			return 1;
 		}
-		else // pMyKey1->col == pMyKey2->col; CONFRONTIAMO L'ordine di lettura.
+		else // pMyKey1->col=pMyKey2->col; CONFRONTIAMO The reading order.
 		{
 			if ( pMyKey1->ord > pMyKey2->ord )
 			{
@@ -3717,7 +3711,7 @@ int VlRbtCompareFuncOrd(const void* pKey1, uint32_t keysize1, const void* pKey2,
 	{
 		return -1;
 	}
-	else // pMyKey1->ord == pMyKey2->ord; CONFRONTIAMO LE COLONNE.
+	else // pMyKey1->ord == pMyKey2->ord; we CONFRONTIAMO LE COLONNE.
 	{
 		if ( pMyKey1->col < pMyKey2->col )
 		{
@@ -3727,15 +3721,15 @@ int VlRbtCompareFuncOrd(const void* pKey1, uint32_t keysize1, const void* pKey2,
 		{
 			return 1;
 		}
-		else // pMyKey1->col == pMyKey2->col; CONFRONTIAMO LE RIGHE.
+		else // pMyKey1->col ==pMyKey2->col; we CONFRONTIAMO LE RIGHE.
 		{
 			if ( pMyKey1->row > pMyKey2->row )
 			{
-				return -1; // Perché le righe vanno dal basso in alto
+				return -1; // Because the lines go from the bottom to the top
 			}
 			else if ( pMyKey1->row < pMyKey2->row )
 			{
-				return 1; // Perché le righe vanno dal basso in alto
+				return 1; // Because the lines go from the bottom to the top
 			}
 			else
 			{
@@ -3805,10 +3799,10 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 		TcPrev = pMyDataPredecessor->Tc;
 		FontObjRefPrev = pMyDataPredecessor->currFontObjRef;
 		
-		// --- INIZIO DEDUPLICAZIONE GLIFI SOVRAPPOSTI ---
-		// Se due glifi sono disegnati praticamente nello stesso punto
-		// ed è lo STESSO carattere, è un artefatto visivo (faux bold, ombra).
-		// Se i caratteri sono diversi, non è un duplicato!
+		// --- INITIAL DEDUPLICATION OF SOVRAPPOSTS ---
+		// If two glifies are drawn practically at the same point
+		// and it is the STESS character, it is a visual artifact (faux bold, shadow).
+		// If the characters are different, it is not a duplicate!
 		{
 			double colDiff = pMyKey->col - pMyKeyPredecessor->col;
 			if ( colDiff < 0.0 )
@@ -3822,7 +3816,7 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 				return 1;
 			}
 		}
-		// --- FINE DEDUPLICAZIONE ---
+		// 
 	}
 	else
 	{
@@ -3867,39 +3861,39 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 
 	if ( pMyData->nCurrentCIDFontSubtype != 0 && (bCurrCJK || bPrevCJK) )
 	{
-		sogliaSpazio = pMyData->Tfs * 0.5;   // font CID/CJK effettivo: soglia più alta
+		sogliaSpazio = pMyData->Tfs * 0.5;   // actual CID/CJK font: higher threshold
 	}
 	else
 	{
-		// Per il testo occidentale (o latino dentro un font CID), usa la larghezza dello spazio del font
-		// o una stima proporzionale se dFontSpaceWidth non è disponibile
-		// Per il testo occidentale: usiamo il 50% della larghezza dello spazio scalato.
-		// Il kerning (es. 'rt') produce un gap tipicamente <= 0.25x spazio,
-		// mentre un vero word-break produce un gap >= 0.75x spazio.
+		// For Western text (or Latin within a CID font), use font space width
+		// or a proportional estimate if dFontSpaceWidth is not available
+		// For Western text: we use the 50% d in the width of the scaled space.
+		// The kerning (e.g. 'rt') produces a typically <= 0.25x space,
+		// while a true word-break produces a gap >= 0.75x space.
 		if ( dFontSpaceWidth > 0.0 )
 			sogliaSpazio = dFontSpaceWidth * 0.5;
 		else
 			sogliaSpazio = pMyData->Tfs * 0.15;
 
-		// Margine di sicurezza: un kerning tipografico puo' produrre un gap
-		// fino a ~1.5x la larghezza dello spazio senza essere un vero word-break.
-		// Gli spazi "reali" sono caratteri L' ' nel testo e vengono gestiti
-		// dal ramo "prevChar == L' '" (che salta questo controllo); qui
-		// filtriamo solo i gap invisibili da kerning TJ, che sono
-		// tipicamente ~1x la larghezza dello spazio (mai >1.5x).
-		//sogliaSpazio *= 1.5;
+		// Security Margin: a typographical kerning can produce a gap
+		// up to ~1.5x the width of space without being a real word-break.
+		// "real" spaces are L '' characters in the text and are managed
+		// from the branch "prevChar == L '" (which skips this control); here
+		// we only filter invisible gaps from kerning TJ, which are
+		// typically ~1x the width of space (but >1.5x).
+		//thresholdSpace *= 1.5;
 	}
 
 	double rowDiff = pMyKey->row - prevRow;
 	if ( rowDiff < 0 )
 		rowDiff = -rowDiff;
 
-	if ( rowDiff < 0.5 )   // tolleranza: stessa riga visiva
+	if ( rowDiff < 0.5 )   // tolerance: same visual line
 	{
 		if ( pMyKeyPredecessor != NULL && SORT_GLYPHS_BY_ROW != pMyData->pParams->nSortGlyphs )
 			BidiVote(prevChar, pMyData->c, pMyKeyPredecessor->col, pMyKey->col);
 
-		// distingui LTR da RTL confrontando le posizioni 
+		// distingui LTR from RTL comparing positions 
 		int bRTL = 0;
 		if ( pMyKeyPredecessor != NULL && (pMyKey->col + 0.5) < pMyKeyPredecessor->col )
 		{
@@ -3908,13 +3902,13 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 
 		if ( bRTL )
 		{
-			// RTL: il carattere corrente sta a SINISTRA del precedente.
-			// Il "gap" e' (col_prev - col_curr) - width_curr.
+			// RTL: the current character lies at SINISTRA of the previous one.
+			// The "gap" is (col prev - col curr) - width curr.
 			xDiff = (pMyKeyPredecessor->col - pMyKey->col) - pMyData->widthScaled;
 		}
 		else
 		{
-			// LTR (o sconosciuto): comportamento originale.
+			// LTR (or unknown): original behavior.
 			xDiff = pMyKey->col - prevXCoordNext;
 
 			if ( FontObjRefCurr == FontObjRefPrev )
@@ -3952,11 +3946,11 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 	wprintf(L"\txDiff = %f; pMyKey->col = %f; prevXCoordNext = %f\n", xDiff, pMyKey->col, prevXCoordNext);
 	#endif
 
-	// Vero se siamo a inizio buffer o dopo un '\n'
+	// True if we start buffer or after a '\n'
 	int bAtLineStart = ( pMyData->pParams->TextLength == 0 || pMyData->pParams->pText[pMyData->pParams->TextLength - 1] == L'\n' );
-	// Evita lo spazio automatico soltanto PRIMA di un segno combinante bengalese
-	// proveniente da /ActualText. Non sopprimere invece lo spazio tra due blocchi
-	// /ActualText distinti quando le coordinate indicano un vero confine di parola.
+	// Avoid automatic space only PRIMA of a Bengal Combine Sign
+	// from /ActualText. Do not suppress the space between two blocks
+	// /ActualText distinguishes when coordinates indicate a true boundary of word.
 	int bActualTextBengaliCombiningMark = 0;
 	if (pMyData->bFromActualText)
 	{
@@ -3968,15 +3962,15 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 			(cActualText >= 0x09E2 && cActualText <= 0x09E3);
 	}
 
-	// Un segno combinante bengalese non deve iniziare una nuova parola.
-	// Per gli altri caratteri resta attiva la normale stima degli spazi dalle coordinate.
-	//if ( pMyData->c != L' ' && prevChar != L' ' && prevChar != L'\0' && !bAtLineStart && !IsIndicCombiningMark(pMyData->c) && !IsIndicCombiningMark(prevChar) )
-	//if ( pMyData->c != L' ' && prevChar != L' ' && prevChar != L'\0' && !bAtLineStart && !IsIndicVirama(prevChar) )
+	// A Bengal combined sign should not start a new word.
+	// For other characters the normal estimate of the spaces from the coordinates remains active.
+	//(pMyData->c!= L' && prevChar!= L' && prevChar!= L'\0' && !bAtLineStart &&!IsIndicCombiningMark(pMyData->c) & !IsIndicCombiningMark(prevChar) )
+	//If (pMyData->c!= The ' && prevChar!= The ' && prevChar!= The \0' && !bAtLineStart && !IsIndicVirama(prevChar) )
 	if ( pMyData->c != L' ' && prevChar != L' ' && prevChar != L'\0' && !bAtLineStart && !bActualTextBengaliCombiningMark )
 	{
 		if ( bPrevCJK != bCurrCJK )
 		{
-			// Transizione CJK <-> non-CJK: spazio garantito (tipografia giapponese)
+			// Transition CJK <-> non-CJK: guaranteed space (Japanese typography)
 			pMyData->pParams->pText[pMyData->pParams->TextLength] = L' ';
 			if (pMyData->pParams->pTextFromActualText != NULL)
 				pMyData->pParams->pTextFromActualText[pMyData->pParams->TextLength] = 0;
@@ -3984,7 +3978,7 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 		}
 		else if ( xDiff > sogliaSpazio && !(bPrevCJK && bCurrCJK) )
 		{
-			// Stessa classe: solo se xDiff supera la soglia, e mai tra due CJK
+			// Same class: only if xDiff exceeds the threshold, and never between two CJKs
 			pMyData->pParams->pText[pMyData->pParams->TextLength] = L' ';
 			if (pMyData->pParams->pTextFromActualText != NULL)
 				pMyData->pParams->pTextFromActualText[pMyData->pParams->TextLength] = 0;
@@ -4032,9 +4026,9 @@ double getCurrCharWidth(Params *pParams, wchar_t c, wchar_t cEncoding)
 	{
 		if ( cEncoding >= pParams->pCurrFontGlyphsWidths->FirstChar && cEncoding <= pParams->pCurrFontGlyphsWidths->LastChar )
 		{
-			//cEncoding--;
-			//if ( cEncoding < 0 )
-			//	cEncoding = 0;
+			//cEncoding--
+			//if (cEncoding < 0)
+			// cEncoding = 0;
 			//dblCurrCharWidth = pParams->pCurrFontGlyphsWidths->pWidths[cEncoding - pParams->pCurrFontGlyphsWidths->FirstChar];
 			dblCurrCharWidth = pParams->pCurrFontGlyphsWidths->pWidths[cEncoding - pParams->pCurrFontGlyphsWidths->FirstChar];
 
@@ -4066,9 +4060,9 @@ double getCurrCharWidth(Params *pParams, wchar_t c, wchar_t cEncoding)
 		{
 			if ( cEncoding >= pParams->pCurrFontGlyphsWidths->FirstChar && cEncoding < pParams->pCurrFontGlyphsWidths->LastChar )
 			{
-				//cEncoding--;
-				//if ( cEncoding < 0 )
-				//	cEncoding = 0;
+				//cEncoding--
+				//if (cEncoding < 0)
+				// cEncoding = 0;
 
 				//dblCurrCharWidth = pParams->pCurrFontGlyphsWidths->pWidths[cEncoding - pParams->pCurrFontGlyphsWidths->FirstChar];
 				dblCurrCharWidth = pParams->pCurrFontGlyphsWidths->pWidths[cEncoding - pParams->pCurrFontGlyphsWidths->FirstChar];
@@ -4137,10 +4131,10 @@ double getCurrCharWidth(Params *pParams, wchar_t c, wchar_t cEncoding)
 
 		//dblCurrCharWidth = 0.699698;
 
-		//if ( L'–' == c )
-		//	dblCurrCharWidth = 0.725;
-		//if ( dblCurrCharWidth <= 0.0 )
-		//	dblCurrCharWidth = 0.725;
+		//if (L-' == c)
+		// dblCurrCharWidth = 0.725;
+		//if (dblCurrCharWidth < 0.0 )
+		// dblCurrCharWidth = 0.725;
 	}
 
 	return dblCurrCharWidth;
@@ -4167,8 +4161,8 @@ unsigned int DecodeUTF16BE(const unsigned char *pBuf, size_t bufLen, size_t *pCo
     return hi;
 }
 
-// Decodifica una stringa ActualText codificata in UTF-16BE con BOM FE FF.
-// Restituisce 1 se la stringa e' valida, 0 se la codifica non e' supportata/valida.
+// Decode an ActualText string encoded in UTF-16BE with BOM FE FF.
+// Returns 1 if the string is valid, 0 if the coding is not supported/valid.
 static int DecodeActualTextUTF16BE(
     const unsigned char *pRawBytes,
     size_t rawBytesLen,
@@ -4279,8 +4273,8 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
 		useIdentityHCID = 1;
 	}
 
-	// Manteniamo temporaneamente l'euristica precedente
-	// per gli altri font Type0, senza ToUnicode.
+	// We temporarily keep the previous heuristics
+	// for other Type0 fonts, without ToUnicode.
 	if (!useIdentityHCID &&
 		pParams->nCurrentFontSubtype == FONT_SUBTYPE_Type0 &&
 		pParams->nToUnicodeStreamObjRef <= 0 &&
@@ -4360,9 +4354,9 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
 
 	if (useIdentityHCID)
 	{
-    // Identity-H: ogni codice occupa due byte.
-    // Un eventuale byte finale isolato verrà gestito
-    // come codice non valido nel ciclo principale.
+    // Identity-H: each code occupies two bytes.
+    // A possible isolated final byte will be managed
+    // as code not valid in the main cycle.
 		lenString = rawBytesLen / 2 + (rawBytesLen % 2);
 	}
 	else if (useUtf16Direct)
@@ -4481,12 +4475,12 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
         wchar_t unmappedMapValue = 0;
         wchar_t unmappedFallbackValue = 0;
 
-        // NOTA: c e cEncoding vengono impostati piu' sotto, nel ramo
-        // useUtf16Direct (dai raw bytes) oppure nel ramo else (da
-        // pszString/pszEncodingString). Non le leggiamo qui per evitare
-        // accessi out-of-bounds quando pszString e' vuota.
+        // NOTE: c and cEncoding are set below, in the branch
+        // useUtf16Direct (from raw bytes) or into the branch else (from
+        // pszString/pszEncodingString). We do not read them here to avoid
+        // accesses out-of-bounds when pszString is empty.
 
-        // ---------- Gestione TJ: avanzamento da elemento precedente ----------
+        // ---------- TJ Management: advance from previous element ------------
         if (pParams->Tj != 0.0)
         {
             dblCurrCharWidth = -1.0;
@@ -4534,7 +4528,7 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
             MultiplyTransMatrix(&tempTextMatrixA, &tempTextMatrixB, &(pParams->dsTextMatrix));
         }
 
-        // ---------- Calcolo della RenderingMatrix ----------
+        // ------------ Calculation of the RenderingMatrix --------------
         tempTextMatrixA.a = pParams->dsTextState.Tfs * pParams->dsTextState.Th;
         tempTextMatrixA.b = 0;
         tempTextMatrixA.c = 0;
@@ -4560,7 +4554,7 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
         xCoordCurrent = pParams->dsRenderingMatrix.e;
         yCoordCurrent = pParams->dsRenderingMatrix.f;
 
-        // ---------- Conversione del carattere ----------
+        // ---------- Character conversion --------------
         wchar_t finalChar = 0;
 
 		if (useIdentityHCID)
@@ -4569,7 +4563,7 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
 
 			if (rawIdx + 1 < rawBytesLen)
 			{
-				// Identity-H: ricostruzione del CID big-endian.
+				// Identity-H: reconstruction of the CID big-endian.
 				cid = ((unsigned int)pRawBytes[rawIdx] << 8) | (unsigned int)pRawBytes[rawIdx + 1];
 
 				rawIdx += 2;
@@ -4577,8 +4571,8 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
 				c         = (wchar_t)cid;
 				cEncoding = (wchar_t)cid;
 
-				// Conversione CID -> Unicode tramite la collezione
-				// indicata da CIDSystemInfo /Ordering.
+				// Conversion CID -> Unicode through the collection
+				// indicated by CIDSystemInfo /Ordering.
 				finalChar = ConvertCIDToUnicode(pParams, (int)cid);
 
 				dblCurrCharWidth = -1.0;
@@ -4589,8 +4583,8 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
 			}
 			else
 			{
-				// Codice Identity-H incompleto: un solo byte.
-				// Non possiamo ricostruire il CID.
+				// Incomplete Identity-H code: one byte.
+				// We can't rebuild the CID.
 				rawIdx = rawBytesLen;
 
 				c = (wchar_t)0xFFFD;
@@ -4602,8 +4596,8 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
 		}
         else if (useUtf16Direct)
         {
-            // Decodifica dai raw bytes. NON tocchiamo pszString/pszEncodingString
-            // (che in questo caso possono essere vuote).
+            // Decode from raw bytes. We do not touch pszString/pszEncodingString
+            // (which in this case may be empty).
             size_t consumed = 0;
             unsigned int cp = DecodeUTF16BE(pRawBytes + rawIdx, rawBytesLen - rawIdx, &consumed);
 
@@ -4646,7 +4640,7 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
                 finalChar = c;
             }
 
-            // gestione CID non mappati (identity) e noncharacter
+            // CID management not mapped (identity) and noncharacter
             if ( pParams->nCurrentFontSubtype == FONT_SUBTYPE_Type0 && pParams->nToUnicodeStreamObjRef > 0 && pParams->paCustomizedFont_CharSet != NULL )
             {
                 int cid = (int)cEncoding;
@@ -4657,7 +4651,7 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
 
                     if ( uc == (wchar_t)cid )
                     {
-                        // identity = non mappato dal CMap
+                        // identity = not mapped by CMap
                         wchar_t conv = ConvertCIDToUnicode(pParams, cid);
                         if ( conv != 0xFFFD && conv != 0xFFFF && conv != 0xFFFE && conv != (wchar_t)cid)
                         {
@@ -4701,8 +4695,8 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
             dblCurrCharWidth = getCurrCharWidth(pParams, c, cEncoding);
         }
 
-        // Se ActualText e' attivo, il glifo originale fornisce la geometria,
-        // mentre il carattere inserito proviene dalla stringa sostitutiva.
+        // If ActualText is active, the original glyph provides geometry,
+        // while the inserted character comes from the replacement string.
         if (pParams->bActualTextActive)
         {
             bInsertCurrentGlyph = 0;
@@ -4756,7 +4750,7 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
         (void)unmappedFallbackValue;
         #endif
 
-        // ---------- Avanzamento orizzontale / verticale ----------
+        // ------------ Horizontal/vertical advance ------------
         if (WRITING_MODE_HORIZONTAL == pParams->pCurrFontGlyphsWidths->WritingMode)
         {
             Ty = 0.0;
@@ -4818,7 +4812,7 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
 
         pParams->xCoordPrev = pParams->dsRenderingMatrix.e;
 
-        // ---------- Avanzamento della TextMatrix ----------
+        // ---------- Advancement of TextMatrix ----------------
         tempTextMatrixA.a = 1;
         tempTextMatrixA.b = 0;
         tempTextMatrixA.c = 0;
@@ -4853,7 +4847,7 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
         }
         #endif
 
-        // ---------- Inserimento nell'albero ----------
+        // ---------- Insertion into the tree ------------
         if (bInsertCurrentGlyph)
         {
             pParams->myRedBlackTreeKey.row = yCoordCurrent;
@@ -4904,7 +4898,7 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
                 if (cidIdx >= 0 && cidIdx < 0x10000 && pParams->sequences[cidIdx] != NULL)
                 {
                     wchar_t *seq = pParams->sequences[cidIdx];
-                    // seq[0] coincide con finalChar: inseriamo i successivi
+                    // seq[0] coincides with finalChar: we insert the next
                     for (size_t sk = 1; seq[sk] != 0; sk++)
                     {
                         pParams->myRedBlackTreeKey.ord++;
@@ -4921,8 +4915,8 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
             }
         }
 
-        // L'avanzamento resta sempre quello dei glifi originali, anche quando
-        // il loro carattere non viene inserito perche' sostituito da ActualText.
+        // The advance always remains that of the original glifi, even when
+        // their character is not inserted because it is replaced by ActualText.
         pParams->xCoordNextPrev = xCoordNext;
         pParams->yCoordNextPrev = yCoordNext;
 
@@ -4932,9 +4926,9 @@ int ManageShowTextOperator(Params *pParams, const char *szOpName,
         pParams->Tj = 0.0;
     }
 
-    // Salvataggio ultimo carattere: usiamo i valori tracciati nel loop,
-    // non pszString[lenString-1] (che sarebbe out-of-bounds in modalita'
-    // useUtf16Direct con pszString vuota).
+    // Save last character: We use the values drawn in the loop,
+    // not pszString[lenString-1] (which would be out-of-bounds in modalities)
+    // useUtf16Direct with pszString blank).
     pParams->cLastChar         = lastC;
     pParams->cLastCharEncoding = lastCEncoding;
 
@@ -4997,7 +4991,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 
 	int bArrayState = 0;
 
-	// Stato temporaneo per riconoscere /ActualText nei dizionari diretti di BDC.
+	// Temporary state to recognize /ActualText in BDC direct dictionaries.
 	int nContentDictDepth = 0;
 	int bActualTextValuePending = 0;
 	int bActualTextDictionaryHasValue = 0;
@@ -5022,7 +5016,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 	TransMatrix tempTextMatrixA;
 	//TransMatrix tempTextMatrixB;
 
-	TJStackItem TJStack[1024] = {0}; // Inizializza l'intero array a NULL/0 al momento della creazione
+	TJStackItem TJStack[1024] = {0}; // Start the entire array at NULL/0 at the time of creation
 	int nTJStackTop = -1;
 
 	pParams->nCurrentPageNum = nPageNumber;
@@ -5068,8 +5062,8 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE ManageDecodedContent: impossibile allocare la memoria per pszString.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE ManageDecodedContent: impossibile allocare la memoria per pszString.\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE ManageDecodedContent: impossibile allocare la memoria per pszString.\n");
+		//wprintf(L"ERRORE ManageDecodedContent: impossible to allocate memory for pszString. \n);
+		//fwprintf(pParams->fpErrors, L"ERRORE ManageDecodedContent: impossible to allocate memory for pszString. \n);
 		retValue = 0;
 		goto uscita;
 	}
@@ -5077,7 +5071,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 	for ( nTemp = 0; nTemp < 128; nTemp++ )
 		szPrevFontResName[nTemp] = '\0';
 
-	// ----------------------------------- STACK -----------------------------------------------
+	// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 	while ( pParams->nStreamsStackTop >= 0 )
 	{
 		qui_dopo_push:
@@ -5095,8 +5089,8 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 			{
 				snprintf(pParams->szError, 8192, "ERRORE ManageDecodedContent: Memoria insufficiente.\n\n");
 				myShowErrorMessage(pParams, pParams->szError, 1);
-				//wprintf(L"ERRORE ManageDecodedContent: Memoria insufficiente.\n\n");
-				//fwprintf(pParams->fpErrors, L"ERRORE ManageDecodedContent: Memoria insufficiente.\n\n");
+				//wprintf(L"ERRORE ManageDecodedContent: Insufficient memory. \n\n);
+				//fwprintf(pParams->fpErrors, L"ERRORE ManageDecodedContent: Insufficient Memory. \n\n);
 				retValue = 0;
 				goto uscita;
 			}
@@ -5144,8 +5138,8 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 
 		while ( T_EOF != pParams->myToken.Type )
 		{
-			// Se /ActualText e' seguito da un valore non-stringa, non lasciare
-			// attiva la modalita' speciale dello scanner per i token successivi.
+			// If /ActualText is followed by a non-stringa value, do not leave
+			// activates the special mode of the scanner for the next tokens.
 			if (bActualTextValuePending &&
 			    pParams->myToken.Type != T_STRING_LITERAL &&
 			    pParams->myToken.Type != T_STRING_HEXADECIMAL)
@@ -5154,7 +5148,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 				bActualTextValuePending = 0;
 			}
 
-			// Il dizionario contiene /ActualText solo se e' seguito direttamente da BDC.
+			// The dictionary contains /ActualText only if it is followed directly by BDC.
 			if (bActualTextDictionaryClosed &&
 			    pParams->myToken.Type != T_CONTENT_OP_BDC)
 			{
@@ -5179,13 +5173,13 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 
 					pParams->bPdfHasText = 1;
 
-					//len = strnlen(pParams->myToken.vString, MAX_STRING_LENTGTH_IN_CONTENT_STREAM);
-					//memcpy(pszString, (unsigned char*)pParams->myToken.vString, len + 1);
-					len = (size_t)pParams->myToken.vStringLen;   // lunghezza reale, anche con 0x00 in mezzo
+					//len = strnlen(pParams->mytoken.vString, MAX STRING LENTGTH IN CONTENT STREAM);
+					//memcpy(pszString, (unsigned char*)pParams->myToken. vString, len + 1);
+					len = (size_t)pParams->myToken.vStringLen;   // real length, even with 0x00 in half
 					memcpy(pszString, (unsigned char*)pParams->myToken.vString, len);
 					pszString[len] = '\0';
 
-					// >>> NUOVO: salva i byte grezzi dell'ultima stringa letta <<<
+					// > > > < < < < > > > > < > > < < > > > < > > > < > < < < < < > > > < > > > < > < > > > < > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > > < > > > > > > > > > > > > > > < > > > > > > > > > >  > > 
 					if (pParams->pLastRawStringBytes != NULL)
 					{
 						free(pParams->pLastRawStringBytes);
@@ -5205,8 +5199,8 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 					memcpy(pParams->pLastRawStringBytes, pszString, len);
 					pParams->nLastRawStringBytesLen = len;
 
-					// Copia subito i byte di /ActualText: pLastRawStringBytes verra'
-					// sostituito quando il lexer incontrera' la stringa successiva.
+					// Copy now the bytes of /ActualText: pLastRawStringBytes will be'
+					// replaced when the lexer meets the next string.
 					if (bActualTextValuePending)
 					{
 						free(pActualTextRawBytes);
@@ -5228,12 +5222,12 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 					}
 
 					#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_PrintStrings) || defined(MYDEBUG_PRINT_SINGLE_CHAR_COORD) && !defined(MYDEBUG_PRINT_ON_SHOW_STRING_OPERATOR)
-					//wprintf(L"\tSTRINGA: (%s) <-> UTF-8: (%ls)\n", pszString, (wchar_t*)(pParams->pUtf8String));
-					//wprintf(L"\nSTRING -> <%ls>\n\n", (wchar_t*)(pParams->pUtf8String));
+					//wprintf(L"\tSTRINGA: (%s) <-> UTF-8: (%ls)\n", pszString, (wchar t*)(pParams->pUtf8String));
+					//wprintf(L"\nSTRING -> <%ls>\n\n", (wchar t*)(pParams->pUtf8String));
 					//wprintf(L"\nSTRING <%ls>\n\n", pParams->pUtf8String);
 					wprintf(L"\nSTRING 1: pParams->pUtf8String = <%ls>\n", pParams->pUtf8String);
-					//wprintf(L"STRING 2: pParams->myToken.vString = <%s>\n", pParams->myToken.vString);
-					//wprintf(L"STRING 3: pszString =  pszString = <%s>\n\n", pszString);
+					//wprintf(L"STRING 2: pParams->myToken. vString = <%s>\n, pParams->myToken.vString);
+					//wprintf(L)STRING 3: pszString = pszString = <%s>\n\n, pszString);
 					#endif
 
 					pParams->lenUtf8String = wcsnlen(pParams->pUtf8String, MAX_STRING_LENTGTH_IN_CONTENT_STREAM);
@@ -5254,7 +5248,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 						TJStack[nTJStackTop].Type = TJSTACK_ITEMTYPE_STRING;
 						TJStack[nTJStackTop].pUtf8String = NULL;
 
-						//len = wcsnlen(pParams->pUtf8String, MAX_STRING_LENTGTH_IN_CONTENT_STREAM);
+						//len = wcsnlen(pParams->pUtf8String, MAX STRING LENTGTH IN CONTENT STREAM);
 
 						TJStack[nTJStackTop].pEncodingString = (wchar_t*)malloc(sizeof(wchar_t) * pParams->lenUtf8String + sizeof(wchar_t));
 						if ( NULL == TJStack[nTJStackTop].pEncodingString )
@@ -5283,9 +5277,9 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 						TJStack[nTJStackTop].pEncodingString[i] = L'\0';
 						TJStack[nTJStackTop].pUtf8String[i] = L'\0';
 						TJStack[nTJStackTop].lenUtf8String = pParams->lenUtf8String;
-						//wcsncpy(TJStack[nTJStackTop].pUtf8String, pParams->pUtf8String, pParams->lenUtf8String);
+						//wcsncpy(TJStack[nTJStackTop]. pUtf8String, pParams->pUtf8String, pParams->lenUtf8String);
 
-						// >>> copia i byte grezzi in TJStack (lunghezza reale, non strnlen) <<<
+						// > > > copy of crude bytes in TJStack (real length, not strnlen) < < < < < < < > > > > > > > > > > > > > > > > > > > > > > > > > ) copy of crude bytes
 						TJStack[nTJStackTop].pRawBytes = (unsigned char *)malloc(len);
 						if (TJStack[nTJStackTop].pRawBytes == NULL)
 						{
@@ -5640,10 +5634,10 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 						wprintf(L"\n\tVADO A CAPO CON L'OPERATORE 'Td'\n");
 						#endif
 
-						//if ( pParams->szOutputFile[0] != '\0' )
-						//	fwprintf(pParams->fpOutput, L"\n");
+						//if (pParams->szOutputFile[0]!= '\0' )
+						// fwprintf(pParams->fpOutput, L"\n");
 						//else
-						//	wprintf(L"\n");
+						// wprintf(L"\n");
 					}
 
 					#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_POSITIONING_STRING_OPERATOR)
@@ -5745,10 +5739,10 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 						wprintf(L"\n\tVADO A CAPO CON L'OPERATORE 'TD'\n");
 						#endif
 
-						//if ( pParams->szOutputFile[0] != '\0' )
-						//	fwprintf(pParams->fpOutput, L"\n");
+						//if (pParams->szOutputFile[0]!= '\0' )
+						// fwprintf(pParams->fpOutput, L"\n");
 						//else
-						//	wprintf(L"\n");
+						// wprintf(L"\n");
 					}
 
 					#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_POSITIONING_STRING_OPERATOR)
@@ -5827,10 +5821,10 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 						wprintf(L"\n\tVADO A CAPO CON L'OPERATORE 'Tm'\n");
 						#endif
 
-						//if ( pParams->szOutputFile[0] != '\0' )
-						//	fwprintf(pParams->fpOutput, L"\n");
+						//if (pParams->szOutputFile[0]!= '\0' )
+						// fwprintf(pParams->fpOutput, L"\n");
 						//else
-						//	wprintf(L"\n");
+						// wprintf(L"\n");
 					}
 
 					#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_SPLITTING_WORDS) || defined(MYDEBUG_PRINT_DECODED_CONTENT_NUMSTACK)
@@ -5912,10 +5906,10 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 						wprintf(L"\n\tVADO A CAPO CON L'OPERATORE 'T*'\n");
 						#endif
 
-						//if ( pParams->szOutputFile[0] != '\0' )
-						//	fwprintf(pParams->fpOutput, L"\n");
+						//if (pParams->szOutputFile[0]!= '\0' )
+						// fwprintf(pParams->fpOutput, L"\n");
 						//else
-						//	wprintf(L"\n");
+						// wprintf(L"\n");
 
 						#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_FN) || defined(MYDEBUG_PRINT_ON_ManageContent_PrintStrings)
 						if ( '\0' != pParams->szWordsToSearch[0] )
@@ -6099,7 +6093,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 								wprintf(L"TJStack[%d].pUtf8String = '%ls'\n\n", nTJStackTop, TJStack[k].pUtf8String);
 								#endif
 
-								//ManageShowTextOperator(pParams, "TJ", TJStack[k].pUtf8String, TJStack[k].lenUtf8String, TJStack[k].pEncodingString);
+								//ManageShowTextOperator(pParams, "TJ", TJStack[k].pUtf8String, TJStack[k].lenUtf8String, TJStack[k]. pEncodingString);
 								ManageShowTextOperator(pParams, "TJ",
 									TJStack[k].pUtf8String, TJStack[k].lenUtf8String,
 									TJStack[k].pEncodingString,
@@ -6253,7 +6247,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 						goto uscita;
 					}
 
-					pParams->dsTextState.Th = dNumbersStack[nNumsStackTop]/100.0; // percentale, dunque diviso 100 -> cento.
+					pParams->dsTextState.Th = dNumbersStack[nNumsStackTop]/100.0; // percentale, therefore divided 100 -> cent.
 					nNumsStackTop--;
 
 					#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_POSITIONING_STRING_OPERATOR)
@@ -6463,7 +6457,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 						wprintf(L"TROVATO 'Do' command: vado a prendere la Resource %s\n", szName);
 						#endif
 
-						//nRes = scopeFind(&(pParams->pPagesArray[nPageNumber].myScopeHT_XObjRef), szName, len + sizeof(char), (void*)&nTemp, &nDataSize, &bContentAlreadyProcessed, 1);
+						//nRes = discoveredFind(&(pParams->pPagesArray[nPageNumber]. myScopeHT XObjRef), szName, len + sizeof(char), (void*)&nTemp, &nDataSize, &bContentAlreadyProcessed, 1);
 						nRes = scopeFind(&(pParams->pPagesArray[nPageNumber].myScopeHT_XObjRef), szName, len + sizeof(char), (void*)&nTemp, &nDataSize, &bContentAlreadyProcessed, 0);
 						if ( nRes >= 0 ) // TROVATO
 						{
@@ -6483,12 +6477,12 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 									#endif
 
 									bContentAlreadyProcessed = 1;
-									//if ( !scopeUpdateValue(&(pParams->pPagesArray[nPageNumber].myScopeHT_XObjRef), szName, len + sizeof(char), (void*)&nTemp, nDataSize, bContentAlreadyProcessed, 1, 1) )
+									//if (!scopeUpdateValue(&(pParams->pPagesArray[nPageNumber]. myScopeHT XObjRef), szName, len + sizeof(char), (void*)&nTemp, nDataSize, bContentAlreadyProcessed, 1, 1) )
 									if ( !scopeUpdateValue(&(pParams->pPagesArray[nPageNumber].myScopeHT_XObjRef), szName, len + sizeof(char), (void*)&nTemp, nDataSize, bContentAlreadyProcessed, 1, 0) )
 									{
 										snprintf(pParams->szError, 8192, "\nERRORE ManageDecodedContent scopeUpdateValue 1 : impossibile aggiornare bContentAlreadyProcessed\n");
 										myShowErrorMessage(pParams, pParams->szError, 1);
-										//wprintf(L"\nERRORE ManageDecodedContent scopeUpdateValue 1 : impossibile aggiornare bContentAlreadyProcessed\n");
+										//wprintf(L"\nERRORE ManageDecodedContent bUpdateValue 1 : impossible to update bContentAlreadyProcessed\n");
 										retValue = 0;
 										goto uscita;
 									}
@@ -6514,14 +6508,14 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 
 										snprintf(pParams->szError, 8192, "\n***** ECCO LO SCHIFO:\n");
 										myShowErrorMessage(pParams, pParams->szError, 1);
-										//wprintf(L"\n***** ECCO LO SCHIFO:\n");
+										//I'm sorry.
 										//fwprintf(pParams->fpErrors, L"\n***** ECCO LO SCHIFO:\n");
 										PrintThisObject(pParams, nTemp, 0, 0, pParams->fpErrors);
 
 										snprintf(pParams->szError, 8192, "\n***** FINE DELLO SCHIFO:\n");
 										myShowErrorMessage(pParams, pParams->szError, 1);
-										//wprintf(L"\n***** FINE DELLO SCHIFO\n");
-										//fwprintf(pParams->fpErrors, L"\n***** FINE DELLO SCHIFO\n");
+										//wprintf(L"\n****
+										//fwprintf(pParams->fpErrors, L"\n****
 
 										retValue = 0;
 										goto uscita;
@@ -6529,26 +6523,26 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 
 									if ( !(pParams->bXObjIsImage) )
 									{
-										//	pParams->nCountNotImageContent++;
+										// pParams->nCountNotImageContent++;
 
 										PushXObjDecodedContent(pParams, nPageNumber, nTemp);
 									}
 									else
 									{
-										//	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_FN) || defined(MYDEBUG_PRINT_ON_ManageContent_FN_ShowResourceSelected)
-										//	wprintf(L"\tManageDecodedContent: L'oggetto %d 0 R è un'immagine. Esco.\n\n", nTemp);
-										//	#endif
+										// #if defined(MYDEBUG PRINT ALL) || defined(MYDEBUG PRINT ON ManageContent FN) | defined(MYDEBUG PRINT ON ManageContent FN ShowResourceSelected)
+										// wprintf(L"\tManageDecodedContent: The %d 0 R object is an image. Esco.\n\n, nTemp);
+										// #endif
 
-										//	pParams->nCountImageContent++;
+										// pParams->nCountImageContent++;
 
 										pParams->bStreamState = pParams->myStreamsStack[pParams->nStreamsStackTop].bStreamState;
 										pParams->bStringIsDecoded = pParams->myStreamsStack[pParams->nStreamsStackTop].bStringIsDecoded;
 										pParams->blockCurPos = pParams->myStreamsStack[pParams->nStreamsStackTop].blockCurPos;
 
-										// Un'immagine non mette nulla sullo stack degli stream, quindi nessun
-										// "libera:" far� il pop degli scope pushati sopra: lo facciamo qui,
-										// altrimenti gli scope si sfasano e, alla fine di un Form XObject, viene
-										// tolto lo scope sbagliato (le risorse del form "sporcano" quelle della pagina).
+										// An image does not put anything on the stream stack, so no
+										// "free:" make the pop of the blown brooms above: we do it here,
+										// otherwise the brooms are blurred and, at the end of a XObject Form, comes
+										// removed the wrong broom (the resources of the form "sport" those of the page).
 										scopePop(&(pParams->pPagesArray[nPageNumber].myScopeHT_XObjRef));
 										scopePop(&(pParams->pPagesArray[nPageNumber].myScopeHT_FontsRef));
 										scopePop(&(pParams->pPagesArray[nPageNumber].myScopeHT_GsRef));
@@ -6589,8 +6583,8 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 					{
 						snprintf(pParams->szError, 8192, "ERRORE ManageDecodedContent: trovato comando 'Do' ma non e' preceduto dal nome della Resource!\n");
 						myShowErrorMessage(pParams, pParams->szError, 1);
-						//wprintf(L"ERRORE ManageDecodedContent: trovato comando 'Do' ma non e' preceduto dal nome della Resource!\n");
-						//fwprintf(pParams->fpErrors, L"ERRORE ManageDecodedContent: trovato comando 'Do' ma non e' preceduto dal nome della Resource!\n");
+						//wprintf(L"ERRORE ManageDecodedContent: found command 'Do' but is not preceded by the name of Resource!\n");
+						//fwprintf(pParams->fpErrors, L"ERRORE ManageDecodedContent: found command 'Do' but is not preceded by the name of Resource!\n");
 						retValue = 0;
 						goto uscita;
 					}
@@ -6623,11 +6617,11 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 						pParams->dsTextState.Tfs = dNumbersStack[nNumsStackTop];
 						nNumsStackTop--;
 
-					//if ( strncmp(szName, szPrevFontResName, 128) != 0 )
+					//If ( strncmp(szName, szPrevFontResName, 128)
 					//{
 						//len = strnlen(szName, 128);
 						#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_FN) || defined(MYDEBUG_PRINT_ON_ManageContent_FN_ShowFontSelected) || defined(MYDEBUG_PRINT_DECODED_CONTENT_TOKENS)
-						//wprintf(L"\nEHI 1: szName = '%s' -> szPrevFontResName = '%s'\n", szName, szPrevFontResName);
+						//wprintf(L"\nEHI 1: szName = '%s' -> szPrevFontResName = '%s'\n'X, szName, szPrevFontResName);
 						wprintf(L"\nTROVATO 'Tf FONT SELECTOR' command: vado a prendere la Resource %s\n", szName);
 						#endif
 
@@ -6642,21 +6636,21 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 							wprintf(L"\tVado a fare il parsing dell'oggetto FONT %d 0 R e torno subito.\n", nTemp);
 							#endif
 							
-							// *** CACHE ULTIMO FONT ***
+							// 
 							if ( nTemp == pParams->nLastParsedFontObjNum )
 							{
-								// Stesso font dell'ultima volta: lo stato globale è già corretto.
+								// Same font of the last time: the global state is already correct.
 								strncpy(szPrevFontResName, szName, len);
-								break; // Esce dal case senza fare nulla!
+								break; // Get out of the house without doing anything!
 							}
-							// *** FINE CACHE ***
+							// 
 
 							pParams->bStreamState = 0;
 							pParams->bStringIsDecoded = 0;
 							pParams->myStreamsStack[pParams->nStreamsStackTop].blockCurPos = pParams->blockCurPos;
 
-							//#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_FN) || defined(MYDEBUG_PRINT_ON_ManageContent_FN_ShowFontSelected) || defined(MYDEBUG_PRINT_DECODED_CONTENT_TOKENS)
-							//wprintf(L"\tOggetto FONT %d 0 R NON trovato nella HashTable. È NECESSARIO EFFETTUARE IL PARSING DELL'OGGETTO.\n", nTemp);
+							//#if defined(MYDEBUG PRINT ALL) || defined(MYDEBUG PRINT ON ManageContent FN) | defined(MYDEBUG PRINT ON ManageContent FN ShowFontSelected) || defined(MYDEBUG PRINT DECODED CONTENT TOKENS)
+							//wprintf(L"\tOject FONT %d 0 R NOT found in the HashTable. It's no big deal to make the trip. \n, nTemp);
 							//#endif
 
 							pParams->bCurrParsingFontIsCIDFont = 0;
@@ -6669,7 +6663,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 
 								snprintf(pParams->szError, 8192, "\n***** ECCO L'OGGETTO ERRATO:\n");
 								myShowErrorMessage(pParams, pParams->szError, 1);
-								//fwprintf(pParams->fpErrors, L"\n***** ECCO L'OGGETTO ERRATO:\n");
+								//fwprintf(pParams->fpErrors, L"\n*****
 
 								PrintThisObject(pParams, nTemp, 0, 0, pParams->fpErrors);
 
@@ -6730,7 +6724,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 					{
 						snprintf(pParams->szError, 8192, "ERRORE ManageDecodedContent: trovato operatore 'Tf' ma non e' preceduto dal nome della Resource!\n");
 						myShowErrorMessage(pParams, pParams->szError, 1);
-						//wprintf(L"ERRORE ManageDecodedContent: trovato operatore 'Tf' ma non e' preceduto dal nome della Resource!\n");
+						//wprintf(L"ERRORE ManageDecodedContent: found operator 'Tf' but is not preceded by the name of Resource!\n");
 						retValue = 0;
 						goto uscita;
 					}
@@ -6769,7 +6763,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 
 								snprintf(pParams->szError, 8192, "\n***** ECCO L'OGGETTO ERRATO:\n");
 								myShowErrorMessage(pParams, pParams->szError, 1);
-								//fwprintf(pParams->fpErrors, L"\n***** ECCO L'OGGETTO ERRATO:\n");
+								//fwprintf(pParams->fpErrors, L"\n*****
 
 								PrintThisObject(pParams, nTemp, 0, 0, pParams->fpErrors);
 
@@ -6802,13 +6796,13 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 									goto uscita;
 								}
 
-								//if ( pParams->nCurrentGsObjFontObjNum > 0 )
-								//	nCurrFontObjRef = pParams->nCurrentGsObjFontObjNum;
+								//(pParams)
+								// nCurrFontObjRef = pParams->nCurrentGsObjFontObjNum;
 
-								// nTemp e' l'oggetto GS (ExtGState), non il font: i dati del font stanno
-								// nell'oggetto nCurrentGsObjFontObjNum. Il font corrente e' cambiato, quindi
-								// aggiorno anche la cache dell'ultimo font parsato (altrimenti un successivo
-								// 'Tf' sullo stesso font dell'ultima volta verrebbe saltato a torto).
+								// nTemp is the GS object (ExtGState), not the font: the font data are
+								// in the object nCurrentGsObjFontObjNum. The current font has changed, so
+								// also the cache of the last parsoned font (otherwise a next
+								// 'Tf' on the same font last time would be wronged.'
 								pParams->nLastParsedFontObjNum = (int)pParams->nCurrentGsObjFontObjNum;
 								pParams->pCurrFontGlyphsWidths = pParams->myObjsTable[pParams->nCurrentGsObjFontObjNum]->pGlyphsWidths;
 								//pParams->dCurrFontSpaceWidth = pParams->myObjsTable[nTemp]->pGlyphsWidths->dFontSpaceWidth/1000.0;
@@ -6862,8 +6856,8 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 					{
 						snprintf(pParams->szError, 8192, "ERRORE ManageDecodedContent: trovato comando 'Do' ma non e' preceduto dal nome della Resource!\n");
 						myShowErrorMessage(pParams, pParams->szError, 1);
-						//wprintf(L"ERRORE ManageDecodedContent: trovato comando 'Do' ma non e' preceduto dal nome della Resource!\n");
-						//fwprintf(pParams->fpErrors, L"ERRORE ManageDecodedContent: trovato comando 'Do' ma non e' preceduto dal nome della Resource!\n");
+						//wprintf(L"ERRORE ManageDecodedContent: found command 'Do' but is not preceded by the name of Resource!\n");
+						//fwprintf(pParams->fpErrors, L"ERRORE ManageDecodedContent: found command 'Do' but is not preceded by the name of Resource!\n");
 						retValue = 0;
 						goto uscita;
 					}
@@ -6875,7 +6869,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 					wprintf(L"ManageDecodeContent -> NUM STACK: nNumsStackTop = %d; nCTM_StackTop = %d\n\n", nNumsStackTop, pParams->nCTM_StackTop);
 					#endif
 
-					// IGNORIAMO L'OPERATORE BI(Begin Image) FINO ALLA FINE DELLO STREAM
+					// IGNORIAMO L'OPERATORE BI(Begin Image)
 					goto libera;
 				}
 				break;
@@ -7248,7 +7242,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 
 uscita:
 
-	// In caso di marcatori non chiusi, ripristina e libera tutti i contesti ActualText annidati.
+	// In the event of unclosed markers, it restores and frees all the annihilated ActualText contexts.
 	while (nMarkedContentStackTop >= 0)
 	{
 		ActualTextMarkedContentFrame *pFrame = &markedContentStack[nMarkedContentStackTop--];
@@ -7315,14 +7309,14 @@ uscita:
 	return retValue;
 }
 
-// Normalizza l'ordine visivo->logico delle vocali "prefisse" in
-// alcune scritture Indic: in Devanagari, Tamil e Bengalese, certe vocali
-// si scrivono VISIVAMENTE a sinistra della consonante, ma in Unicode
-// vanno LOGICAMENTE dopo. Alcuni generator PDF (es. LuaLaTeX + HarfBuzz)
-// emettono i glifi in ordine visivo, quindi qui invertiamo la coppia
-// (vocale, consonante) in (consonante, vocale).
+// Normalizes the visual order of the vowels "prefixed" in
+// some Indic scriptures: in Devanagari, Tamil and Bengalese, certain vowels
+// sign VISIVAMENT on the left of the consonant, but in Unicode
+// go LOGICAMENTS later. Some PDF generators (e.g. LuaLaTeX + HarfBuzz)
+// emit the glyphs in visual order, so here we reverse the couple
+// (vocal, consonant) in (consonant, vocal).
 //
-// Modifica pParams->pText in place. Agisce solo su Devanagari, Tamil, Bengalese.
+// Edit pParams->pText in place. It only works on Devanagari, Tamil, Bengalese.
 //
 static void NormalizeIndicVisualOrder(Params *pParams)
 {
@@ -7368,8 +7362,8 @@ static void NormalizeIndicVisualOrder(Params *pParams)
     }
 }
 
-// Compone matra decomposte in Tamil e Kannada (normalizzazione NFC manuale).
-// Modifica pText in place.
+// Matra compound in Tamil and Kannada (standardization manual NFC).
+// Edit pText in place.
 static void ComposeTamilKannadaMatras(Params *pParams)
 {
     if (pParams == NULL || pParams->pText == NULL) return;
@@ -7408,13 +7402,13 @@ static void ComposeTamilKannadaMatras(Params *pParams)
     pParams->TextLength = out;
 }
 
-// Rimuove lo spazio spurio tra un virama bengalese (U+09CD) e la consonante
-// che segue. Il virama bengalese ha forma esplicita e in un congiunto
-// dovrebbe essere attaccato alla consonante. Alcuni PDF (es. LuaLaTeX/HarfBuzz)
-// lo separano con un piccolo gap che l'algoritmo di spaziatura interpreta
-// erroneamente come spazio.
-// Agisce SOLO sul Bengalese: Tamil, Kannada, ecc. usano virama diversi
-// (U+0BCD, U+0CCD) e non sono toccati.
+// Removes spurious space between a Bengal virama (U+09CD) and consonant
+// which follows. The Bengal virama has explicit form and in a joint
+// should be attached to the consonant. Some PDFs (e.g. LuaLaTeX/HarfBuzz)
+// separate it with a small gap that the spatial algorithm interprets
+// erroneously as space.
+// It acts ONLY on Bengalese: Tamil, Kannada, etc. use different viramas
+// (U+0BCD, U+0CCD) and are not touched.
 static void NormalizeBengaliSpuriousSpace(Params *pParams)
 {
     if (pParams == NULL || pParams->pText == NULL) return;
@@ -7429,7 +7423,7 @@ static void NormalizeBengaliSpuriousSpace(Params *pParams)
             pParams->pText[i + 1] == L' ' &&
             pParams->pText[i + 2] >= 0x0995 && pParams->pText[i + 2] <= 0x09B9)
         {
-            // virama + spazio + consonante bengalese: rimuovi lo spazio
+            // virama + space + Bengal consonant: remove the space
             pParams->pText[out++] = c1;
             i += 2;
         }
@@ -7443,9 +7437,9 @@ static void NormalizeBengaliSpuriousSpace(Params *pParams)
     pParams->TextLength = out;
 }
 
-// Restituisce 1 se la richiesta riguarda un singolo file.
-// Per --extracttextfrom il file è sempre singolo.
-// Per --path distingue un file da una directory tramite stat().
+// Returns 1 if the request concerns a single file.
+// For --extracttextfrom the file is always single.
+// For --path distinguishes a file from a directory via stat().
 static int IsSingleFilePasswordRequest(Params *pParams)
 {
     struct stat st;
@@ -7485,15 +7479,15 @@ static int AuthenticateCurrentPdf(Params *pParams)
     cp = pParams->pCryptoParams;
     bSingleFile = IsSingleFilePasswordRequest(pParams);
 
-    // Non ripetere l'autenticazione se la chiave del documento è già stata memorizzata.
+    // Do not repeat authentication if the document key has already been stored.
     if (cp->bUseProvidedFileKey && cp->lenFileKey > 0)
         return 1;
 
-    // L'autenticazione non deve dipendere da uno stream specifico.
+    // Authentication should not depend on a specific stream.
     cp->pInput = NULL;
     cp->lenInput = 0;
 
-    // Primo tentativo: password utente vuota.
+    // First attempt: empty user password.
     cp->pPassword = emptyPassword;
     cp->lenPassword = 0;
     cp->bPasswordSet = 1;
@@ -7501,13 +7495,13 @@ static int AuthenticateCurrentPdf(Params *pParams)
     if (PdfCryptoParams_Authenticate(cp))
         goto autenticazione_riuscita;
 
-    // La password vuota non è valida. Elimina il riferimento.
+    // The empty password is not valid. Delete the reference.
     cp->pPassword = NULL;
     cp->lenPassword = 0;
     cp->bPasswordSet = 0;
 
-    // Se non è un file singolo OPPURE la callback non è impostata (NULL),
-    // saltiamo il file senza chiedere nulla all'utente.
+    // If it is not a single file OR callback is not set (NULL),
+    // we skip the file without asking the user anything.
     if (!bSingleFile || pParams->pOnUserPassword == NULL)
     {
         pParams->bSkipCurrentPdf = 1;
@@ -7515,11 +7509,11 @@ static int AuthenticateCurrentPdf(Params *pParams)
         return 0;
     }
 
-    // File singolo E callback presente: consente più tentativi.
+    // Single file And callback present: allows more attempts.
     for (;;)
     {
-        // Chiamata alla funzione del client!
-        // Nota: se il client vuole annullare, ritorna 0 o imposta out_len a 0.
+        // Call to the client function!
+        // Note: If the client wants to cancel, return 0 or set out len to 0.
         if (!pParams->pOnUserPassword(pParams->szFileName, error_msg, password, sizeof(password), &passwordLength))
         {
             memset(password, 0, sizeof(password));
@@ -7527,7 +7521,7 @@ static int AuthenticateCurrentPdf(Params *pParams)
             return 0;
         }
 
-        // Se il client restituisce una password vuota (es. l'utente ha premuto Invio)
+        // If the client returns an empty password (e.g. the user pressed Enter)
         if (passwordLength == 0)
         {
             ReportPasswordWarning(pParams, L"Richiesta della password annullata.");
@@ -7542,7 +7536,7 @@ static int AuthenticateCurrentPdf(Params *pParams)
         if (PdfCryptoParams_Authenticate(cp))
             goto autenticazione_riuscita;
 
-        // Se fallisce, prepariamo il messaggio di errore per il prossimo giro
+        // If it fails, we prepare the error message for the next round
         cp->pPassword = NULL;
         cp->lenPassword = 0;
         cp->bPasswordSet = 0;
@@ -7552,7 +7546,7 @@ static int AuthenticateCurrentPdf(Params *pParams)
     }
 
 autenticazione_riuscita:
-    // Pulizia e parsing dei metadati Info (lascia invariato il tuo codice esistente)
+    // Cleaning and parsing metadata Info (leave your existing code unchanged)
     cp->pPassword = NULL;
     cp->lenPassword = 0;
     cp->bPasswordSet = 0;
@@ -7647,7 +7641,7 @@ int ManageContent(Params *pParams, int nPageNumber)
 
 			snprintf(pParams->szError, 8192, "\n***** ECCO L'OGGETTO ERRATO:\n");
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//fwprintf(pParams->fpErrors, L"\n***** ECCO L'OGGETTO ERRATO:\n");
+			//fwprintf(pParams->fpErrors, L"\n*****
 
 			PrintThisObject(pParams, pParams->myPdfTrailer.Encrypt.Number, 0, 0, pParams->fpErrors);
 
@@ -7659,7 +7653,7 @@ int ManageContent(Params *pParams, int nPageNumber)
 		}
 		pParams->bOnParseEncryptObject = 0;
 
-		// Verifica la password prima di decifrare i flussi della pagina.
+		// Check the password before decrypting the page flows.
 		if (!AuthenticateCurrentPdf(pParams))
 		{
 			retValue = 0;
@@ -7674,7 +7668,7 @@ int ManageContent(Params *pParams, int nPageNumber)
 	#endif
 
 
-	// PUSH BEGIN
+	// 
 	pParams->nStreamsStackTop = 0;
 
 	DecodedStreamSize = ( totalLengthFromPdf * sizeof(unsigned char) ) * 55 + sizeof(unsigned char);
@@ -7690,8 +7684,8 @@ int ManageContent(Params *pParams, int nPageNumber)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE ManageContent: impossibile allocare la memoria per pszDecodedStream sullo stack %d.\n", pParams->nStreamsStackTop);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE ManageContent: impossibile allocare la memoria per pszDecodedStream sullo stack %d.\n", pParams->nStreamsStackTop);
-		//fwprintf(pParams->fpErrors, L"ERRORE ManageContent: impossibile allocare la memoria per pszDecodedStream sullo stack %d.\n", pParams->nStreamsStackTop);
+		//wprintf(L"ERRORE ManageContent: impossible to allocate memory for pszDecodedStream on the %d stack. \n, pParams->nStreamsStackTop);
+		//fwprintf(pParams->fpErrors, L"ERRORE ManageContent: impossible to allocate memory for pszDecodedStream on the %d stack. \n, pParams->nStreamsStackTop);
 		pParams->nStreamsStackTop--;
 		retValue = 0;
 		goto uscita;
@@ -7749,8 +7743,8 @@ int ManageContent(Params *pParams, int nPageNumber)
 			{
 				snprintf(pParams->szError, 8192, "ERRORE ManageContent: impossibile reallocare %lu byte per leggere lo stream\n", bytesAllocatedForDecodedStreamOnStack);
 				myShowErrorMessage(pParams, pParams->szError, 1);
-				//wprintf(L"ERRORE ManageContent: impossibile reallocare %lu byte per leggere lo stream\n", bytesAllocatedForDecodedStreamOnStack);
-				//fwprintf(pParams->fpErrors, L"ERRORE ManageContent: impossibile reallocare %lu byte per leggere lo stream\n", bytesAllocatedForDecodedStreamOnStack);
+				//wprintf(L"ERRORE ManageContent: impossible to reallocate %lu bytes to read the stream\n", bytesAllocatedForDecodedStreamOnStack);
+				//fwprintf(pParams->fpErrors, L"ERRORE ManageContent: impossible to reallocate %lu bytes to read the stream\n", bytesAllocatedForDecodedStreamOnStack);
 
 				retValue = 0;
 				goto uscita;
@@ -7769,7 +7763,7 @@ int ManageContent(Params *pParams, int nPageNumber)
 		offsetDecodedStream += DecodedStreamSize;
 	}
 
-	//pParams->myStreamsStack[pParams->nStreamsStackTop].DecodedStreamSize = DecodedStreamSize;
+	//pParams->myStreamsStack[pParams->nStreamsStackTop]. DecodedStreamSize = DecodedStreamSize;
 	//pParams->myStreamsStack[pParams->nStreamsStackTop].blockLen = DecodedStreamSize;
 	pParams->myStreamsStack[pParams->nStreamsStackTop].DecodedStreamSize = offsetDecodedStream;
 	pParams->myStreamsStack[pParams->nStreamsStackTop].blockLen = offsetDecodedStream;
@@ -7827,19 +7821,19 @@ int ManageContent(Params *pParams, int nPageNumber)
 	//pParams->myRedBlackTreeData.prevWidthScaled = 0;
 
 	pParams->myRedBlackTreeData.pParams = pParams;
-	//if ( pParams->szOutputFile[0] != '\0' )
-	//	pParams->myRedBlackTreeData.fpOutput = pParams->fpOutput;
+	//if (pParams->szOutputFile[0]!= '\0' )
+	// pParams->myRedBlackTreeData. fpOutput = pParams->fpOutput;
 	//else
-	//	pParams->myRedBlackTreeData.fpOutput = NULL;
+	// pParams->myRedBlackTreeData. fpOutput = NULL;
 
-	//pParams->myRedBlackTreeData.prevChar = L' ';
+	//pParams->myRedBlackTreeData.prevChar = L ';
 
 	if ( SORT_GLYPHS_BY_ROW == pParams->nSortGlyphs )
 		vlrbtSetCompareFunc(&(pParams->myRedBlackTree), VlRbtCompareFuncRow);
 	else
 		vlrbtSetCompareFunc(&(pParams->myRedBlackTree), VlRbtCompareFuncOrd);
 
-	//vlrbtSetCompareFunc(&(pParams->myRedBlackTree), VlRbtCompareFuncCol);
+	//vlrbtSetCompareFunc(&(pParams->myRedBlackTree), VlRbtFuncCol);
 
 	vlrbtSetOnTraverseFunc(&(pParams->myRedBlackTree), VlRbtOnTraverseFunc);
 	//vlrbtSetOnTraverseFunc(&(pParams->myRedBlackTree), VlRbtOnTraverseFuncNew);
@@ -7895,15 +7889,15 @@ int ManageContent(Params *pParams, int nPageNumber)
 		ComposeTamilKannadaMatras(pParams);
 		NormalizeBengaliSpuriousSpace(pParams);
 
-        /* >>> PATCH 4: inversione dei run RTL per riga <<< */
+        /* PATCH 4: reversal of RTL run per line */
         ReverseRTLRunsInText(pParams->pText);
         BidiReset();
-        /* >>> FINE PATCH 4 <<< */
+        /* PATCH 4 */
 
-		//if ( !(pParams->bOptVersionOrHelp) && (pParams->szFilePdf[0] == '\0' && pParams->szPath[0] == '\0') )
+		//(pParams->bOptVersionOrHelp) && (pParams->szFilePdf[0] == '\0' && pParams->szPath[0] == '\0')
 		//{
-		//	wprintf(L"\n\nErrore: dev'essere specificata una(e solo una, non entrambe) delle due opzioni: '-p (--path)' o '-e(--extracttextfrom)'\n\n");
-		//	return 0;
+		// wprintf(L"\n\nErrore: a(and only one, not both) of the two options: '-p (--path)' or '-e(--extracttextfrom)'\n\n');
+		// return 0;
 		//}
 
 		if ( '\0' != pParams->szFilePdf[0] )
@@ -7948,15 +7942,15 @@ uscita:
 }
 
 // ============================================================
-// Helper per Bug C (CJK multi-carattere e caratteri singoli).
-// Devono stare PRIMA di ManageExtractedText e DOPO InsertWordIntoTst
-// (o comunque dopo che parser.h e' stato incluso, perche' la
-// dichiarazione di InsertWordIntoTst e' in parser.h).
+// Helper for Bug C (CJK multi-character and single characters).
+// Must be FIRST of ManageExtractedText and DOPO InsertWordIntoTst
+// (or after parser.h was included, because the
+// InsertWordIntoTst statement is in parser.h).
 // ============================================================
 
-// Inserisce nel TST la run CJK corrente, scambiando temporaneamente
-// pParams->pwszCurrentWord / idxCurrentWordChar con pwszAsianRun / *pIdxAsianRun.
-// Necessario perche' InsertWordIntoTst legge sempre pParams->pwszCurrentWord.
+// Inserts the current CJK run into the TST, temporarily switching
+// pParams->pwszCurrentWord / idxCurrentWordChar with pwszAsianRun / *pIdxAsianRun.
+// Needed because InsertWordIntoTst always reads pParams->pwszCurrentWord.
 static void FlushAsianRunToTst(Params *pParams, wchar_t *pwszAsianRun, int *pIdxAsianRun)
 {
     wchar_t *pSavedWord;
@@ -7985,9 +7979,9 @@ static void FlushAsianRunToTst(Params *pParams, wchar_t *pwszAsianRun, int *pIdx
     pwszAsianRun[0] = L'\0';
 }
 
-// Inserisce nel TST un singolo carattere come token a se'.
-// Salva e ripristina lo stato di pwszCurrentWord / idxCurrentWordChar,
-// perche' InsertWordIntoTst li azzera.
+// Enters a single character in TST as a token.
+// Save and restore pwszCurrentWord / idxCurrentWordChar status,
+// because InsertWordIntoTst will clear them.
 static void InsertSingleCharToTst(Params *pParams, wchar_t c)
 {
     wchar_t *pSavedWord;
@@ -8025,7 +8019,7 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
 
     MyUnicodeNFCStatus nfcStatus;
 
-    // Buffer per la run CJK corrente (Bug C).
+    // Buffer for current CJK run (Bug C).
     wchar_t *pwszAsianRun = NULL;
     int idxAsianRun = 0;
 
@@ -8091,10 +8085,10 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
 
 
     // ============================================================
-    // PASSAGGIO 1:
-    // Preparazione del testo da indicizzare e normalizzazione NFC.
+    // 
+    // Preparation of the text to index and normalize NFC.
     //
-    // Il testo originale pParams->pText NON viene modificato.
+    // The original text pParams->pText is NOT changed.
     // ============================================================
 
     if ( bSearch )
@@ -8103,8 +8097,8 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
 
         textLength = (size_t)pParams->TextLength;
 
-        // Controllo contro eventuale overflow nella dimensione
-        // dell'allocazione.
+        // Control against any overflow in size
+        // of the allocation.
 
         if ( textLength > (((size_t)-1) / sizeof(wchar_t)) - 1 )
         {
@@ -8136,8 +8130,8 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
             goto uscita;
         }
 
-        // Copia il testo originale, scartando gli stessi caratteri
-        // che venivano già esclusi dalla funzione precedente:
+        // Copy the original text, discarding the same characters
+        // which were already excluded from the previous function:
         //
         // U+FFFD
         // U+D800 - U+DFFF
@@ -8161,10 +8155,10 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
 
         pSearchInput[searchInputLength] = L'\0';
 
-        // Normalizzazione Unicode NFC.
+        // Unicode NFC standardization.
         //
-        // pSearchText viene allocato dalla funzione NFC.
-        // La sua lunghezza viene restituita in searchTextLength.
+        // pSearchText is allocated by the NFC function.
+        // Its length is returned to searchTextLength.
 
         nfcStatus = myUnicodeNFC_Normalize(pSearchInput, searchInputLength, &pSearchText, &searchTextLength);
 
@@ -8181,11 +8175,11 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
     }
 
     // ============================================================
-    // PASSAGGIO 2:
-    // Stampa del testo originale.
-    // Non stampiamo pSearchText perché è normalizzato NFC.
-    // L'estrazione testuale deve conservare il comportamento
-    // precedente.
+    // 
+    // Print original text.
+    // We do not print pSearchText because it is normalized NFC.
+    // Textual extraction must preserve behavior
+    // previous.
     // ============================================================
 
     if ( bPrint )
@@ -8194,15 +8188,15 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
         {
             c = pParams->pText[k];
 
-            // PULIZIA DEI CARATTERI DI CONTROLLO NON STAMPABILI:
-            // esclude tutti i caratteri da 0x00 a 0x1F, MA preserva
+            // PULISHING CONTROL CHARACTERISTICS:
+            // excludes all characters from 0x00 to 0x1F, MA preserves
             // \t (0x09), \n (0x0A) e \r (0x0D).
             if ( c < 0x0020 && c != 0x0009 && c != 0x000A && c != 0x000D )
             {
                 continue;
             }
 
-            // Esclude anche il carattere di controllo DEL (127) e i rimpiazzi non validi.
+            // It also excludes the control character of DEL (127) and invalid replacements.
             if (
                 c == 0xFFFD ||
                 (c >= 0xD800 && c <= 0xDFFF) ||
@@ -8212,30 +8206,30 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
                 continue;
             }
 
-            //if ( NULL != pParams->fpOutput )
+            //if ( NULL!= pParams->fpOutput)
             //    fwprintf(pParams->fpOutput, L"%lc", c);
             //else
             //    wprintf(L"%lc", c);
 
-            // FILTRO DI OUTPUT FINALE: Pulisce i caratteri di controllo non stampabili 
-            // e i residui ottali prima di scrivere a schermo o su file, azzerando le regressioni.
+            // FINAL OUTPUT FILTER: Cleans Unprintable Control Characters 
+            // and octal residues before writing on screen or on files, resetting regressions.
             if ( c < 32 && c != L'\n' && c != L'\r' && c != L'\t' )
             {
                 c = L' ';
             }
 
-            //if ( NULL != pParams->fpOutput )
+            //if ( NULL!= pParams->fpOutput)
             //    fwprintf(pParams->fpOutput, L"%lc", c);
             //wprintf(L"%lc", c);
             
-            // FILTRO DEGLI ESCAPE OTTALI LETTERALI (es. \030, \027)
-            static int stateOctal = 0; // 0: normale, 1: trovata \, 2: prima cifra, 3: seconda cifra
+            // LETTERAL EXAPE FILTER (e.g. \030, \027)
+            static int stateOctal = 0; // 0: normal, 1: found \, 2: first digit, 3: second digit
             int bSkipWrite = 0;
 
             if (stateOctal == 0 && c == L'\\')
             {
                 stateOctal = 1;
-                bSkipWrite = 1; // Mette in pausa la scrittura per verificare se segue un numero ottale
+                bSkipWrite = 1; // Stop writing to see if it follows an octal number
             }
             else if (stateOctal == 1)
             {
@@ -8283,8 +8277,8 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
     }
 
     // ============================================================
-    // PASSAGGIO 3:
-    // Indicizzazione del testo normalizzato NFC.
+    // 
+    // Normalized text indexing NFC.
     // ============================================================
 
     if ( bSearch )
@@ -8293,10 +8287,10 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
         {
             c = pSearchText[k];
 
-            // RICONGIUNGIMENTO SCRITTURA VERTICALE ASIATICA:
-            // se incontriamo un a capo o uno spazio isolato e sia il
-            // carattere prima che quello dopo sono glifi asiatici
-            // (CJK), saltiamo il separatore.
+            // RECONDITIONAL ASIATIC VERTICAL SCRITTURE:
+            // if we meet a head or an isolated space and be the
+            // character before that later are Asian glyphs
+            // (CJK), we skip the separator.
             if ( (c == L'\n' || c == L'\r' || c == L' ') && k > 0 && (k + 1) < searchTextLength )
             {
                 wchar_t cPrev = pSearchText[k - 1];
@@ -8310,33 +8304,33 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
 
             c = towlower(c);
 
-            // BUG C: flush della run CJK prima di entrare in un ramo
-            // non-CJK. Copre in un solo punto i rami "occidentale",
-            // L'-' e l'else finale.
+            // BUG C: flush of the CJK run before entering a branch
+            // Not-CJK. Cover in one point the "Western" branches,
+            // The final eelse.
             if ( !IS_ASIAN_SCRIPT(c) && idxAsianRun > 0 )
             {
                 FlushAsianRunToTst(pParams, pwszAsianRun, &idxAsianRun);
             }
 
-            // Il danda (U+0964) e il double danda (U+0965)
-            // sono separatori di parola, non parte della parola stessa.
-            // Devanagari, Bengalese e altre scritture li usano come
-            // equivalente del punto fermo.
+            // Round (U+0964) and double date (U+0965)
+            // are word separators, not part of the word itself.
+            // Devanagari, Bengalese and other scriptures use them as
+            // equivalent of the stationary point.
             if ( c == 0x0964 || c == 0x0965 )
             {
-                // Chiude la parola corrente (se non e' vuota) e la
-                // inserisce nel TST. Non accumula il danda.
+                // Closes the current word (if not empty) and closes it
+                // fits into TST. It doesn't accumulate the danda.
 
                 pParams->pwszCurrentWord[pParams->idxCurrentWordChar] = L'\0';
 
                 InsertWordIntoTst(pParams);
             }
 
-            // LOGICA ASIATICA (CJK): bigrammi + singolo carattere + run completa.
+            // LOGICA ASIATICA (CJK): bigrams + single character + full run.
             else if ( IS_ASIAN_SCRIPT(c) )
             {
-                // Se c'era una parola occidentale accumulata
-                // precedentemente, la salviamo prima.
+                // If there was a Western word accumulated
+                // Previously, we save it first.
 
                 if (
                     pParams->idxCurrentWordChar > 0 &&
@@ -8348,7 +8342,7 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
                     InsertWordIntoTst(pParams);
                 }
 
-                // Bigramma (comportamento esistente).
+                // Bigram (existing behavior).
                 if ( pParams->idxCurrentWordChar == 0 )
                 {
                     pParams->pwszCurrentWord[pParams->idxCurrentWordChar++] = c;
@@ -8361,19 +8355,19 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
 
                     InsertWordIntoTst(pParams);
 
-                    // Fa scivolare il carattere corrente in posizione
-                    // iniziale 0 per permettere al ciclo successivo
-                    // di fare coppia con lui.
+                    // Slides current character in position
+                    // initial 0 to allow the next cycle
+                    // to partner with him.
                     pParams->pwszCurrentWord[0] = c;
 
                     pParams->idxCurrentWordChar = 1;
                 }
 
-                // BUG C: emette anche il singolo carattere e accumula
-                // nella run CJK. InsertSingleCharToTst e FlushAsianRunToTst
-                // salvano/ripristinano lo stato di pwszCurrentWord, quindi
-                // il carry-over (idx=1, pwsz[0]=c) resta valido per il
-                // prossimo giro.
+                // BUG C: It also emits the single character and accumulates
+                // in the CJK run. InsertSingleCharToTst and FlushAsianRunToTst
+                // save/restore pwszCurrentWord status, so
+                // the carry-over (idx=1, pwsz[0]=c) remains valid for
+                // next round.
                 {
                     int nSavedIdx = pParams->idxCurrentWordChar;
                     wchar_t cSavedFirst = (nSavedIdx > 0) ? pParams->pwszCurrentWord[0] : L'\0';
@@ -8392,8 +8386,8 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
                 }
             }
 
-            // RAMO OCCIDENTALE / MEDIORIENTALE STANDARD
-            // (Rimosse le lingue CJK/Thai da qui)
+            // OCCIDENTAL RAM / STANDARD
+            // (Remove CJK/Thai languages from here)
 
             else if (
                  (c >= 0x0041 && c <= 0x007A) ||
@@ -8457,7 +8451,7 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
                  (c >= 0xA880 && c <= 0xA8DF) ||
                  (c >= 0xA840 && c <= 0xA87F) ||
                  (c >= 0xA800 && c <= 0xA82F) ||
-                 (c >= 0x0E00 && c <= 0x0E7F) ||   // Thai: blocco completo (lettere + cifre)
+                 (c >= 0x0E00 && c <= 0x0E7F) ||   // Thai: full block (letters + digits)
                  (c >= 0x0E80 && c <= 0x0EFF) ||
                  (c >= 0x1000 && c <= 0x109F) ||
                  (c >= 0x1780 && c <= 0x17FF) ||
@@ -8507,8 +8501,8 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
                  (c >= 0x2800 && c <= 0x28FF)
                )
             {
-                // Se passiamo repentinamente da uno script asiatico
-                // a uno occidentale, azzeriamo l'indice.
+                // If we suddenly pass from an Asian script
+                // to a Westerner, we clear the index.
 
                 if (
                     pParams->idxCurrentWordChar > 0 &&
@@ -8521,8 +8515,8 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
                 pParams->pwszCurrentWord[pParams->idxCurrentWordChar++] = c;
             }
 
-            // Gestione della sillabazione:
-            // il trattino separa la parola tra due righe.
+            // Syllabus management:
+            // the hyphen separates the word between two lines.
 
             else if ( L'-' == c )
             {
@@ -8530,8 +8524,8 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
                 {
                     int nCopy;
 
-                    // Copiamo la prima parte della parola
-                    // sillabata in pwszPreviousWord.
+                    // We cover the first part of the word
+                    // syllable in pwszPreviousWord.
 
                     nCopy = 0;
 
@@ -8547,8 +8541,8 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
 
                     pParams->idxPreviousWordChar = nCopy;
 
-                    // Azzera il buffer corrente.
-                    // La continuazione verrà accumulata qui.
+                    // Clear the current buffer.
+                    // The continuation will be accumulated here.
 
                     pParams->idxCurrentWordChar = 0;
                     pParams->pwszCurrentWord[0] = L'\0';
@@ -8566,12 +8560,12 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
         }
     }
 
-    // BUG C: flush finale della run CJK, se il testo termina con CJK.
+    // BUG C: final flush of the CJK run, if the text ends with CJK.
     FlushAsianRunToTst(pParams, pwszAsianRun, &idxAsianRun);
 
-    // NECESSARIO PER INSERIRE L'ULTIMA PAROLA NEL TST.
-    // Manteniamo la chiamata nella stessa posizione logica
-    // della funzione originale.
+    // No, no, no, no, no.
+    // We keep the call in the same logical position
+    // of the original function.
 
     pParams->pwszCurrentWord[pParams->idxCurrentWordChar] = L'\0';
 
@@ -8579,7 +8573,7 @@ int ManageExtractedText(Params *pParams, int bPrint, int bSearch)
 
 uscita:
 
-    // Rilascio dei buffer temporanei NFC.
+    // Release of temporary NFC buffers.
 
     if ( NULL != pSearchInput )
     {
@@ -8599,8 +8593,8 @@ uscita:
         pwszAsianRun = NULL;
     }
 
-    // Rilascio dei buffer utilizzati per la costruzione
-    // delle parole.
+    // Releasing buffers used for construction
+    // words.
 
     if ( NULL != pParams->pwszCurrentWord )
     {
@@ -8727,8 +8721,8 @@ int LoadFirstBlock(Params *pParams, int objNum, const char *pszFunctionName)
 		{
 			snprintf(pParams->szError, 8192, "Errore LoadFirstBlock(%s): Offset oggetto n. %d errato -> %d\n", pszFunctionName, objNum, pParams->myObjsTable[objNum]->Obj.Offset);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"Errore LoadFirstBlock(%s): Offset oggetto n. %d errato -> %d\n", pszFunctionName, objNum, pParams->myObjsTable[objNum]->Obj.Offset);
-			//fwprintf(pParams->fpErrors, L"Errore LoadFirstBlock(%s): Offset oggetto n. %d errato -> %d\n", pszFunctionName, objNum, pParams->myObjsTable[objNum]->Obj.Offset);
+			//wprintf(L"Errore LoadFirstBlock(%s): Object no. %d wrong -> %d\n", pszFunctionName, objNum, pParams->myObjsTable[objNum]->Obj.Offset);
+			//fwprintf(pParams->fpErrors, L"Errore LoadFirstBlock(%s): Object no. %d wrong -> %d\n", pszFunctionName, objNum, pParams->myObjsTable[objNum]->Obj.Offset);
 			retValue = 0;
 			goto uscita;
 		}
@@ -8740,8 +8734,8 @@ int LoadFirstBlock(Params *pParams, int objNum, const char *pszFunctionName)
 		{
 			snprintf(pParams->szError, 8192, "Errore LoadFirstBlock(%s): oggetto n. %d; atteso spazio, trovato '%c'\n", pszFunctionName, objNum, c);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"Errore LoadFirstBlock(%s): oggetto n. %d; atteso spazio, trovato '%c'\n", pszFunctionName, objNum, c);
-			//fwprintf(pParams->fpErrors, L"Errore LoadFirstBlock(%s): oggetto n. %d; atteso spazio, trovato '%c'\n", pszFunctionName, objNum, c);
+			//wprintf(L"Errore LoadFirstBlock(%s): object n. %d; expected space, found '%c'\n", pszFunctionName, objNum, c);
+			//fwprintf(pParams->fpErrors, L"Errore LoadFirstBlock(%s): object n. %d; expected space, found '%c'\n", pszFunctionName, objNum, c);
 			retValue = 0;
 			goto uscita;
 		}
@@ -8788,7 +8782,7 @@ int LoadFirstBlock(Params *pParams, int objNum, const char *pszFunctionName)
 				snprintf(pParams->szError, 8192, "ERRORE LoadFirstBlock(%s): malloc failed for pParams->myBlock.\n\n", pszFunctionName);
 				myShowErrorMessage(pParams, pParams->szError, 1);
 				//wprintf(L"ERROR LoadFirstBlock(%s): malloc failed for pParams->myBlock.\n\n", pszFunctionName);
-				//fwprintf(pParams->fpErrors, L"ERRORE LoadFirstBlock(%s): malloc failed for pParams->myBlock.\n\n", pszFunctionName);
+				//fwprintf(pParams->fpErrors, L"ERRORE LoadFirstBlock(%s): malloc failed for pParams->myBlock. \n\n, pszFunctionName);
 				retValue = 0;
 				goto uscita;
 			}
@@ -8816,7 +8810,7 @@ int LoadFirstBlock(Params *pParams, int objNum, const char *pszFunctionName)
 		snprintf(pParams->szError, 8192, "ERRORE LoadFirstBlock(%s): INVALID OBJ TYPE.\n\n", pszFunctionName);
 		myShowErrorMessage(pParams, pParams->szError, 1);
 		//wprintf(L"ERROR LoadFirstBlock(%s): INVALID OBJ TYPE.\n\n", pszFunctionName);
-		//fwprintf(pParams->fpErrors, L"ERRORE LoadFirstBlock(%s): INVALID OBJ TYPE.\n\n", pszFunctionName);
+		//fwprintf(pParams->fpErrors, L"ERRORE LoadFirstBlock(%s): INVALID OBJ TYPE.\n\n, pszFunctionName);
 		retValue = 0;
 		goto uscita;
 	}
@@ -8856,7 +8850,7 @@ void myTreeTraversePostOrderLeafOnly(Tree *head, Params *pParams)
 			myintqueuelist_Enqueue(&(pParams->pPagesArray[pParams->nCurrentPageNum].queueContentsObjRefs), pParams->nTemp);
 		}
 
-		if ( !(head->bCurrentPageHasDirectResources) && (-1 == head->nCurrentPageResources)  )   // La pagina eredita Resources da uno dei suoi parenti.
+		if ( !(head->bCurrentPageHasDirectResources) && (-1 == head->nCurrentPageResources)  )   // The page inherits Resources from one of its relatives.
 		{
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseObject_FN) || defined(MYDEBUG_PRINT_ON_myTreeTraversePostOrderLeafOnly_FN)
 			wprintf(L"La pagina %d eredita Resources da uno dei suoi parenti.\n", pParams->nCurrentPageNum);
@@ -8904,13 +8898,13 @@ void myTreeTraversePostOrderLeafOnly(Tree *head, Params *pParams)
 				#endif
 			}
 		}
-		else if ( !(head->bCurrentPageHasDirectResources) && (0 == head->nCurrentPageResources)  ) // La pagina non ha riferimenti a Resources.
+		else if ( !(head->bCurrentPageHasDirectResources) && (0 == head->nCurrentPageResources)  ) // The page has no references to Resources.
 		{
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseObject_FN) || defined(MYDEBUG_PRINT_ON_myTreeTraversePostOrderLeafOnly_FN)
 			wprintf(L"La pagina %d non ha riferimenti a Resources.\n", pParams->nCurrentPageNum);
 			#endif
 		}
-		else if ( !(head->bCurrentPageHasDirectResources) && head->nCurrentPageResources > 0 )   // Un intero > 0 indica il riferimento al numero dell'oggetto Resources.
+		else if ( !(head->bCurrentPageHasDirectResources) && head->nCurrentPageResources > 0 )   // An entire > 0 refers to the number of Resources object.
 		{
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseObject_FN) || defined(MYDEBUG_PRINT_ON_myTreeTraversePostOrderLeafOnly_FN)
 			wprintf(L"La pagina %d ha un oggetto Resources indiretto.\n", pParams->nCurrentPageNum);
@@ -8938,7 +8932,7 @@ void myTreeTraversePostOrderLeafOnly(Tree *head, Params *pParams)
 			#endif
 		}
 
-		if ( head->bCurrentPageHasDirectResources  )   // La pagina ha un oggetto Resources diretto.
+		if ( head->bCurrentPageHasDirectResources  )   // The page has a direct Resources object.
 		{
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseObject_FN) || defined(MYDEBUG_PRINT_ON_myTreeTraversePostOrderLeafOnly_FN)
 			wprintf(L"La pagina %d ha un oggetto Resources diretto.\n", pParams->nCurrentPageNum);
@@ -9004,8 +8998,8 @@ int ParseObject(Params *pParams, int objNum)
 		retValue = 0;
 		snprintf(pParams->szError, 8192, "Errore ParseObject: objNum non valido -> %d\n", objNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseObject: objNum non valido -> %d\n", objNum);
-		//fwprintf(pParams->fpErrors, L"Errore ParseObject: objNum non valido -> %d\n", objNum);
+		//wprintf(L"Errore ParseObject: objNum invalid -> %d\n", objNum);
+		//fwprintf(pParams->fpErrors, L"Errore ParseObject: objNum invalid -> %d\n", objNum);
 		goto uscita;
 	}
 
@@ -9085,19 +9079,19 @@ int ParseObject(Params *pParams, int objNum)
 	wprintf(L"ROOT PAGES PARSING -> pParams->myObjsTable[%d]->numObjParent = %d\n", pParams->nCurrentObjNum, pParams->myObjsTable[pParams->nCurrentObjNum]->Obj.genObjParent);
 	#endif
 
-	if ( -1 == pParams->nCurrentPageResources  )   // La pagina eredita Resources da uno dei suoi parenti.
+	if ( -1 == pParams->nCurrentPageResources  )   // The page inherits Resources from one of its relatives.
 	{
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseObject_FN)
 		wprintf(L"Il nodo ROOT(obj num: %d) non ha riferimenti a Resources.\n", pParams->nCurrentObjNum);
 		#endif
 	}
-	else if ( 0 == pParams->nCurrentPageResources  ) // La pagina non ha riferimenti a Resources.
+	else if ( 0 == pParams->nCurrentPageResources  ) // The page has no references to Resources.
 	{
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseObject_FN)
 		wprintf(L"Il nodo ROOT(obj num: %d) non ha riferimenti a Resources\n", pParams->nCurrentObjNum);
 		#endif
 	}
-	else if ( pParams->nCurrentPageResources > 0 )   // Un intero > 0 che indica il riferimento al numero dell'oggetto Resources.
+	else if ( pParams->nCurrentPageResources > 0 )   // An entire > 0 indicating reference to the number of Resources object.
 	{
 		if ( !ParseDictionaryObject(pParams, pParams->nCurrentPageResources) )
 		{
@@ -9137,7 +9131,7 @@ int ParseObject(Params *pParams, int objNum)
 		}
 	}
 
-	if ( pParams->bCurrentPageHasDirectResources  )   // La pagina ha un oggetto Resources diretto.
+	if ( pParams->bCurrentPageHasDirectResources  )   // The page has a direct Resources object.
 	{
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseObject_FN)
 		wprintf(L"Il nodo ROOT(obj num: %d) ha un oggetto Resources diretto.\n", pParams->nCurrentObjNum);
@@ -9182,7 +9176,7 @@ int ParseObject(Params *pParams, int objNum)
 		{
 			snprintf(pParams->szError, 8192, "ERRORE!!! ParseObject. Impossibile allocare la memoria per l'array delle pagine per %d pagine\n", pParams->nCountPagesFromPdf);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE!!! ParseObject. Impossibile allocare la memoria per l'array delle pagine per %d pagine\n", pParams->nCountPagesFromPdf);
+			//wprintf(L"ERRORE!!! ParseObject. It is impossible to allocate memory for the array of pages for %d pages\n", pParams->nCountPagesFromPdf);
 			retValue = 0;
 			goto uscita;
 		}
@@ -9310,7 +9304,7 @@ int ParseObject(Params *pParams, int objNum)
 			wprintf(L"PAGETREE PAGES PARSING -> (obj num: %d) pParams->nCurrentPageParent = %d\n", pParams->nCurrentObjNum, pParams->nCurrentPageParent);
 			#endif
 
-			if ( !(pParams->bCurrentPageHasDirectResources) && (-1 == pParams->nCurrentPageResources)  )   // La pagina(o il nodo interno) eredita Resources da uno dei suoi parenti.
+			if ( !(pParams->bCurrentPageHasDirectResources) && (-1 == pParams->nCurrentPageResources)  )   // The page(or the inner node) inherits Resources from one of its relatives.
 			{
 				if ( OBJ_TYPE_PAGES == pParams->eCurrentObjType )
 				{
@@ -9319,7 +9313,7 @@ int ParseObject(Params *pParams, int objNum)
 					#endif
 				}
 			}
-			else if ( !(pParams->bCurrentPageHasDirectResources) && (0 == pParams->nCurrentPageResources)  ) // La pagina(o il nodo interno) non ha riferimenti a Resources.
+			else if ( !(pParams->bCurrentPageHasDirectResources) && (0 == pParams->nCurrentPageResources)  ) // The page(or the internal node) has no references to Resources.
 			{
 				if ( OBJ_TYPE_PAGES == pParams->eCurrentObjType )
 				{
@@ -9328,7 +9322,7 @@ int ParseObject(Params *pParams, int objNum)
 					#endif
 				}
 			}
-			else if ( !(pParams->bCurrentPageHasDirectResources) && pParams->nCurrentPageResources > 0 )   // Un intero > 0 indica il riferimento al numero dell'oggetto Resources.
+			else if ( !(pParams->bCurrentPageHasDirectResources) && pParams->nCurrentPageResources > 0 )   // An entire > 0 refers to the number of Resources object.
 			{
 				if ( OBJ_TYPE_PAGES == pParams->eCurrentObjType )
 				{
@@ -9363,7 +9357,7 @@ int ParseObject(Params *pParams, int objNum)
 				}
 			}
 
-			if ( pParams->bCurrentPageHasDirectResources  )   // La pagina(o il nodo interno) ha un oggetto Resources diretto.
+			if ( pParams->bCurrentPageHasDirectResources  )   // The page(or the inner node) has a direct Resources object.
 			{
 				if ( OBJ_TYPE_PAGES == pParams->eCurrentObjType )
 				{
@@ -9459,20 +9453,20 @@ int ParseObject(Params *pParams, int objNum)
 			goto uscita;
 		}
 
-		//if ( pParams->nCountImageContent > 34 && 0 == pParams->nCountNotImageContent )
-		//	goto uscita;
+		//if (pParams->nCountImageContent > 34 & 0 == pParams->nCountNotImageContent )
+		// goto exit;
 
 		//pParams->pCurrentEncodingArray = &(pParams->aUtf8CharSet[0]);
 		pParams->pCurrentEncodingArray = &(pParams->aSTD_CharSet[0]);
-		//pParams->pCurrentEncodingArray = &(pParams->aWIN_CharSet[0]);
-		//pParams->pCurrentEncodingArray = &(pParams->aMAC_CharSet[0]);
-		//pParams->pCurrentEncodingArray = &(pParams->aPDF_CharSet[0]);
+		//pParams->pCurrentEncodingArray = &(pParams->aWIN CharSet[0]);
+		//pParams->pCurrentEncodingArray = &(pParams->aMAC CharSet[0]);
+		//pParams->pCurrentEncodingArray = &(pParams->aPDF CharSet[0]);
 
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseObject_FN)
 		wprintf(L"PAGINA %d -> Obj Number = %d\n", nInt, pParams->pPagesArray[nInt].numObjNumber);
 		#endif
 
-		//if ( pParams->pPagesArray[nInt].numObjContent <= 0 && pParams->pPagesArray[nInt].queueContentsObjRefs.count <= 0 )
+		//(pParams->pPagesArray[nInt].numObjContent <= 0 &amp; pParams->pPagesArray[nInt].queueContentsObjRefs.count <= 0 )
 		if ( pParams->pPagesArray[nInt].queueContentsObjRefs.count <= 0 )
 		{
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseObject_FN)
@@ -9505,8 +9499,8 @@ int ParseObject(Params *pParams, int objNum)
 
 				snprintf(pParams->szError, 8192, "FINE OGGETTO Y:\n");
 				myShowErrorMessage(pParams, pParams->szError, 1);
-				//wprintf(L"FINE OGGETTO Y:\n");
-				//fwprintf(pParams->fpErrors, L"FINE OGGETTO Y:\n");
+				//wprintf(L"OGGETTO Y:\n");
+				//fwprintf(pParams->fpErrors, L'FINE OGGETTO Y:\n");
 
 				retValue = 0;
 				goto uscita;
@@ -9567,7 +9561,7 @@ int ParseObject(Params *pParams, int objNum)
 			}
 			//else
 			//{
-			//	wprintf(L"\tKey '%ls' NOT found\n", pParams->pWordsToSearchArray[idxWord]);
+			// wprintf(L"\tKey '%ls' NOT found\n", pParams->pWordsToSearchArray[idxWord]);
 			//}
 		}
 	}
@@ -9576,7 +9570,7 @@ uscita:
 
 	mynumstacklist_Free( &(pParams->myNumStack) );
 
-	//for ( nInt = 1; nInt <= pParams->nCountPageFound; nInt++ )
+	//for (nInt = 1; nInt <= pParams->nCountPageFound; nInt++ )
 	for ( nInt = 1; nInt <= pParams->nCountPagesFromPdf; nInt++ )
 	{
 		myintqueuelist_Free(&(pParams->pPagesArray[nInt].queueContentsObjRefs));
@@ -9765,7 +9759,7 @@ int ParseInfoObject(Params *pParams, int objNum)
 					{
 						if (textBytesLen == 0)
 						{
-							// Stringa vuota: caso legittimo, non e' un errore. Es. H21 monodukuri report.pdf ha /Author () e /Title ().
+							// Empty string: legitimate case, it's not a mistake. H21 monodukuri report.pdf ha /Author () e /Title ().
 							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseInfoObject_FN)
 							wprintf(L"  /%-12s : (stringa vuota)\n", szKey);
 							#endif
@@ -9815,7 +9809,7 @@ int ParseInfoObject(Params *pParams, int objNum)
     #endif
 
 uscita:
-    // >>> RIPRISTINO SEMPRE il flag, anche sui return anticipati.
+    // > > > > > > > > > > > > > > > > > > > > > > > > > > >  > > > >  S > > > > > > > >  S > > > S > S > S > S > S > S > S > S > S > S > > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S > S >
     pParams->bOnParseInfoObject = saved_bOnParseInfoObject;
     return retValue;
 }
@@ -9898,7 +9892,7 @@ int PrintThisObject(Params *pParams, int objNum, int bDecodeStream, int nPageNum
 		{
 			snprintf(pParams->szError, 8192, "Errore PrintThisObject: objNum non valido -> %d\n", objNum);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//fwprintf(fpOutput, L"Errore PrintThisObject: objNum non valido -> %d\n", objNum);
+			//fwprintf(fpOutput, L"Errore PrintThisObject: objNum invalid -> %d\n", objNum);
 		}
 		goto uscita;
 	}
@@ -10212,7 +10206,7 @@ int PrintThisObjectFontFile(Params *pParams, int objNum, FILE* fpOutput)
 		{
 			snprintf(pParams->szError, 8192, "Errore PrintThisObjectFontFile: objNum non valido -> %d\n", objNum);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//fwprintf(fpOutput, L"Errore PrintThisObject: objNum non valido -> %d\n", objNum);
+			//fwprintf(fpOutput, L"Errore PrintThisObject: objNum invalid -> %d\n", objNum);
 		}
 		goto uscita;
 	}
@@ -10302,7 +10296,7 @@ int PrintThisObjectFontFile(Params *pParams, int objNum, FILE* fpOutput)
 					}
 
 					if ( bytesWrite == bytesRead )
-					//if ( bytesWrite == DecodedStreamSize )
+					//if (bytesWrite == DecodedStreamSize )
 					{
 						wprintf(L"\n\nSCRITTI CON SUCCESSO %d BYTE.\n\n", bytesWrite);
 					}
@@ -10438,8 +10432,8 @@ int ParseNextObject(Params *pParams, int objNum)
 		retValue = 0;
 		snprintf(pParams->szError, 8192, "Errore ParseNextObject: objNum non valido -> %d\n", objNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseNextObject: objNum non valido -> %d\n", objNum);
-		//fwprintf(pParams->fpErrors, L"Errore ParseNextObject: objNum non valido -> %d\n", objNum);
+		//wprintf(L"Errore ParseNextObject: objNum invalid -> %d\n", objNum);
+		//fwprintf(pParams->fpErrors, L"Errore ParseNextObject: invalid objNum -> %d\n", objNum);
 		goto uscita;
 	}
 
@@ -10487,11 +10481,11 @@ unsigned char * getDecodedStream(Params *pParams, unsigned long int *pDecodedStr
 	size_t bytesRead = 0;
 
 
-	// Buffer e lunghezza effettiva da passare a DecodeStream().
+	// Buffer and actual length to go to DecodeStream().
 	unsigned char *pszStreamForDecode = NULL;
 	unsigned long int StreamForDecodeSize = 0;
 
-	// Indica se il buffer di decifratura appartiene a PdfCryptoParams.
+	// Indicates if the decryption buffer belongs to PdfCryptoParams.
 	int bCryptoOutputUsed = 0;
 	int bCanDecryptStream = 0;
 
@@ -10510,10 +10504,10 @@ unsigned char * getDecodedStream(Params *pParams, unsigned long int *pDecodedStr
 
 	//EncodedStreamSize = pContent->LengthFromPdf * sizeof(unsigned char) + sizeof(unsigned char);
 
-	// La lunghezza effettiva non comprende il byte di terminazione.
+	// The actual length does not include the termination byte.
 	EncodedStreamSize = pContent->LengthFromPdf;
 
-	// Alloca un byte aggiuntivo, mantenendo la lunghezza effettiva separata.
+	// Place an additional byte, keeping the actual length separate.
 	pszEncodedStream = (unsigned char *)malloc((size_t)EncodedStreamSize + sizeof(unsigned char));
 
 	if (pszEncodedStream == NULL)
@@ -10531,23 +10525,23 @@ unsigned char * getDecodedStream(Params *pParams, unsigned long int *pDecodedStr
 	{
 		snprintf(pParams->szError, 8192, "\nERRORE getDecodedStream: fread ha letto %lu byte quando il pdf ne specifica, invece, %lu\n", bytesRead, pContent->LengthFromPdf);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"\nERRORE getDecodedStream: fread ha letto %lu byte quando il pdf ne specifica, invece, %lu\n", bytesRead, pContent->LengthFromPdf);
-		//fwprintf(pParams->fpErrors, L"\nERRORE getDecodedStream: fread ha letto %lu byte quando il pdf ne specifica, invece, %lu\n", bytesRead, pContent->LengthFromPdf);
+		//wprintf(L"\nERRORE getDecodedStream: fread read %lu byte when pdf specifies, instead, %lu\n", bytesRead, pContent->LengthFromPdf);
+		//fwprintf(pParams->fpErrors, L"\nERRORE getDecodedStream: fread read %lu byte when pdf specifies, instead, %lu\n", bytesRead, pContent->LengthFromPdf);
 		goto uscita;
 	}
 	pszEncodedStream[bytesRead] = '\0';
 
-	// Per impostazione predefinita, DecodeStream() riceve i byte letti dal PDF.
+	// By default, DecodeStream() receives bytes read from PDF.
 	pszStreamForDecode = pszEncodedStream;
 	StreamForDecodeSize = EncodedStreamSize;
 
-    // Verifica se il metodo di cifratura degli stream è supportato.
+    // Check if the stream encryption method is supported.
     if (pParams->pCryptoParams != NULL)
     {
         PdfCryptoParams *cp = pParams->pCryptoParams;
 
-        // I PDF precedenti a V=4 utilizzano il percorso legacy.
-        // Per V>=4 serve un metodo esplicito selezionato da /CFM.
+        // I PDF prior to V=4 use the legacy path.
+        // For V>=4 you need an explicit method selected by /CFM.
         bCanDecryptStream =
             (cp->V < 4 && cp->streamMethod != PDF_CRYPT_NONE) ||
             cp->streamMethod == PDF_CRYPT_RC4 ||
@@ -10555,7 +10549,7 @@ unsigned char * getDecodedStream(Params *pParams, unsigned long int *pDecodedStr
             cp->streamMethod == PDF_CRYPT_AESV3;
     }
 
-    // Gli stream XRef e l'oggetto /Encrypt non devono essere decifrati.
+    // XRef streams and /Encrypt object should not be decrypted.
     if (pParams->isEncrypted &&
         pParams->pCryptoParams != NULL &&
         pParams->pCryptoParams->R >= 2 &&
@@ -10567,9 +10561,9 @@ unsigned char * getDecodedStream(Params *pParams, unsigned long int *pDecodedStr
 		PdfCryptoParams *cp = pParams->pCryptoParams;
 		int bDecryptOK;
 
-		// Seleziona il metodo e l'identità dell'oggetto PDF corrente.
-		        // I PDF legacy lasciano scegliere il metodo al modulo crittografico.
-        // Da V=4 in poi utilizziamo il metodo del filtro selezionato.
+		// Select the method and identity of the current PDF object.
+		        // I Legacy PDF lets you choose the method to the cryptographic module.
+        // From V=4 onwards we use the selected filter method.
         cp->method = (cp->V < 4)
             ? PDF_CRYPT_AUTO
             : cp->streamMethod;
@@ -10577,13 +10571,13 @@ unsigned char * getDecodedStream(Params *pParams, unsigned long int *pDecodedStr
 		cp->objectNumber = pContent->ObjectNumber;
 		cp->generationNumber = pContent->GenerationNumber;
 
-		// Decrypt() prende in prestito il buffer di input.
+		// Decrypt() borrows the input buffer.
 		cp->pInput = pszEncodedStream;
 		cp->lenInput = (size_t)EncodedStreamSize;
 
 		bDecryptOK = Decrypt(pParams);
 
-		// Il buffer originale appartiene ancora a getDecodedStream().
+		// The original buffer still belongs to getDecodedStream().
 		cp->pInput = NULL;
 		cp->lenInput = 0;
 
@@ -10602,13 +10596,13 @@ unsigned char * getDecodedStream(Params *pParams, unsigned long int *pDecodedStr
 			goto uscita;
 		}
 
-		// L'output è posseduto da PdfCryptoParams.
+		// The output is owned by PdfCryptoParams.
 		pszStreamForDecode = cp->pszStream;
 		StreamForDecodeSize = (unsigned long int)cp->lenStreamValue;
 		bCryptoOutputUsed = 1;
 	}
 
-	// I filtri PDF devono ricevere i dati dopo la decifratura.
+	// PDF filters must receive data after decryption.
 	pszDecodedStream = DecodeStream(
 		pszStreamForDecode,
 		StreamForDecodeSize,
@@ -10630,13 +10624,13 @@ unsigned char * getDecodedStream(Params *pParams, unsigned long int *pDecodedStr
 
 uscita:
 
-	// Il puntatore all'input non deve sopravvivere alla fine della funzione.
+	// The input pointer should not survive at the end of the function.
 	if (pParams->pCryptoParams != NULL)
 	{
 		pParams->pCryptoParams->pInput = NULL;
 		pParams->pCryptoParams->lenInput = 0;
 
-		// Libera l'output soltanto se questa chiamata l'ha usato.
+		// Release output only if this call used it.
 		if (bCryptoOutputUsed)
 			PdfCryptoParams_FreeOutput(pParams->pCryptoParams);
 	}
@@ -10654,21 +10648,21 @@ int CheckObjectType(Params *pParams, int objNum)
 {
 	int retValue = 1;
 
-	//if ( objNum < 1 || objNum >= pParams->myPdfTrailer.Size )
+	//if (objNum < 1 | objNum >= pParams->myPdfTrailer. Size )
 	if ( objNum < 1 || (uint32_t)objNum >= pParams->nObjsTableSizeFromPrescanFile )
 	{
 		retValue = 0;
 		snprintf(pParams->szError, 8192, "Errore CheckObjectType: objNum non valido -> %d\n", objNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//fwprintf(pParams->fpErrors, L"Errore CheckObjectType: objNum non valido -> %d\n", objNum);
+		//fwprintf(pParams->fpErrors, L"Errore CheckObjectType: invalid objNum -> %d\n", objNum);
 		goto uscita;
 	}
 
 	//pParams->pReadNextChar = ReadNextChar;
 
-	// CheckObjectType legge la sintassi dell'oggetto dal file PDF,
-	// non da uno stream già decodificato.
-	// Non deve ereditare lo stato dello stream dell'oggetto precedente.
+	// CheckObjectType reads object syntax from PDF file,
+	// not from a already decoded stream.
+	// You should not inherit the stream status of the previous object.
 	pParams->pReadNextChar = ReadNextChar;
 	pParams->bStreamState = 0;
 
@@ -10720,7 +10714,7 @@ int ParseStmObj(Params *pParams, int objNum)
 		retValue = 0;
 		snprintf(pParams->szError, 8192, "Errore ParseStmObj: objNum non valido -> %d\n", objNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//fwprintf(pParams->fpErrors, L"Errore ParseStmObj: objNum non valido -> %d\n", objNum);
+		//fwprintf(pParams->fpErrors, L"Error ParseStmObj: invalid objNum -> %d\n", objNum);
 		goto uscita;
 	}
 
@@ -10738,7 +10732,7 @@ int ParseStmObj(Params *pParams, int objNum)
 	{
 		snprintf(pParams->szError, 8192, "Errore ParseStmObj fseek\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseStmObj fseek\n");
+		//wprintf(L"Error ParseStmObj fseek\n");
 		//fwprintf(pParams->fpErrors, L"Errore ParseStmObj fseek\n");
 		retValue = 0;
 		goto uscita;
@@ -10817,8 +10811,8 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "Errore ParseTrailerXRefStreamObject: Offset oggetto n. %d errato -> %d\n", pParams->nXRefStreamObjNum, pParams->offsetXRefObjStream);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseTrailerXRefStreamObject: Offset oggetto n. %d errato -> %d\n", pParams->nXRefStreamObjNum, pParams->offsetXRefObjStream);
-		//fwprintf(pParams->fpErrors, L"Errore ParseTrailerXRefStreamObject: Offset oggetto n. %d errato -> %d\n", pParams->nXRefStreamObjNum, pParams->offsetXRefObjStream);
+		//wprintf(L"Errore ParseTrailerXRefStreamObject: Object no. %d wrong -> %d\n", pParams->nXRefStreamObjNum, pParams->offsetXRefObjStream);
+		//fwprintf(pParams->fpErrors, L"Errore ParseTrailerXRefStreamObject: Object no. %d wrong -> %d\n", pParams->nXRefStreamObjNum, pParams->offsetXRefObjStream);
 		retValue = 0;
 		goto uscita;
 	}
@@ -10840,8 +10834,8 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "Errore ParseTrailerXRefStreamObject: xrefstream_obj failed\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseTrailerXRefStreamObject: xrefstream_obj failed\n");
-		//fwprintf(pParams->fpErrors, L"Errore ParseTrailerXRefStreamObject: xrefstream_obj failed\n");
+		//wprintf(L"Errore ParseTrailerXRefStreamObject: xrefstream obj failed\n");
+		//fwprintf(pParams->fpErrors, L"Errore ParseTrailerXRefStreamObject: xrefstream obj failed\n");
 		retValue = 0;
 		goto uscita;
 	}
@@ -10917,7 +10911,7 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 
 		myDecimalValue3 = getDecimalValue(pParams->nThisMachineEndianness, &(pszDecodedStream[y]), pParams->trailerW3);
 
-		// bounds check su nObjNum per evitare SIGSEGV
+		// bounds check on nObjNum to avoid SIGSEGV
 		if ( nObjNum < 0 || nObjNum >= (int)pParams->nObjsTableSizeFromPrescanFile )
 		{
 			snprintf(pParams->szError, 8192,
@@ -10926,7 +10920,7 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 					nObjNum, pParams->nObjsTableSizeFromPrescanFile - 1);
 			myShowErrorMessage(pParams, pParams->szError, 1);
 
-			// Consuma i W3 byte che mancano (il ciclo for esterno fa solo y++)
+			// Consume the W3 bytes lacking (the cycle for outdoor only makes y++)
 			y += pParams->trailerW3 - 1;
 			continue;
 		}
@@ -10957,24 +10951,24 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 			myobjreflist_Init(&(pParams->myObjsTable[nObjNum]->myFontsRefList));
 		}
 
-		// consuma i W3 byte dell'ultimo campo
+		// consumes the W3 bytes of the last field
 		for ( int z = 0; z < pParams->trailerW3; z++ )
 		{
 			if ( y >= DecodedStreamSize ) break;
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseTrailerXRefStreamObject_FN) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
-			if ( pszDecodedStream[y] <= 0xF )      // * <-- y, non x 
+			if ( pszDecodedStream[y] <= 0xF )      // * <-- y, not x 
 			{
 				wprintf(L"0");
-				wprintf(L"%X", pszDecodedStream[y]);   // <-- y, non x 
+				wprintf(L"%X", pszDecodedStream[y]);   // <-- y, not x 
 			}
 			else
 			{
-				wprintf(L"%X", pszDecodedStream[y]);   // <-- y, non x 
+				wprintf(L"%X", pszDecodedStream[y]);   // <-- y, not x 
 			}
 			#endif
 			y++;
 		}
-		y--;  // compensa l'incremento del for esterno
+		y--;  // compensates for the increase of the external for
 
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseTrailerXRefStreamObject_FN) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
 		wprintf(L"   (ObjNum = %5d) -> valori decimali -> ", nObjNum);
@@ -11063,8 +11057,8 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "Errore ParseTrailerXRefStreamObject: xrefstream_obj failed\n");
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"Errore ParseTrailerXRefStreamObject: xrefstream_obj failed\n");
-			//fwprintf(pParams->fpErrors, L"Errore ParseTrailerXRefStreamObject: xrefstream_obj failed\n");
+			//wprintf(L"Errore ParseTrailerXRefStreamObject: xrefstream obj failed\n");
+			//fwprintf(pParams->fpErrors, L"Errore ParseTrailerXRefStreamObject: xrefstream obj failed\n");
 			retValue = 0;
 			goto uscita;
 		}
@@ -11142,7 +11136,7 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 
 			myDecimalValue3 = getDecimalValue(pParams->nThisMachineEndianness, &(pszDecodedStream[y]), pParams->trailerW3);
 
-			// bounds check su nObjNum per evitare SIGSEGV
+			// bounds check on nObjNum to avoid SIGSEGV
 			if ( nObjNum < 0 || nObjNum >= (int)pParams->nObjsTableSizeFromPrescanFile )
 			{
 				snprintf(pParams->szError, 8192,
@@ -11151,7 +11145,7 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 						nObjNum, pParams->nObjsTableSizeFromPrescanFile - 1);
 				myShowErrorMessage(pParams, pParams->szError, 1);
 
-				// Consuma i W3 byte che mancano (il ciclo for esterno fa solo y++)
+				// Consume the W3 bytes lacking (the cycle for outdoor only makes y++)
 				y += pParams->trailerW3 - 1;
 				continue;
 			}
@@ -11182,24 +11176,24 @@ int ParseTrailerXRefStreamObject(Params *pParams)
 				myobjreflist_Init(&(pParams->myObjsTable[nObjNum]->myFontsRefList));
 			}
 
-			// consuma i W3 byte dell'ultimo campo
+			// consumes the W3 bytes of the last field
 			for ( int z = 0; z < pParams->trailerW3; z++ )
 			{
 				if ( y >= DecodedStreamSize ) break;
 				#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseTrailerXRefStreamObject_FN) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
-				if ( pszDecodedStream[y] <= 0xF )      /* <-- y, non x */
+				if ( pszDecodedStream[y] <= 0xF )      /* <-- y, not x */
 				{
 					wprintf(L"0");
-					wprintf(L"%X", pszDecodedStream[y]);   /* <-- y, non x */
+					wprintf(L"%X", pszDecodedStream[y]);   /* <-- y, not x */
 				}
 				else
 				{
-					wprintf(L"%X", pszDecodedStream[y]);   /* <-- y, non x */
+					wprintf(L"%X", pszDecodedStream[y]);   /* <-- y, not x */
 				}
 				#endif
 				y++;
 			}
-			y--;  // compensa l'incremento del for esterno
+			y--;  // compensates for the increase of the external for
 
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ParseTrailerXRefStreamObject_FN) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
 			wprintf(L"   (ObjNum = %5d) -> valori decimali -> ", nObjNum);
@@ -11272,8 +11266,8 @@ int ParseStreamObject(Params *pParams, int objNum)
 		retValue = 0;
 		snprintf(pParams->szError, 8192, "Errore ParseStreamObject: objNum non valido -> %d\n", objNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseStreamObject: objNum non valido -> %d\n", objNum);
-		//fwprintf(pParams->fpErrors, L"Errore ParseStreamObject: objNum non valido -> %d\n", objNum);
+		//wprintf(L"Errore ParseStreamObject: objNum invalid -> %d\n", objNum);
+		//fwprintf(pParams->fpErrors, L"Errore ParseStreamObject: invalid objNum -> %d\n", objNum);
 		goto uscita;
 	}
 
@@ -11303,8 +11297,8 @@ int ParseStreamObject(Params *pParams, int objNum)
 	{
 		snprintf(pParams->szError, 8192, "Errore ParseStreamObject: Offset oggetto n. %d errato -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseStreamObject: Offset oggetto n. %d errato -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
-		//fwprintf(pParams->fpErrors, L"Errore ParseStreamObject: Offset oggetto n. %d errato -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
+		//wprintf(L"Errore ParseStreamObject: Object no. %d wrong -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
+		//fwprintf(pParams->fpErrors, L"Errore ParseStreamObject: Object no. %d wrong -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
 		retValue = 0;
 		goto uscita;
 	}
@@ -11316,8 +11310,8 @@ int ParseStreamObject(Params *pParams, int objNum)
 	{
 		snprintf(pParams->szError, 8192, "Errore ParseStreamObject: oggetto n. %d; atteso spazio, trovato '%c'\n", objNum, c);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseStreamObject: oggetto n. %d; atteso spazio, trovato '%c'\n", objNum, c);
-		//fwprintf(pParams->fpErrors, L"Errore ParseStreamObject: oggetto n. %d; atteso spazio, trovato '%c'\n", objNum, c);
+		//wprintf(L"Errore ParseStreamObject: object n. %d; expected space, found '%c'\n", objNum, c);
+		//fwprintf(pParams->fpErrors, L"Errore ParseStreamObject: object n. %d; expected space, found '%c'\n", objNum, c);
 		retValue = 0;
 		goto uscita;
 	}
@@ -11350,8 +11344,8 @@ int ParseStreamXObject(Params *pParams, int objNum)
 		retValue = 0;
 		snprintf(pParams->szError, 8192, "Errore ParseStreamXObject: objNum non valido -> %d\n", objNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseStreamXObject: objNum non valido -> %d\n", objNum);
-		//fwprintf(pParams->fpErrors, L"Errore ParseStreamXObject: objNum non valido -> %d\n", objNum);
+		//wprintf(L"Errore ParseStreamXObject: objNum invalid -> %d\n", objNum);
+		//fwprintf(pParams->fpErrors, L"Errore ParseStreamXObject: invalid objNum -> %d\n", objNum);
 		goto uscita;
 	}
 
@@ -11381,8 +11375,8 @@ int ParseStreamXObject(Params *pParams, int objNum)
 	{
 		snprintf(pParams->szError, 8192, "Errore ParseStreamXObject: Offset oggetto n. %d errato -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseStreamXObject: Offset oggetto n. %d errato -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
-		//fwprintf(pParams->fpErrors, L"Errore ParseStreamXObject: Offset oggetto n. %d errato -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
+		//wprintf(L"Errore ParseStreamXObject: Offset object n. %d wrong -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
+		//fwprintf(pParams->fpErrors, L"Errore ParseStreamXObject: Object No. %d wrong -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
 		retValue = 0;
 		goto uscita;
 	}
@@ -11394,8 +11388,8 @@ int ParseStreamXObject(Params *pParams, int objNum)
 	{
 		snprintf(pParams->szError, 8192, "Errore ParseStreamXObject: oggetto n. %d; atteso spazio, trovato '%c'\n", objNum, c);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseStreamXObject: oggetto n. %d; atteso spazio, trovato '%c'\n", objNum, c);
-		//fwprintf(pParams->fpErrors, L"Errore ParseStreamXObject: oggetto n. %d; atteso spazio, trovato '%c'\n", objNum, c);
+		//wprintf(L"Errore ParseStreamXObject: object n. %d; expected space, found '%c'\n", objNum, c);
+		//fwprintf(pParams->fpErrors, L"Errore ParseStreamXObject: object n. %d; expected space, found '%c'\n", objNum, c);
 		retValue = 0;
 		goto uscita;
 	}
@@ -11538,7 +11532,7 @@ int ParseCMapStream(Params *pParams, int objNum, unsigned char *pszDecodedStream
 				{
 					snprintf(pParams->szError, 8192, "ParseCMapStream: impossibile allocare la memoria per pParams->pCodeSpaceRangeArray\n");
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//fwprintf(pParams->fpErrors, L"ParseCMapStream: impossibile allocare la memoria per pParams->pCodeSpaceRangeArray\n");
+					//fwprintf(pParams->fpErrors, L"ParseCMapStream: impossible to allocate memory for pParams->pCodeSpaceRangeArray\n");
 					#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_CMAP_STREAM)
 					wprintf(L"ParseCMapStream: impossibile allocare la memoria per pParams->pCodeSpaceRangeArray\n");
 					#endif
@@ -11754,7 +11748,7 @@ int ParseCMapStream(Params *pParams, int objNum, unsigned char *pszDecodedStream
 							pParams->bHasCodeSpaceTwoByte = 1;
 							pParams->pCodeSpaceRangeArray[idxCodeSpace].nNumBytes = 2;
 						}
-						else // Gestione intervalli estesi > 0xFFFF (4 byte / Surrogati UTF-16)
+						else // Management of extended ranges > 0xFFFF (4 bytes / Surrogates UTF-16)
 						{
 							pParams->pCodeSpaceRangeArray[idxCodeSpace].nNumBytes = 4;
 
@@ -11796,7 +11790,7 @@ int ParseCMapStream(Params *pParams, int objNum, unsigned char *pszDecodedStream
 							#endif
 							snprintf(pParams->szError, 8192, "ERRORE ParseCMapStream 1: atteso T_INT_LITERAL\n");
 							myShowErrorMessage(pParams, pParams->szError, 1);
-							//fwprintf(pParams->fpErrors, L"ERRORE ParseCMapStream 1: atteso T_INT_LITERAL\n");
+							//fwprintf(pParams->fpErrors, L"ERRORE ParseCMapStream 1: expected T INT LITERAL\n");
 							retValue = 0;
 							goto uscita;
 						}
@@ -11847,7 +11841,7 @@ int ParseCMapStream(Params *pParams, int objNum, unsigned char *pszDecodedStream
 							#endif
 							snprintf(pParams->szError, 8192, "ERRORE ParseCMapStream 2: atteso T_INT_LITERAL\n");
 							myShowErrorMessage(pParams, pParams->szError, 1);
-							//fwprintf(pParams->fpErrors, L"ERRORE ParseCMapStream 2: atteso T_INT_LITERAL\n");
+							//fwprintf(pParams->fpErrors, L"ERRORE ParseCMapStream 2: expected T INT LITERAL\n");
 							retValue = 0;
 							goto uscita;
 						}
@@ -11897,7 +11891,7 @@ int ParseCMapStream(Params *pParams, int objNum, unsigned char *pszDecodedStream
 							#endif
 							snprintf(pParams->szError, 8192, "ERRORE ParseCMapStream 3: atteso T_INT_LITERAL\n");
 							myShowErrorMessage(pParams, pParams->szError, 1);
-							//fwprintf(pParams->fpErrors, L"ERRORE ParseCMapStream 3: atteso T_INT_LITERAL\n");
+							//fwprintf(pParams->fpErrors, L"ERRORE ParseCMapStream 3: expected T INT LITERAL\n");
 							retValue = 0;
 							goto uscita;
 						}
@@ -11948,7 +11942,7 @@ int ParseCMapStream(Params *pParams, int objNum, unsigned char *pszDecodedStream
 							#endif
 							snprintf(pParams->szError, 8192, "ERRORE ParseCMapStream 4: atteso T_INT_LITERAL\n");
 							myShowErrorMessage(pParams, pParams->szError, 1);
-							//fwprintf(pParams->fpErrors, L"ERRORE ParseCMapStream 4: atteso T_INT_LITERAL\n");
+							//fwprintf(pParams->fpErrors, L"ERRORE ParseCMapStream 4: expected T INT LITERAL\n");
 							retValue = 0;
 							goto uscita;
 						}
@@ -12055,7 +12049,7 @@ int ParseCMapStream(Params *pParams, int objNum, unsigned char *pszDecodedStream
 							#endif
 							snprintf(pParams->szError, 8192, "ERRORE ParseCMapStream: atteso T_STRING_HEXADECIMAL o T_NAME\n");
 							myShowErrorMessage(pParams, pParams->szError, 1);
-							//fwprintf(pParams->fpErrors, L"ERRORE ParseCMapStream: atteso T_STRING_HEXADECIMAL o T_NAME\n");
+							//fwprintf(pParams->fpErrors, L"ERRORE ParseCMapStream: expected T STRING HEXADECIMAL or T NAME\n");
 							retValue = 0;
 							goto uscita;
 						}
@@ -12135,17 +12129,17 @@ uscita:
 	return retValue;
 }
 
-// Converte una stringa esadecimale (es. "0915094D0915") in una sequenza
-// di wchar_t decodificando UTF-16BE (1, 2 o N unità, gestendo i surrogati).
-// Restituisce una stringa allocata con calloc(n+1) e ne scrive la lunghezza
-// in *outLen. Restituisce NULL in caso di errore.
-// Il chiamante deve free() il risultato.
+// Converts a hexadecimal string (e.g. "0915094D0915") into a sequence
+// of wchar t decoding UTF-16BE (1, 2 or N units, managing surrogates).
+// Returns a attached string with calloc(n+1) and writes the length
+// in *outLen. Returns NULL in case of error.
+// The caller must free() the result.
 //
 static wchar_t *ParseUTF16BEHexToWcharSeq(const char *hex, size_t hexLen, size_t *outLen)
 {
     if (outLen) *outLen = 0;
     if (hex == NULL || hexLen == 0) return NULL;
-    if (hexLen % 4 != 0) return NULL; /* deve essere multiplo di 4 cifre */
+    if (hexLen % 4 != 0) return NULL; /* must be multiple of 4 digits */
 
     size_t nUnits = hexLen / 4;
     wchar_t *seq = (wchar_t *)calloc(nUnits + 1, sizeof(wchar_t));
@@ -12154,7 +12148,7 @@ static wchar_t *ParseUTF16BEHexToWcharSeq(const char *hex, size_t hexLen, size_t
     size_t i = 0, out = 0;
     while (i + 3 < hexLen)
     {
-        // Decodifica 4 cifre hex -> uint16 
+        // Deciding 4 digits hex -> uint16 
         unsigned int v = 0;
         int ok = 1;
         for (size_t j = 0; j < 4; j++)
@@ -12169,7 +12163,7 @@ static wchar_t *ParseUTF16BEHexToWcharSeq(const char *hex, size_t hexLen, size_t
         if (!ok) { free(seq); return NULL; }
         i += 4;
 
-        // Surrogato alto? Prova a leggere il basso. 
+        // Surrogate high? Try reading the bass. 
         if (v >= 0xD800u && v <= 0xDBFFu && i + 3 < hexLen)
         {
             unsigned int v2 = 0;
@@ -12294,7 +12288,7 @@ int ParseToUnicodeStream(Params *pParams, int objNum, unsigned char *pszDecodedS
 				{
 					snprintf(pParams->szError, 8192, "ParseToUnicodeStream: impossibile allocare la memoria per pParams->pCodeSpaceRangeArray\n");
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//fwprintf(pParams->fpErrors, L"ParseToUnicodeStream: impossibile allocare la memoria per pParams->pCodeSpaceRangeArray\n");
+					//fwprintf(pParams->fpErrors, L"ParseToUnicodeStream: impossible to allocate memory for pParams->pCodeSpaceRangeArray\n");
 					#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_TOUNICODE_STREAM)
 					wprintf(L"ParseToUnicodeStream: impossibile allocare la memoria per pParams->pCodeSpaceRangeArray\n");
 					#endif
@@ -12462,7 +12456,7 @@ int ParseToUnicodeStream(Params *pParams, int objNum, unsigned char *pszDecodedS
 							pParams->bHasCodeSpaceTwoByte = 1;
 							pParams->pCodeSpaceRangeArray[idxCodeSpace].nNumBytes = 2;
 						}
-						else // Riconoscimento esteso a 4 byte per l'estensione Unicode orientali
+						else // Recognition extended to 4 bytes for the eastern Unicode extension
 						{
 							pParams->pCodeSpaceRangeArray[idxCodeSpace].nNumBytes = 4;
 						}
@@ -12497,7 +12491,7 @@ int ParseToUnicodeStream(Params *pParams, int objNum, unsigned char *pszDecodedS
 
 						if ( bfChar1 <= 0xFFFF )
 						{
-							// Libera eventuale sequenza precedente
+							// Clear any previous sequence
 							if ( pParams->sequences != NULL && pParams->sequences[bfChar1] != NULL )
 							{
 								free(pParams->sequences[bfChar1]);
@@ -12506,14 +12500,14 @@ int ParseToUnicodeStream(Params *pParams, int objNum, unsigned char *pszDecodedS
 
 							if ( seq != NULL && seqLen > 0 )
 							{
-								// Filtro noncharacter sul PRIMO code point
+								// Noncharacter filter on the PRIMO code point
 								if ( seqLen == 1 && (seq[0] == 0xFFFF || seq[0] == 0xFFFE) )
 									seq[0] = L' ';
 
 								pParams->paCustomizedFont_CharSet[bfChar1] = seq[0];
 
 								if ( seqLen > 1 )
-									pParams->sequences[bfChar1] = seq;  // salva l'intera sequenza
+									pParams->sequences[bfChar1] = seq;  // saves the entire sequence
 								else
 								{
 									free(seq);
@@ -12566,7 +12560,7 @@ int ParseToUnicodeStream(Params *pParams, int objNum, unsigned char *pszDecodedS
 							#endif
 							snprintf(pParams->szError, 8192, "ERRORE ParseToUnicodeStream: atteso T_STRING_HEXADECIMAL o T_NAME\n");
 							myShowErrorMessage(pParams, pParams->szError, 1);
-							//fwprintf(pParams->fpErrors, L"ERRORE ParseToUnicodeStream: atteso T_STRING_HEXADECIMAL o T_NAME\n");
+							//fwprintf(pParams->fpErrors, L"ERRORE ParseToUnicodeStream: expected T STRING HEXADECIMAL or T NAME\n");
 							retValue = 0;
 							goto uscita;
 						}
@@ -12626,7 +12620,7 @@ int ParseToUnicodeStream(Params *pParams, int objNum, unsigned char *pszDecodedS
 					{
 						uint32_t curCid = bfRange1;
 
-						GetNextTokenFromToUnicodeStream(pParams);   /* primo elemento array */
+						GetNextTokenFromToUnicodeStream(pParams);   /* first array element */
 
 						while ( T_STRING_HEXADECIMAL == pParams->myToken.Type && curCid <= bfRange2 )
 						{
@@ -12666,23 +12660,23 @@ int ParseToUnicodeStream(Params *pParams, int objNum, unsigned char *pszDecodedS
 
 						bfRange1 = 0; bfRange2 = 0; bfRange3 = 0;
 						nCountBfRangeValues = 0;
-						// bBfRangeState NON va azzerato qui: siamo ancora dentro
-						// beginbfrange...endbfrange e potrebbero esserci altre
-						// entry (es. <1AA4> <1AA5> [<65E2> <65E5>]).
-						// Va azzerato solo in T_CONTENT_OP_endbfrange.
+						// bBfRangeState is NOT reset here: we are still in
+						// beginbfrange... endbfrange and there may be more
+						// entry (e.g.
+						// It should be removed only in T CONTENT OP endbfrange.
 
-						// Il token corrente e' gia' quello successivo all'array
-						// (tipicamente ']' oppure il prossimo bfRange1).
-						// Saltiamo il GetNextTokenFromToUnicodeStream in fondo al loop.
+						// The current token is already the one after the array
+						// (typically ']' or the next bfRange1).
+						// We skip the GetNextTokenFromToUnicodeStream at the bottom of the loop.
 						continue;
 					}
 					else
 					{
 						wprintf(L"ParseToUnicodeStream: BFRANGE array con range non valido [%u..%u], salto.\n", bfRange1, bfRange2);
 
-						// Range non valido: per evitare loop infiniti azzeriamo
-						// lo stato. Le eventuali entry successive nello stesso
-						// blocco andranno perse, ma il PDF e' malformato.
+						// Range not valid: to avoid endless loops we reset
+						// The state. Any subsequent entries in the same
+						// blockage will be lost, but the PDF is malformed.
 						bfRange1 = 0; bfRange2 = 0; bfRange3 = 0;
 						nCountBfRangeValues = 0;
 						bBfRangeState = 0;
@@ -12718,8 +12712,8 @@ int ParseCMapObject(Params *pParams, int objNum)
 		retValue = 0;
 		snprintf(pParams->szError, 8192, "Errore ParseCMapObject: objNum non valido -> %d\n", objNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseCMapObject: objNum non valido -> %d\n", objNum);
-		//fwprintf(pParams->fpErrors, L"Errore ParseCMapObject: objNum non valido -> %d\n", objNum);
+		//wprintf(L"Errore ParseCMapObject: objNum invalid -> %d\n", objNum);
+		//fwprintf(pParams->fpErrors, L"Errore ParseCMapObject: invalid objNum -> %d\n", objNum);
 		goto uscita;
 	}
 
@@ -12864,8 +12858,8 @@ int ParseEncryptObject(Params *pParams, int objNum)
 		retValue = 0;
 		snprintf(pParams->szError, 8192, "Errore ParseEncryptObject: objNum non valido -> %d\n", objNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseFontObject: objNum non valido -> %d\n", objNum);
-		//fwprintf(pParams->fpErrors, L"Errore ParseFontObject: objNum non valido -> %d\n", objNum);
+		//wprintf(L"Errore ParseFontObject: objNum invalid -> %d\n", objNum);
+		//fwprintf(pParams->fpErrors, L"Errore ParseFontObject: invalid objNum -> %d\n", objNum);
 		goto uscita;
 	}
 
@@ -12899,7 +12893,7 @@ int ParseEncryptObject(Params *pParams, int objNum)
 		goto uscita;
 	}
 
-	// Conserva il riferimento ai byte del primo identificativo del trailer.
+	// Keep reference to the bytes of the first identifier of the trailer.
 	if (pParams->pCryptoParams != NULL)
 	{
 		pParams->pCryptoParams->pID0 = pParams->myPdfTrailer.pID0Bytes;
@@ -12944,12 +12938,12 @@ int ParseFontObject(Params *pParams, int objNum)
 		retValue = 0;
 		snprintf(pParams->szError, 8192, "Errore ParseFontObject: objNum non valido -> %d\n", objNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseFontObject: objNum non valido -> %d\n", objNum);
-		//fwprintf(pParams->fpErrors, L"Errore ParseFontObject: objNum non valido -> %d\n", objNum);
+		//wprintf(L"Errore ParseFontObject: objNum invalid -> %d\n", objNum);
+		//fwprintf(pParams->fpErrors, L"Errore ParseFontObject: invalid objNum -> %d\n", objNum);
 		goto uscita;
 	}
 	
-    // >>> AGGIUNTA CONSIGLIATA: Pulizia delle sequenze del font precedente <<<
+    //  Cleaning of previous font sequences <<<<
     if (pParams->sequences != NULL)
     {
         for (int s = 0; s < 0x10000; s++)
@@ -12969,8 +12963,8 @@ int ParseFontObject(Params *pParams, int objNum)
 			retValue = 0;
 			snprintf(pParams->szError, 8192, "Errore ParseFontObject: pParams->sequences = (wchar_t**)calloc(0x10000, sizeof(wchar_t*)); FAILED\n");
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"Errore ParseFontObject: objNum non valido -> %d\n", objNum);
-			//fwprintf(pParams->fpErrors, L"Errore ParseFontObject: objNum non valido -> %d\n", objNum);
+			//wprintf(L"Errore ParseFontObject: objNum invalid -> %d\n", objNum);
+			//fwprintf(pParams->fpErrors, L"Errore ParseFontObject: invalid objNum -> %d\n", objNum);
 			goto uscita;
 		}
     }
@@ -13117,8 +13111,8 @@ int ParseFontDescriptorObject(Params *pParams, int objNum)
 		retValue = 0;
 		snprintf(pParams->szError, 8192, "Errore ParseFontDescriptorObject: objNum non valido -> %d\n", objNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseFontObject: objNum non valido -> %d\n", objNum);
-		//fwprintf(pParams->fpErrors, L"Errore ParseFontObject: objNum non valido -> %d\n", objNum);
+		//wprintf(L"Errore ParseFontObject: objNum invalid -> %d\n", objNum);
+		//fwprintf(pParams->fpErrors, L"Errore ParseFontObject: invalid objNum -> %d\n", objNum);
 		goto uscita;
 	}
 
@@ -13164,8 +13158,8 @@ int ParseEncodingObject(Params *pParams, int objNum)
 		retValue = 0;
 		snprintf(pParams->szError, 8192, "Errore ParseEncodingObject: objNum non valido -> %d\n", objNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseEncodingObject: objNum non valido -> %d\n", objNum);
-		//fwprintf(pParams->fpErrors, L"Errore ParseEncodingObject: objNum non valido -> %d\n", objNum);
+		//wprintf(L"Errore ParseEncodingObject: objNum invalid -> %d\n", objNum);
+		//fwprintf(pParams->fpErrors, L"Errore ParseEncodingObject: invalid objNum -> %d\n", objNum);
 		goto uscita;
 	}
 
@@ -13211,8 +13205,8 @@ int ParseDictionaryObject(Params *pParams, int objNum)
 		retValue = 0;
 		snprintf(pParams->szError, 8192, "Errore ParseDictionaryObject: objNum non valido -> %d\n", objNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseDictionaryObject: objNum non valido -> %d\n", objNum);
-		//fwprintf(pParams->fpErrors, L"Errore ParseDictionaryObject: objNum non valido -> %d\n", objNum);
+		//wprintf(L"Errore ParseDictionaryObject: objNum invalid -> %d\n", objNum);
+		//fwprintf(pParams->fpErrors, L"Errore ParseDictionaryObject: invalid objNum -> %d\n", objNum);
 		goto uscita;
 	}
 
@@ -13241,7 +13235,7 @@ int ParseDictionaryObject(Params *pParams, int objNum)
 	{
 		snprintf(pParams->szError, 8192, "\nERRORE ParseDictionaryObject resourcesdictionary -> pParams->nObjToParse = %d\n", pParams->nObjToParse);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"\nERRORE ParseDictionaryObject resourcesdictionary -> pParams->nObjToParse = %d\n", pParams->nObjToParse);
+		//wprintf(L)\nERRORE ParseDictionaryObject resourcesdictionary -> pParams->nObjToParse = %d\n", pParams->nObjToParse);
 		//fwprintf(pParams->fpErrors, L"\nERRORE ParseDictionaryObject resourcesdictionary -> pParams->nObjToParse = %d\n", pParams->nObjToParse);
 
 		PrintThisObject(pParams, pParams->nObjToParse, 0, pParams->nCurrentPageNum, pParams->fpErrors);
@@ -13267,15 +13261,15 @@ int ParseLengthObject(Params *pParams, int objNum)
 		retValue = 0;
 		snprintf(pParams->szError, 8192, "Errore ParseLengthObject: objNum non valido -> %d\n", objNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseLengthObject: objNum non valido -> %d\n", objNum);
-		//fwprintf(pParams->fpErrors, L"Errore ParseLengthObject: objNum non valido -> %d\n", objNum);
+		//wprintf(L"Errore ParseLengthObject: objNum invalid -> %d\n", objNum);
+		//fwprintf(pParams->fpErrors, L"Errore ParseLengthObject: invalid objNum -> %d\n", objNum);
 		goto uscita;
 	}
 
 	pParams->pReadNextChar = ReadNextChar;
 
 	pParams->nCurrentParsingLengthObj = objNum;;
-	//pParams->nCurrentParsingObj = (uint32_t)objNum;
+	//pParams->nCurrentParsingObj = (uint32 t)objNum;
 
 	pParams->blockLenLengthObj = 0;
 	pParams->blockCurPosLengthObj = 0;
@@ -13286,8 +13280,8 @@ int ParseLengthObject(Params *pParams, int objNum)
 	{
 		snprintf(pParams->szError, 8192, "Errore nell'apertura del file '%s'.\n\n", pParams->szFileName);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore nell'apertura del file '%s'.\n\n", pParams->szFileName);
-		//fwprintf(pParams->fpErrors, L"Errore nell'apertura del file '%s'.\n\n", pParams->szFileName);
+		//wprintf(L"Error in opening the '%s' file. \n\n, pParams->szFileName);
+		//fwprintf(pParams->fpErrors, L"Error in opening the '%s' file. \n\n, pParams->szFileName);
 		retValue = 0;
 		goto uscita;
 	}
@@ -13310,8 +13304,8 @@ int ParseLengthObject(Params *pParams, int objNum)
 	{
 		snprintf(pParams->szError, 8192, "Errore ParseLengthObject: Offset oggetto n. %d errato -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseLengthObject: Offset oggetto n. %d errato -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
-		//fwprintf(pParams->fpErrors, L"Errore ParseLengthObject: Offset oggetto n. %d errato -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
+		//wprintf(L"Errore ParseLengthObject: Offset object n. %d wrong -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
+		//fwprintf(pParams->fpErrors, L"Errore ParseLengthObject: Object Offset n. erroneous %d -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
 		retValue = 0;
 		goto uscita;
 	}
@@ -13323,8 +13317,8 @@ int ParseLengthObject(Params *pParams, int objNum)
 	{
 		snprintf(pParams->szError, 8192, "Errore ParseLengthObject: oggetto n. %d; atteso spazio, trovato '%c'\n", objNum, c);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseLengthObject: oggetto n. %d; atteso spazio, trovato '%c'\n", objNum, c);
-		//fwprintf(pParams->fpErrors, L"Errore ParseLengthObject: oggetto n. %d; atteso spazio, trovato '%c'\n", objNum, c);
+		//wprintf(L"Errore ParseLengthObject: object n. %d; expected space, found '%c'\n", objNum, c);
+		//fwprintf(pParams->fpErrors, L"Errore ParseLengthObject: object n. %d; expected space, found '%c'\n", objNum, c);
 		retValue = 0;
 		goto uscita;
 	}
@@ -13342,8 +13336,8 @@ int ParseLengthObject(Params *pParams, int objNum)
 	{
 		snprintf(pParams->szError, 8192, "\nERRORE ParseLengthObject lengthobj -> pParams->nObjToParse = %d\n", pParams->nObjToParse);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"\nERRORE ParseLengthObject lengthobj -> pParams->nObjToParse = %d\n", pParams->nObjToParse);
-		//fwprintf(pParams->fpErrors, L"\nERRORE ParseLengthObject lengthobj -> pParams->nObjToParse = %d\n", pParams->nObjToParse);
+		//wprintf(L)\nERRORE ParseLengthObject lengthobj -> pParams->nObjToParse = %d\n", pParams->nObjToParse);
+		//fwprintf(pParams->fpErrors, L"\nERRORE ParseLengthObjectobj -> pParams->nObjToParse = %d\n", pParams->nObjToParse);
 		retValue = 0;
 		goto uscita;
 	}
@@ -13374,15 +13368,15 @@ int ParseIntegerObject(Params *pParams, int objNum)
 		retValue = 0;
 		snprintf(pParams->szError, 8192, "Errore ParseLengthObject: objNum non valido -> %d\n", objNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseLengthObject: objNum non valido -> %d\n", objNum);
-		//fwprintf(pParams->fpErrors, L"Errore ParseLengthObject: objNum non valido -> %d\n", objNum);
+		//wprintf(L"Errore ParseLengthObject: objNum invalid -> %d\n", objNum);
+		//fwprintf(pParams->fpErrors, L"Errore ParseLengthObject: invalid objNum -> %d\n", objNum);
 		goto uscita;
 	}
 
 	pParams->pReadNextChar = ReadNextChar;
 
 	pParams->nCurrentParsingLengthObj = objNum;
-	//pParams->nCurrentParsingObj = (uint32_t)objNum;
+	//pParams->nCurrentParsingObj = (uint32 t)objNum;
 
 	pParams->blockLenLengthObj = 0;
 	pParams->blockCurPosLengthObj = 0;
@@ -13393,8 +13387,8 @@ int ParseIntegerObject(Params *pParams, int objNum)
 	{
 		snprintf(pParams->szError, 8192, "Errore nell'apertura del file '%s'.\n\n", pParams->szFileName);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore nell'apertura del file '%s'.\n\n", pParams->szFileName);
-		//fwprintf(pParams->fpErrors, L"Errore nell'apertura del file '%s'.\n\n", pParams->szFileName);
+		//wprintf(L"Error in opening the '%s' file. \n\n, pParams->szFileName);
+		//fwprintf(pParams->fpErrors, L"Error in opening the '%s' file. \n\n, pParams->szFileName);
 		retValue = 0;
 		goto uscita;
 	}
@@ -13417,8 +13411,8 @@ int ParseIntegerObject(Params *pParams, int objNum)
 	{
 		snprintf(pParams->szError, 8192, "Errore ParseIntegerObject: Offset oggetto n. %d errato -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseIntegerObject: Offset oggetto n. %d errato -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
-		//fwprintf(pParams->fpErrors, L"Errore ParseIntegerObject: Offset oggetto n. %d errato -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
+		//wprintf(L"Errore ParseIntegerObject: Offset object n. %d wrong -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
+		//fwprintf(pParams->fpErrors, L"Errore ParseIntegerObject: Object No. %d erroneous -> %d\n", objNum, pParams->myObjsTable[objNum]->Obj.Offset);
 		retValue = 0;
 		goto uscita;
 	}
@@ -13430,8 +13424,8 @@ int ParseIntegerObject(Params *pParams, int objNum)
 	{
 		snprintf(pParams->szError, 8192, "Errore ParseIntegerObject: oggetto n. %d; atteso spazio, trovato '%c'\n", objNum, c);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore ParseIntegerObject: oggetto n. %d; atteso spazio, trovato '%c'\n", objNum, c);
-		//fwprintf(pParams->fpErrors, L"Errore ParseIntegerObject: oggetto n. %d; atteso spazio, trovato '%c'\n", objNum, c);
+		//wprintf(L"Errore ParseIntegerObject: object n. %d; expected space, found '%c'\n", objNum, c);
+		//fwprintf(pParams->fpErrors, L"Errore ParseIntegerObject: object n. %d; expected space, found '%c'\n", objNum, c);
 		retValue = 0;
 		goto uscita;
 	}
@@ -13449,8 +13443,8 @@ int ParseIntegerObject(Params *pParams, int objNum)
 	{
 		snprintf(pParams->szError, 8192, "\nERRORE ParseIntegerObject lengthobj -> pParams->nObjToParse = %d\n", pParams->nObjToParse);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"\nERRORE ParseIntegerObject lengthobj -> pParams->nObjToParse = %d\n", pParams->nObjToParse);
-		//fwprintf(pParams->fpErrors, L"\nERRORE ParseIntegerObject lengthobj -> pParams->nObjToParse = %d\n", pParams->nObjToParse);
+		//wprintf(L)\nERRORE ParseIntegerObject lengthobj -> pParams->nObjToParse = %d\n", pParams->nObjToParse);
+		//fwprintf(pParams->fpErrors, L"\nERRORE ParseIntegerObjectobj -> pParams->nObjToParse = %d\n", pParams->nObjToParse);
 		retValue = 0;
 		goto uscita;
 	}
@@ -13474,7 +13468,7 @@ uscita:
 
 // **********************************************************************************************************************
 
-// obj        : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ objbody T_KW_ENDOBJ;
+// 
 int obj(Params *pParams)
 {
 	pParams->szPdfVersionFromCatalog[0] = '\0';
@@ -13483,7 +13477,7 @@ int obj(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE obj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//fwprintf(pParams->fpErrors, L"ERRORE obj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE obj: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
 		PrintToken(&(pParams->myToken), '\t', ' ', 1);
 		return 0;
 	}
@@ -13499,15 +13493,15 @@ int obj(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE parsing obj: il numero %d specificato nel trailer, non corrisponde col numero corrente -> %d\n", pParams->nObjToParse, pParams->nCurrentObjNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE parsing obj: il numero %d specificato nel trailer, non corrisponde col numero corrente -> %d\n", pParams->nObjToParse, pParams->nCurrentObjNum);
-		//fwprintf(pParams->fpErrors, L"ERRORE parsing obj: il numero %d specificato nel trailer, non corrisponde col numero corrente -> %d\n", pParams->nObjToParse, pParams->nCurrentObjNum);
+		//wprintf(L"ERRORE parsing obj: the %d number specified in the trailer, does not correspond with the current number -> %d\n", pParams->nObjToParse, pParams->nCurrentObjNum);
+		//fwprintf(pParams->fpErrors, L"ERRORE parsing obj: the %d number specified in the trailer, does not correspond with the current number -> %d\n", pParams->nObjToParse, pParams->nCurrentObjNum);
 		return 0;
 	}
 
 	GetNextToken(pParams);
 
-	//if ( !match(pParams, T_INT_LITERAL, "obj") )
-	//	return 0;
+	//if (!match(pParams, T INT LITERAL, "obj")
+	// return 0;
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_OBJ)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -13536,7 +13530,7 @@ int obj(Params *pParams)
 	return 1;
 }
 
-// objbody    : objitem {objitem};
+// objbody : objitem {objitem)
 int objbody(Params *pParams)
 {
 	if ( !objitem(pParams) )
@@ -13672,7 +13666,7 @@ int objitem(Params *pParams)
 	return 1;
 }
 
-// array      : T_QOPAREN {objitem} T_QCPAREN;
+// array: T QOPAREN {objitem} T QCPAREN;
 int array(Params *pParams)
 {
 	if ( !match(pParams, T_QOPAREN, "array") )
@@ -13702,7 +13696,7 @@ int array(Params *pParams)
 	return 1;
 }
 
-// dictionary : T_DICT_BEGIN {T_NAME objitem [T_INT_LITERAL T_KW_R]} T_DICT_END;
+// dictionary
 int dictionary(Params *pParams)
 {
 	int bNameIsPages = 0;
@@ -13868,20 +13862,20 @@ int dictionary(Params *pParams)
 
 //*************************************************************************************************************************
 
-//pagetree          : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ pagetreebody T_KW_ENDOBJ;
+//T INT LITERAL T INT LITERAL T KW OBJ pagetreebody T KW ENDOBJ;
 int pagetree(Params *pParams)
 {
 	//pParams->nCountPageAlreadyDone = 0;
 	pParams->nCurrentPageResources = -1;
 	pParams->bCurrentPageHasDirectResources = 0;
 
-	// nCurrentPageParent               -> 0 se nodo radice. Altrimenti intero > 0 che indica il nodo genitore della pagina corrente.
+	// nCurrentPageParent -> 0 if root node. In whole > 0 indicating the parent node of the current page.
 
-	// nCurrentPageResources            -> 0 se la pagina non ha riferimenti a Resources;
-	//                                     -1 se la pagina eredita Resources da uno dei suoi parenti;
-	//                                     altrimenti un intero > 0 che indica il riferimento al numero dell'oggetto Resources.
+	// nCurrentPageResources -> 0 if the page has no references to Resources;
+	//                                     -1 if the page inherits Resources from one of its relatives;
+	//                                     otherwise an entire > 0 indicating reference to the number of the Resources object.
 
-	// bCurrentPageHasDirectResources   -> 1 Se risorsa diretta; 0 altrimenti.
+	// bCurrentPageHasDirectResources -> 1 If direct resource; or otherwise.
 
 	//int nCurrentPageParsingObj;
 
@@ -13931,8 +13925,8 @@ int pagetree(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE pagetree: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE pagetree: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE pagetree: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
+		//wprintf(L"ERRORE pagetree: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE pagetree: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
 		PrintToken(&(pParams->myToken), '\t', ' ', 1);
 		return 0;
 	}
@@ -13950,8 +13944,8 @@ int pagetree(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE parsing pagetree: il numero %d specificato nel trailer, non corrisponde col numero corrente -> %d\n", pParams->nObjToParse, pParams->nCurrentObjNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE parsing pagetree: il numero %d specificato nel trailer, non corrisponde col numero corrente -> %d\n", pParams->nObjToParse, pParams->nCurrentObjNum);
-		//fwprintf(pParams->fpErrors, L"ERRORE parsing pagetree: il numero %d specificato nel trailer, non corrisponde col numero corrente -> %d\n", pParams->nObjToParse, pParams->nCurrentObjNum);
+		//wprintf(L"ERRORE parsing pagetree: the number %d specified in the trailer, does not correspond with the current number -> %d\n", pParams->nObjToParse, pParams->nCurrentObjNum);
+		//fwprintf(pParams->fpErrors, L"ERRORE parsing pagetree: the %d number specified in the trailer, does not match the current number -> %d\n", pParams->nObjToParse, pParams->nCurrentObjNum);
 		return 0;
 	}
 
@@ -13959,8 +13953,8 @@ int pagetree(Params *pParams)
 
 	myintqueuelist_Init(&(pParams->myObjsTable[pParams->nCurrentObjNum]->queueContentsObjRefs));
 
-	//if ( !match(pParams, T_INT_LITERAL, "pagetree") )
-	//	return 0;
+	//if (!match(pParams, T INT LITERAL, "pagetree")
+	// return 0;
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_PAGETREEOBJ)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -13992,10 +13986,10 @@ int pagetree(Params *pParams)
 
 	pParams->nCurrentPageNum = pParams->nCountPageFound;
 
-	//if ( pParams->nCountPageFound > pParams->nCountPagesFromPdf )
+	//(pParams->nCountPageFound > pParams->nCountPagesFromPdf)
 	//{
-	//	wprintf(L"ERRORE parsing pagetree: numero indice pagina corrente %d maggiore del numero totale di pagine attesi -> %d\n", pParams->nCountPageFound, pParams->nCountPagesFromPdf);
-	//	return 0;
+	// wprintf(L"ERRORE parsing pagetree: current page index number %d greater than the total number of expected pages -> %d\n", pParams->nCountPageFound, pParams->nCountPagesFromPdf);
+	// return 0;
 	//}
 
 	pParams->bIsInXObjState = 0;
@@ -14108,7 +14102,7 @@ int pagetree(Params *pParams)
 	return 1;
 }
 
-// pagetreebody      : T_DICT_BEGIN pagetreeitems T_DICT_END;
+// pagetreebody: T DICT BEGIN pagetreeitems T DICT END;
 int pagetreebody(Params *pParams)
 {
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_PAGETREEOBJ)
@@ -14131,7 +14125,7 @@ int pagetreebody(Params *pParams)
 	return 1;
 }
 
-// pagetreeitems     : {T_NAME pagetreeobj};
+// pagetreeitems:
 int pagetreeitems(Params *pParams)
 {
 	while ( pParams->myToken.Type == T_NAME )
@@ -14246,7 +14240,7 @@ int pagetreeobj(Params *pParams)
 								#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_PAGETREEOBJ)
 								wprintf(L"ECCO, pagetreeobj -> metto in coda(pParams->myXObjRefList) l'XObjRef(Key = '%s') %d della pagina(objnum = %d)\n", pParams->szCurrResourcesKeyName, iNum, pParams->nCurrentParsingObj);
 								#endif
-								//myobjreflist_Enqueue(&(pParams->myXObjRefList), pParams->szCurrResourcesKeyName, iNum);
+								//myobjreflist Enqueue(&(pParams->myXObjRefList), pParams->szCurrResourcesKeyName, iNum);
 								myobjreflist_Enqueue(&(pParams->myObjsTable[pParams->nCurrentParsingObj]->myXObjRefList), pParams->szCurrResourcesKeyName, iNum);
 							}
 							else
@@ -14274,7 +14268,7 @@ int pagetreeobj(Params *pParams)
 								#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_PAGETREEOBJ)
 								wprintf(L"ECCO, pagetreeobj -> metto in coda(pParams->myFontsRefList) il FontsRef(Key = '%s') %d della pagina(objnum = %d)\n", pParams->szCurrResourcesKeyName, iNum, pParams->nCurrentParsingObj);
 								#endif
-								//myobjreflist_Enqueue(&(pParams->myFontsRefList), pParams->szCurrResourcesKeyName, iNum);
+								//myobjreflist Enqueue(&(pParams->myFontsRefList), pParams->szCurrResourcesKeyName, iNum);
 								myobjreflist_Enqueue(&(pParams->myObjsTable[pParams->nCurrentParsingObj]->myFontsRefList), pParams->szCurrResourcesKeyName, iNum);
 							}
 							else
@@ -14288,7 +14282,7 @@ int pagetreeobj(Params *pParams)
 						}
 						else
 						{
-							//if ( strncmp(pParams->szCurrResourcesKeyName, "Font", 4096) == 0  )
+							//if ( strncmp(pParams->szCurrResourcesKeyName, "Font", 4096) == 0 )
 							if ( strncmp(pParams->szCurrKeyName, "Font", 4096) == 0  )
 							{
 								pParams->nCurrentFontsRef = iNum;
@@ -14303,7 +14297,7 @@ int pagetreeobj(Params *pParams)
 								#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_PAGETREEOBJ)
 								wprintf(L"ECCO, pagetreeobj -> metto in coda(pParams->myGsRefList) il GsRef(Key = '%s') %d della pagina(objnum = %d)\n", pParams->szCurrResourcesKeyName, iNum, pParams->nCurrentParsingObj);
 								#endif
-								//myobjreflist_Enqueue(&(pParams->myGsRefList), pParams->szCurrResourcesKeyName, iNum);
+								//myobjreflist Enqueue(&(pParams->myGsRefList), pParams->szCurrResourcesKeyName, iNum);
 								myobjreflist_Enqueue(&(pParams->myObjsTable[pParams->nCurrentParsingObj]->myGsRefList), pParams->szCurrResourcesKeyName, iNum);
 							}
 							else
@@ -14317,7 +14311,7 @@ int pagetreeobj(Params *pParams)
 						}
 						else
 						{
-							//if ( strncmp(pParams->szCurrResourcesKeyName, "ExtGState", 4096) == 0  )
+							//if ( strncmp(pParams->szCurrResourcesKeyName, "ExtGState", 4096) == 0 )
 							if ( strncmp(pParams->szCurrKeyName, "ExtGState", 4096) == 0  )
 							{
 								pParams->nCurrentGsRef = iNum;
@@ -14351,8 +14345,8 @@ int pagetreeobj(Params *pParams)
 			GetNextToken(pParams);
 			break;
 		case T_REAL_LITERAL:
-			// Valore reale (es. 0.75 in /CA o /ca dell'ExtGState).
-			// pagetreeobj non ne ha bisogno per il page tree: lo consuma e prosegue.
+			// Real value (e.g. 0.75 in /CA or /ca of the ExtGState).
+			// pagetreeobj does not need it for the page tree: it consumes it and continues.
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_PAGETREEOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
@@ -14410,8 +14404,8 @@ int pagetreeobj(Params *pParams)
 		default:
 			snprintf(pParams->szError, 8192, "Errore parsing pagetreeobj: token non valido: %d\n", pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"Errore parsing pagetreeobj: token non valido: %d\n", pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"Errore parsing pagetreeobj: token non valido: %d\n", pParams->myToken.Type);
+			//wprintf(L"Errore parsing pagetreeobj: not valid token: %d\n, pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"Errore parsing pagetreeobj: not valid token: %d\n, pParams->myToken.Type);
 			PrintToken(&(pParams->myToken), '\0', ' ', 1);
 			return 0;
 			break;
@@ -14420,7 +14414,7 @@ int pagetreeobj(Params *pParams)
 	return 1;
 }
 
-// pagetreearrayobjs : {T_INT_LITERAL T_INT_LITERAL T_KW_R};
+// pagetreearrayobjs:
 int pagetreearrayobjs(Params *pParams)
 {
 	//int count = 1;
@@ -14507,8 +14501,8 @@ int pagetreearrayobjs(Params *pParams)
 			{
 				snprintf(pParams->szError, 8192, "Errore parsing pagetreearrayobjs: token non valido: %d\n", pParams->myToken.Type);
 				myShowErrorMessage(pParams, pParams->szError, 1);
-				//wprintf(L"Errore parsing pagetreearrayobjs: token non valido: %d\n", pParams->myToken.Type);
-				//fwprintf(pParams->fpErrors, L"Errore parsing pagetreearrayobjs: token non valido: %d\n", pParams->myToken.Type);
+				//wprintf(L"Errore parsing pagetreearrayobjs: not valid token: %d\n, pParams->myToken.Type);
+				//fwprintf(pParams->fpErrors, L"Errore parsing pagetreearrayobjs: not valid token: %d\n, pParams->myToken.Type);
 				PrintToken(&(pParams->myToken), '\0', ' ', 1);
 
 				fwprintf(pParams->fpErrors, L"\n***** ECCO L'OGGETTO SCHIFOSO:\n");
@@ -14530,7 +14524,7 @@ int pagetreearrayobjs(Params *pParams)
 	return 1;
 }
 
-// pagetreedictobjs  : {T_NAME pagetreeobj};
+// pagetreedictobjs:
 int pagetreedictobjs(Params *pParams)
 {
 	while ( T_NAME == pParams->myToken.Type )
@@ -14592,8 +14586,8 @@ int contentobj(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE contentobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE contentobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE contentobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
+		//wprintf(L"ERRORE felicibj: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE felicibj: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
 		PrintToken(&(pParams->myToken), '\t', ' ', 1);
 		return 0;
 	}
@@ -14605,8 +14599,8 @@ int contentobj(Params *pParams)
 
 	GetNextToken(pParams);
 
-	//if ( !match(pParams, T_INT_LITERAL, "contentobj") )
-	//	return 0;
+	//if (!match(pParams, T INT LITERAL, "contentobj")
+	// return 0;
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -14641,8 +14635,8 @@ int contentobj(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE contentobj: la chiave 'Length' e' assente.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE contentobj: la chiave 'Length' e' assente.\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE contentobj: la chiave 'Length' e' assente.\n");
+		//wprintf(L"ERRORE felicibj: the key 'Length' is absent. \n);
+		//fwprintf(pParams->fpErrors, L"ERRORE felicibj: the key 'Length' is absent. \n);
 		return 0;
 	}
 
@@ -14655,7 +14649,7 @@ int contentobj(Params *pParams)
 	return 1;
 }
 
-// contentobjbody  : T_DICT_BEGIN streamdictitems T_DICT_END T_KW_STREAM T_STRING T_KW_ENDSTREAM;
+// : T DICT BEGIN streamdictitems T DICT END T KW STREAM T STREAM T KW ENDSTREAM
 int contentobjbody(Params *pParams)
 {
 	int retValue = 1;
@@ -14669,7 +14663,7 @@ int contentobjbody(Params *pParams)
 	pParams->CurrentContent.LengthFromPdf = 0;
 	pParams->bStreamLengthIsPresent = 0;
 
-	// Memorizza l'identificativo dell'oggetto che contiene lo stream.
+	// Stores the object identifier that contains the stream.
 	pParams->CurrentContent.ObjectNumber = pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number;
 	pParams->CurrentContent.GenerationNumber = pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation;
 
@@ -14710,8 +14704,8 @@ int contentobjbody(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE contentobjbody: Atteso token T_KW_STREAM, trovato TOKEN n° %d\n", pParams->myToken.Type);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE contentobjbody: Atteso token T_KW_STREAM, trovato TOKEN n° %d\n", pParams->myToken.Type);
-		//fwprintf(pParams->fpErrors, L"ERRORE contentobjbody: Atteso token T_KW_STREAM, trovato TOKEN n° %d\n", pParams->myToken.Type);
+		//wprintf(L"ERRORE felicibjbody: T KW STREAM, found TOKEN n° %d\n", pParams->myToken.Type);
+		//fwprintf(pParams->fpErrors, L"ERRORE felicibjbody: T KW STREAM, found TOKEN n° %d\n", pParams->myToken.Type);
 		PrintToken(&(pParams->myToken), ' ', ' ', 1);
 		retValue = 0;
 		goto uscita;
@@ -14727,8 +14721,8 @@ int contentobjbody(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE contentobjbody: fseek\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE contentobjbody: fseek\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE contentobjbody: fseek\n");
+		//wprintf(L"ERRORE felicibjbody: fseek\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE felicibjbody: fseek\n");
 		retValue = 0;
 		goto uscita;
 	}
@@ -14759,8 +14753,8 @@ int contentobjbody(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "ERRORE parsing contentobjbody: il numero di DecodeParams(%d) non coincide col numero di Filters(%d)\n", pParams->nCountDecodeParams, pParams->nCountFilters);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE parsing contentobjbody: il numero di DecodeParams(%d) non coincide col numero di Filters(%d)\n", pParams->nCountDecodeParams, pParams->nCountFilters);
-			//fwprintf(pParams->fpErrors, L"ERRORE parsing contentobjbody: il numero di DecodeParams(%d) non coincide col numero di Filters(%d)\n", pParams->nCountDecodeParams, pParams->nCountFilters);
+			//wprintf(L"ERRORE parsing contentbjbody: the number of DecodeParams(%d) does not match the number of Filters(%d)\n", pParams->nCountDecodeParams, pParams->nCountFilters);
+			//fwprintf(pParams->fpErrors, L"ERRORE parsing contentbjbody: the number of DecodeParams(%d) does not coincide with the number of Filters(%d)\n", pParams->nCountDecodeParams, pParams->nCountFilters);
 			retValue = 0;
 			goto uscita;
 		}
@@ -14783,15 +14777,15 @@ uscita:
 	return retValue;
 }
 
-// streamdictitems : T_NAME contentkeyvalue {T_NAME contentkeyvalue};
+// streamdictitems: T NAME contentkeyvalue {T NAME contentkeyvalue}
 int streamdictitems(Params *pParams)
 {
 	if ( pParams->myToken.Type !=  T_NAME )
 	{
 		snprintf(pParams->szError, 8192, "ERRORE streamdictitems: Atteso token T_NAME, trovato TOKEN n° %d\n", pParams->myToken.Type);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE streamdictitems: Atteso token T_NAME, trovato TOKEN n° %d\n", pParams->myToken.Type);
-		//fwprintf(pParams->fpErrors, L"ERRORE streamdictitems: Atteso token T_NAME, trovato TOKEN n° %d\n", pParams->myToken.Type);
+		//wprintf(L"ERRORE streamdictitems: Expected token T NAME, found TOKEN n° %d\n", pParams->myToken.Type);
+		//fwprintf(pParams->fpErrors, L"ERRORE streamdictitems: Expected token T NAME, found TOKEN n° %d\n", pParams->myToken.Type);
 		return 0;
 	}
 	strncpy(pParams->szCurrKeyName, pParams->myToken.vString, strnlen(pParams->myToken.vString, 4096) + 1);
@@ -14905,7 +14899,7 @@ int contentkeyvalue(Params *pParams)
 				}
 				else if ( strncmp(pParams->szCurrKeyName, "UseCMap", 1024) == 0 ) // UseCMap REF
 				{
-					//strncpy(pParams->szUseCMap, pParams->myToken.vString, strnlen(pParams->myToken.vString, 4096) + 1);
+					//strncpy(pParams->szUseCMap, pParams->myToken. vString, strnlen(pParams->myToken.vString, 4096) + 1);
 					pParams->nCurrentUseCMapRef = n1;
 				}
 			}
@@ -14917,8 +14911,8 @@ int contentkeyvalue(Params *pParams)
 				{
 					snprintf(pParams->szError, 8192, "ERRORE contentkeyvalue(bStreamStateToUnicode): Flitri diversi da FlateDecode non supportati in questa versione del programma.\n");
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"ERRORE contentkeyvalue(bStreamStateToUnicode): Flitri diversi da FlateDecode non supportati in questa versione del programma.\n");
-					//fwprintf(pParams->fpErrors, L"ERRORE contentkeyvalue(bStreamStateToUnicode): Flitri diversi da FlateDecode non supportati in questa versione del programma.\n");
+					//wprintf(L"ERRORE contentkeyvalue(bStreamStateToUnicode): Fliters other than FlateDecode not supported in this version of the program. \n);
+					//fwprintf(pParams->fpErrors, L"ERRORE contentkeyvalue(bStreamStateToUnicode): Fliters other than FlateDecode not supported in this version of the program. \n);
 					return 0;
 				}
 
@@ -14974,8 +14968,8 @@ int contentkeyvalue(Params *pParams)
 		default:
 			snprintf(pParams->szError, 8192, "ERRORE contentkeyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE contentkeyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"ERRORE contentkeyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
+			//wprintf(L"ERRORE contentkeyvalue: Waited for one of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d\n", pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"ERRORE contentkeyvalue: Waited for one of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d\n", pParams->myToken.Type);
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			return 0;
 			break;
@@ -15053,8 +15047,8 @@ int contentkeyarray(Params *pParams)
 		default:
 			snprintf(pParams->szError, 8192, "ERRORE contentkeyarray: Atteso uno di questi token: T_NAME, T_KW_NULL, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE contentkeyarray: Atteso uno di questi token: T_NAME, T_KW_NULL, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"ERRORE contentkeyarray: Atteso uno di questi token: T_NAME, T_KW_NULL, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
+			//wprintf(L"ERRORE contentkeyarray: Waited for one of these tokens: T NAME, T KW NULL, TDICT BEGIN; found instead TOKEN n° %d\n", pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"ERRORE contentkeyarray: Waited for one of these tokens: T NAME, T KW NULL, TDICT BEGIN; found instead TOKEN n° %d\n", pParams->myToken.Type);
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			return 0;
 			break;
@@ -15068,7 +15062,7 @@ int contentkeyarray(Params *pParams)
 	return 1;
 }
 
-// contentkeydict  : T_DICT_BEGIN T_NAME contentkeyvalueinternal { T_NAME contentkeyvalueinternal } T_DICT_END;
+// contentkeydict: T DICT BEGIN T NAME contentkeyvalueinternal {T NAME contentkeyvalueinternal} T DICT END;
 int contentkeydict(Params *pParams)
 {
 	int len = 0;
@@ -15095,8 +15089,8 @@ int contentkeydict(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE contentkeydict: impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE contentkeydict: impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
-		//fwprintf(pParams->fpErrors, L"ERRORE contentkeydict: impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
+		//wprintf(L"ERRORE contentkeydict: impossible to allocate %lu bytes memory for pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
+		//fwprintf(pParams->fpErrors, L"ERRORE contentkeydict: impossible to allocate %lu bytes memory for pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
 		return 0;
 	}
 	strncpy(pParams->myDataDecodeParams.pszKey, pParams->myToken.vString, len + sizeof(char));
@@ -15123,8 +15117,8 @@ int contentkeydict(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "ERRORE contentkeydict: impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE contentkeydict: impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
-			//fwprintf(pParams->fpErrors, L"ERRORE contentkeydict: impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
+			//wprintf(L"ERRORE contentkeydict: impossible to allocate %lu bytes memory for pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
+			//fwprintf(pParams->fpErrors, L"ERRORE contentkeydict: impossible to allocate %lu bytes memory for pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
 			return 0;
 		}
 		strncpy(pParams->myDataDecodeParams.pszKey, pParams->myToken.vString, len + sizeof(char));
@@ -15250,8 +15244,8 @@ int contentkeyvalueinternal(Params *pParams)
 		default:
 			snprintf(pParams->szError, 8192, "ERRORE contentkeyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE contentkeyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"ERRORE contentkeyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
+			//wprintf(L"ERRORE contentkeyvalue: Waited for one of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d\n", pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"ERRORE contentkeyvalue: Waited for one of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d\n", pParams->myToken.Type);
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			return 0;
 			break;
@@ -15260,7 +15254,7 @@ int contentkeyvalueinternal(Params *pParams)
 	return 1;
 }
 
-// contentkeyarrayinternal : T_QOPAREN T_STRING_HEXADECIMAL T_STRING_HEXADECIMAL T_QCPAREN
+// contentkeyarrayinternal: T QOPAREN T STRING HEXADECIMAL T STRING HEXADECIMAL T QCPAREN
 int contentkeyarrayinternal(Params *pParams)
 {
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ)
@@ -15296,7 +15290,7 @@ int contentkeyarrayinternal(Params *pParams)
 
 // ************************************************************************************************************************
 
-// lengthobj : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ T_INT_LITERAL T_KW_ENDOBJ;
+// lengthobj: T INT LITERAL T INT LITERAL T KW OBJ T INT LITERAL T KW ENDOBJ;
 int lengthobj(Params *pParams)
 {
 	if ( !matchLengthObj(pParams, T_INT_LITERAL, "lengthobj") )
@@ -15312,8 +15306,8 @@ int lengthobj(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "\nERRORE lengthobj -> errore di sintassi: Atteso token T_INT_LITERAL, trovato token n° %d\n", pParams->myTokenLengthObj.Type);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"\nERRORE lengthobj -> errore di sintassi: Atteso token T_INT_LITERAL, trovato token n° %d\n", pParams->myTokenLengthObj.Type);
-		//fwprintf(pParams->fpErrors, L"\nERRORE lengthobj -> errore di sintassi: Atteso token T_INT_LITERAL, trovato token n° %d\n", pParams->myTokenLengthObj.Type);
+		//wprintf(L"\nERRORE lengthobj -> syntax error: Expected token T INT LITERAL, found token n° %d\n", pParams->myTokenLengthObj.Type);
+		//fwprintf(pParams->fpErrors, L"\nERROREobj - length syntax error: Expected token T INT LITERAL, found token n° %d\n", pParams->myTokenLengthObj.Type);
 		PrintToken(&(pParams->myTokenLengthObj), '\0', ' ', 1);
 		return 0;
 	}
@@ -15334,7 +15328,7 @@ int lengthobj(Params *pParams)
 
 // ************************************************************************************************************************
 
-// integer_obj : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ T_INT_LITERAL T_KW_ENDOBJ;
+// integer obj: T INT LITERAL T INT LITERAL T KW OBJ T INT LITERAL T KW ENDOBJ;
 int integer_obj(Params *pParams)
 {
 	if ( !matchLengthObj(pParams, T_INT_LITERAL, "integer_obj") )
@@ -15350,8 +15344,8 @@ int integer_obj(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "\nERRORE integer_obj -> errore di sintassi: Atteso token T_INT_LITERAL, trovato token n° %d\n", pParams->myTokenLengthObj.Type);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"\nERRORE integer_obj -> errore di sintassi: Atteso token T_INT_LITERAL, trovato token n° %d\n", pParams->myTokenLengthObj.Type);
-		//fwprintf(pParams->fpErrors, L"\nERRORE integer_obj -> errore di sintassi: Atteso token T_INT_LITERAL, trovato token n° %d\n", pParams->myTokenLengthObj.Type);
+		//wprintf(L"\nERRORE integer obj -> syntax error: Expected token T INT LITERAL, found token n° %d\n", pParams->myTokenLengthObj.Type);
+		//fwprintf(pParams->fpErrors, L"\nERRORE integer obj -> syntax error: Expected token T INT LITERAL, found token n° %d\n", pParams->myTokenLengthObj.Type);
 		PrintToken(&(pParams->myTokenLengthObj), '\0', ' ', 1);
 		return 0;
 	}
@@ -15633,7 +15627,7 @@ int MakeDirectResourcesString(Params *pParams)
 	return 1;
 }
 
-// resourcesdictionary      : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ T_DICT_BEGIN resourcesdictionarybody T_DICT_END T_KW_ENDOBJ;
+// resourcesdictionary
 int resourcesdictionary(Params *pParams)
 {
 	pParams->bMakeDirectFontResourceString = 0;
@@ -15649,8 +15643,8 @@ int resourcesdictionary(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE resourcesdictionary: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE resourcesdictionary: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE resourcesdictionary: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
+		//wprintf(L"ERRORE resourcesdictionary: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE resourcesdictionary: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
 		PrintToken(&(pParams->myToken), '\t', ' ', 1);
 		return 0;
 	}
@@ -15662,8 +15656,8 @@ int resourcesdictionary(Params *pParams)
 
 	GetNextToken(pParams);
 
-	//if ( !match(pParams, T_INT_LITERAL, "resourcesdictionary") )
-	//	return 0;
+	//if (!match(pParams, T INT LITERAL, "resourcesdictionary")
+	// return 0;
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_RESOURCESDICT) || defined(MYDEBUG_PRINT_ON_ManageContent_FN)
 	wprintf(L"resourcesdictionary -> ");
@@ -15713,14 +15707,14 @@ int resourcesdictionary(Params *pParams)
 	return 1;
 }
 
-// resourcesdictionarybody  : { T_NAME resourcesdictionaryitems }
+// resourcesdictionarybody:
 int resourcesdictionarybody(Params *pParams)
 {
-	// nCurrentPageResources         -> 0 se la pagina non ha riferimenti a Resources;
-	//                                  -1 se la pagina eredita Resources da uno dei suoi parenti;
-	//                                  altrimenti un intero > 0 che indica il riferimento al numero dell'oggetto Resources.
-	//if ( !(pParams->bIsInXObjState) )
-	//	pParams->nCurrentPageResources = 0;
+	// nCurrentPageResources -> 0 if the page has no references to Resources;
+	//                                  -1 if the page inherits Resources from one of its relatives;
+	//                                  otherwise an entire > 0 indicating reference to the number of the Resources object.
+	//(pParams->bIsInXObjState)
+	// pParams->nCurrentPageResources = 0;
 
 	pParams->bXObjectKeys = 0;
 	pParams->bFontsKeys = 0;
@@ -15778,16 +15772,16 @@ int resourcesdictionarybody(Params *pParams)
 	return 1;
 }
 
-// resourcesdictionaryitems : T_NAME
+// resourcesdictionaryitems: T NAME
 //                          | T_INT_LITERAL [ T_INT_LITERAL T_KW_R ]
-//                          | T_STRING_LITERAL
-//                          | T_STRING_HEXADECIMAL
+//                          
+//                          
 //                          | T_INT_LITERAL
 //                          | T_REAL_LITERAL
-//                          | T_KW_TRUE
+//                          | T KW TRUE
 //                          | T_KW_FALSE
 //                          | T_KW_NULL
-//                          | T_QOPAREN resourcesarrayobjs T_QCPAREN
+//                          
 //                          | T_DICT_BEGIN resourcesdictobjs T_DICT_END
 //                          ;
 int resourcesdictionaryitems(Params *pParams)
@@ -15872,7 +15866,7 @@ int resourcesdictionaryitems(Params *pParams)
 							PageScope = pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT_XObjRef;
 							len = strnlen(pParams->szCurrResourcesKeyName, 128);
 							nRes = scopeFind(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&iNum, &nDataSize, &bContentAlreadyProcessed, 1);
-							if ( nRes < 0 ) // NON TROVATO
+							if ( nRes < 0 ) // NOT FIND
 							{
 								bContentAlreadyProcessed = 0;
 								nRes = scopeInsert(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&iNum, sizeof(iNum), bContentAlreadyProcessed);
@@ -15887,7 +15881,7 @@ int resourcesdictionaryitems(Params *pParams)
 						else
 						{
 							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_RESOURCESDICT) || defined(MYDEBUG_PRINT_ON_ManageContent_FN)
-							//wprintf(L"ECCO, metto in coda(pParams->myXObjRefList) l'XObjRef -> %s %d 0 R\n", pParams->szCurrResourcesKeyName, iNum);
+							//wprintf(L"ECCO, tail (pParams->myXObjRefList) l'XObjRef -> %s %d 0 R\n", pParams->szCurrResourcesKeyName, iNum);
 							wprintf(L"ECCO, resourcesdictionaryitems -> metto in coda(pParams->myXObjRefList) l'XObjRef(Key = '%s') %d della pagina(objnum = %d)\n", pParams->szCurrResourcesKeyName, iNum, pParams->nCurrentPageParsingObj);
 							#endif
 							myobjreflist_Enqueue(&(pParams->myXObjRefList), pParams->szCurrResourcesKeyName, iNum);
@@ -15912,7 +15906,7 @@ int resourcesdictionaryitems(Params *pParams)
 							PageScope = pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT_FontsRef;
 							len = strnlen(pParams->szCurrResourcesKeyName, 128);
 							nRes = scopeFind(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&iNum, &nDataSize, &bContentAlreadyProcessed, 1);
-							if ( nRes < 0 ) // NON TROVATO
+							if ( nRes < 0 ) // NOT FIND
 							{
 								bContentAlreadyProcessed = 0;
 								nRes = scopeInsert(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&iNum, sizeof(iNum), bContentAlreadyProcessed);
@@ -15927,7 +15921,7 @@ int resourcesdictionaryitems(Params *pParams)
 						else
 						{
 							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_RESOURCESDICT) || defined(MYDEBUG_PRINT_ON_ManageContent_FN)
-							//wprintf(L"ECCO, metto in coda(pParams->myFontsRefList) il FontsRef -> %s %d 0 R\n", pParams->szCurrResourcesKeyName, iNum);
+							//wprintf(L"ECCO, tail (pParams->myFontsRefList) the FontsRef -> %s %d 0 R\n", pParams->szCurrResourcesKeyName, iNum);
 							wprintf(L"ECCO, resourcesdictionaryitems -> metto in coda(pParams->myFontsRefList) il FontsRef(Key = '%s') %d della pagina(obinum = %d)\n", pParams->szCurrResourcesKeyName, iNum, pParams->nCurrentPageParsingObj);
 							#endif
 							myobjreflist_Enqueue(&(pParams->myFontsRefList), pParams->szCurrResourcesKeyName, iNum);
@@ -15970,7 +15964,7 @@ int resourcesdictionaryitems(Params *pParams)
 							PageScope = pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT_GsRef;
 							len = strnlen(pParams->szCurrResourcesKeyName, 128);
 							nRes = scopeFind(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&iNum, &nDataSize, &bContentAlreadyProcessed, 1);
-							if ( nRes < 0 ) // NON TROVATO
+							if ( nRes < 0 ) // NOT FIND
 							{
 								bContentAlreadyProcessed = 0;
 								nRes = scopeInsert(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&iNum, sizeof(iNum), bContentAlreadyProcessed);
@@ -15985,7 +15979,7 @@ int resourcesdictionaryitems(Params *pParams)
 						else
 						{
 							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_RESOURCESDICT) || defined(MYDEBUG_PRINT_ON_ManageContent_FN)
-							//wprintf(L"ECCO, metto in coda(pParams->myGsRefList) il GsRef -> %s %d 0 R\n", pParams->szCurrResourcesKeyName, iNum);
+							//wprintf(L"ECCO, tail (pParams->myGsRefList) the GsRef -> %s %d 0 R\n", pParams->szCurrResourcesKeyName, iNum);
 							wprintf(L"ECCO, resourcesdictionaryitems -> metto in coda(pParams->myGsRefList) il GsRef(Key = '%s') %d della pagina(obinum = %d)\n", pParams->szCurrResourcesKeyName, iNum, pParams->nCurrentPageParsingObj);
 							#endif
 							myobjreflist_Enqueue(&(pParams->myGsRefList), pParams->szCurrResourcesKeyName, iNum);
@@ -16030,7 +16024,7 @@ int resourcesdictionaryitems(Params *pParams)
 							PageScope = pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT_XObjRef;
 							len = strnlen(pParams->szCurrResourcesKeyName, 128);
 							nRes = scopeFind(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&iNum, &nDataSize, &bContentAlreadyProcessed, 1);
-							if ( nRes < 0 ) // NON TROVATO
+							if ( nRes < 0 ) // NOT FIND
 							{
 								bContentAlreadyProcessed = 0;
 								nRes = scopeInsert(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&iNum, sizeof(iNum), bContentAlreadyProcessed);
@@ -16045,7 +16039,7 @@ int resourcesdictionaryitems(Params *pParams)
 						else
 						{
 							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_RESOURCESDICT) || defined(MYDEBUG_PRINT_ON_ManageContent_FN)
-							//wprintf(L"ECCO, metto in coda(pParams->myXObjRefList) l'XObjRef -> %s %d 0 R\n", pParams->szCurrResourcesKeyName, iNum);
+							//wprintf(L"ECCO, tail (pParams->myXObjRefList) l'XObjRef -> %s %d 0 R\n", pParams->szCurrResourcesKeyName, iNum);
 							wprintf(L"ECCO 2, resourcesdictionaryitems -> metto in coda(pParams->myXObjRefList) l'XObjRef(Key = '%s') %d della pagina(objnum = %d)\n", pParams->szCurrResourcesKeyName, iNum, pParams->nCurrentPageParsingObj);
 							#endif
 							myobjreflist_Enqueue(&(pParams->myXObjRefList), pParams->szCurrResourcesKeyName, iNum);
@@ -16070,7 +16064,7 @@ int resourcesdictionaryitems(Params *pParams)
 							PageScope = pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT_FontsRef;
 							len = strnlen(pParams->szCurrResourcesKeyName, 128);
 							nRes = scopeFind(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&iNum, &nDataSize, &bContentAlreadyProcessed, 1);
-							if ( nRes < 0 ) // NON TROVATO
+							if ( nRes < 0 ) // NOT FIND
 							{
 								bContentAlreadyProcessed = 0;
 								nRes = scopeInsert(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&iNum, sizeof(iNum), bContentAlreadyProcessed);
@@ -16085,7 +16079,7 @@ int resourcesdictionaryitems(Params *pParams)
 						else
 						{
 							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_RESOURCESDICT) || defined(MYDEBUG_PRINT_ON_ManageContent_FN)
-							//wprintf(L"ECCO, metto in coda(pParams->myFontsRefList) il FontsRef -> %s %d 0 R\n", pParams->szCurrResourcesKeyName, iNum);
+							//wprintf(L"ECCO, tail (pParams->myFontsRefList) the FontsRef -> %s %d 0 R\n", pParams->szCurrResourcesKeyName, iNum);
 							wprintf(L"ECCO 2, resourcesdictionaryitems -> metto in coda(pParams->myFontsRefList) il FontsRef(Key = '%s') %d della pagina(objnum = %d)\n", pParams->szCurrResourcesKeyName, iNum, pParams->nCurrentPageParsingObj);
 							#endif
 							myobjreflist_Enqueue(&(pParams->myFontsRefList), pParams->szCurrResourcesKeyName, iNum);
@@ -16128,7 +16122,7 @@ int resourcesdictionaryitems(Params *pParams)
 							PageScope = pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT_GsRef;
 							len = strnlen(pParams->szCurrResourcesKeyName, 128);
 							nRes = scopeFind(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&iNum, &nDataSize, &bContentAlreadyProcessed, 1);
-							if ( nRes < 0 ) // NON TROVATO
+							if ( nRes < 0 ) // NOT FIND
 							{
 								bContentAlreadyProcessed = 0;
 								nRes = scopeInsert(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&iNum, sizeof(iNum), bContentAlreadyProcessed);
@@ -16143,7 +16137,7 @@ int resourcesdictionaryitems(Params *pParams)
 						else
 						{
 							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_RESOURCESDICT) || defined(MYDEBUG_PRINT_ON_ManageContent_FN)
-							//wprintf(L"ECCO, metto in coda(pParams->myGsRefList) il FontsRef -> %s %d 0 R\n", pParams->szCurrResourcesKeyName, iNum);
+							//wprintf(L"ECCO, tail (pParams->myGsRefList) the FontsRef -> %s %d 0 R\n", pParams->szCurrResourcesKeyName, iNum);
 							wprintf(L"ECCO 2, resourcesdictionaryitems -> metto in coda(pParams->myGsRefList) il GsRef(Key = '%s') %d della pagina(objnum = %d)\n", pParams->szCurrResourcesKeyName, iNum, pParams->nCurrentPageParsingObj);
 							#endif
 							myobjreflist_Enqueue(&(pParams->myGsRefList), pParams->szCurrResourcesKeyName, iNum);
@@ -16343,7 +16337,7 @@ int resourcesdictionaryitems(Params *pParams)
 		default:
 			snprintf(pParams->szError, 8192, "Errore parsing resourcesdictionaryitems: token non valido: %d\n", pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"Errore parsing resourcesdictionaryitems: token non valido: %d\n", pParams->myToken.Type);
+			//wprintf(L"Errore parsing resourcesdictionaryitems: not valid token: %d\n, pParams->myToken.Type);
 			PrintToken(&(pParams->myToken), '\0', ' ', 1);
 			return 0;
 			break;
@@ -16352,7 +16346,7 @@ int resourcesdictionaryitems(Params *pParams)
 	return 1;
 }
 
-// resourcesarrayobjs : {T_INT_LITERAL T_INT_LITERAL T_KW_R};
+// resourcesarrayobjs:
 int resourcesarrayobjs(Params *pParams)
 {
 	do
@@ -16366,8 +16360,8 @@ int resourcesarrayobjs(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "Errore parsing resourcesarrayobjs: token non valido: %d\n", pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"Errore parsing resourcesarrayobjs: token non valido: %d\n", pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"Errore parsing resourcesarrayobjs: token non valido: %d\n", pParams->myToken.Type);
+			//wprintf(L"Errore parsing resourcesarrayobjs: not valid token: %d\n, pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"Errore parsing resourcesarrayobjs: not valid token: %d\n, pParams->myToken.Type);
 			PrintToken(&(pParams->myToken), '\0', ' ', 1);
 			return 0;
 		}
@@ -16386,7 +16380,7 @@ int resourcesarrayobjs(Params *pParams)
 	return 1;
 }
 
-// resourcesdictobjs  : {T_NAME resourcesdictionaryitems};
+// resourcesdictobjs:
 int resourcesdictobjs(Params *pParams)
 {
 	if ( DICTIONARY_TYPE_RESOURCES == pParams->nDictionaryType )
@@ -16420,7 +16414,7 @@ int resourcesdictobjs(Params *pParams)
 		PrintToken(&(pParams->myToken), ' ', ' ', 1);
 		#endif
 
-		//wprintf(L"\n\npParams->szCurrKeyName = '%s'; pParams->szCurrResourcesKeyName = '%s'\n\n" , pParams->szCurrKeyName, pParams->szCurrResourcesKeyName);
+		//wprintf(L)\n\npParams->szCurrKeyName = '%s'; pParams->szCurrResourcesKeyName = '%s'\n\n' , pParams->szCurrKeyName, pParams->szCurr
 		if ( pParams->bFontsKeys )
 		{
 			if ( '\0' == pParams->szDirectFontResourceName[0] )
@@ -16445,7 +16439,7 @@ int resourcesdictobjs(Params *pParams)
 
 // ***********************************************************************************************************************
 
-//contentxobj      : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ contentxobjbody T_KW_ENDOBJ;
+//contentxobj: T INT LITERAL T INT LITERAL T KW OBJ contentxobjbody T KW ENDOBJ;
 int contentxobj(Params *pParams)
 {
 	pParams->nCurrentXObjResourcesRef = 0;
@@ -16482,8 +16476,8 @@ int contentxobj(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE contentxobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE contentxobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE contentxobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
+		//wprintf(L"ERRORE contentxobj: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE contentxobj: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
 		PrintToken(&(pParams->myToken), '\t', ' ', 1);
 		return 0;
 	}
@@ -16498,8 +16492,8 @@ int contentxobj(Params *pParams)
 
 
 
-	//if ( !match(pParams, T_INT_LITERAL, "contentxobj") )
-	//	return 0;
+	//if (!match(pParams, T INT LITERAL, "contentxobj")
+	// return 0;
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMXOBJ)
 	wprintf(L"contentxobj -> ");
@@ -16544,8 +16538,8 @@ int contentxobj(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE contentxobj: la chiave 'Length' è assente.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE contentxobj: la chiave 'Length' e' assente.\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE contentxobj: la chiave 'Length' è assente.\n");
+		//wprintf(L"ERRORE contentxobj: the key 'Length' is absent. \n);
+		//fwprintf(pParams->fpErrors, L"ERRORE contentxobj: the 'Length' key is absent. \n);
 		return 0;
 	}
 
@@ -16633,7 +16627,7 @@ uscita:
 	return 1;
 }
 
-// contentxobjbody  : T_DICT_BEGIN xobjstreamdictitems T_DICT_END T_KW_STREAM T_STRING T_KW_ENDSTREAM;
+// contentxobjbody: T DICT BEGIN xobjstreamdictitems T DICT END T KW STREAM T STREAM T KW ENDSTREAM
 int contentxobjbody(Params *pParams)
 {
 	int retValue = 1;
@@ -16686,8 +16680,8 @@ int contentxobjbody(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE contentxobjbody: Atteso token T_KW_STREAM, trovato TOKEN n° %d\n", pParams->myToken.Type);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE contentxobjbody: Atteso token T_KW_STREAM, trovato TOKEN n° %d\n", pParams->myToken.Type);
-		//fwprintf(pParams->fpErrors, L"ERRORE contentxobjbody: Atteso token T_KW_STREAM, trovato TOKEN n° %d\n", pParams->myToken.Type);
+		//wprintf(L"ERRORE contentxobjbody: T KW STREAM, found TOKEN n° %d\n", pParams->myToken.Type);
+		//fwprintf(pParams->fpErrors, L"ERRORE contentxobjbody: T KW STREAM, found TOKEN n° %d\n", pParams->myToken.Type);
 		PrintToken(&(pParams->myToken), ' ', ' ', 1);
 		retValue = 0;
 		goto uscita;
@@ -16740,8 +16734,8 @@ int contentxobjbody(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "ERRORE parsing contentxobjbody: il numero di DecodeParams(%d) non coincide col numero di Filters(%d)\n", pParams->nCountDecodeParams, pParams->nCountFilters);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE parsing contentxobjbody: il numero di DecodeParams(%d) non coincide col numero di Filters(%d)\n", pParams->nCountDecodeParams, pParams->nCountFilters);
-			//fwprintf(pParams->fpErrors, L"ERRORE parsing contentxobjbody: il numero di DecodeParams(%d) non coincide col numero di Filters(%d)\n", pParams->nCountDecodeParams, pParams->nCountFilters);
+			//wprintf(L"ERRORE parsing contentxobjbody: the number of DecodeParams(%d) does not coincide with the number of Filters(%d)\n", pParams->nCountDecodeParams, pParams->nCountFilters);
+			//fwprintf(pParams->fpErrors, L"ERRORE parsing contentxobjbody: the number of DecodeParams(%d) does not coincide with the number of Filters(%d)\n", pParams->nCountDecodeParams, pParams->nCountFilters);
 			retValue = 0;
 			goto uscita;
 		}
@@ -16752,7 +16746,7 @@ uscita:
 	return retValue;
 }
 
-// xobjstreamdictitems : {T_NAME xobjcontentkeyvalue};
+// xobjstreamdictitems: {T NAME xobjcontentkeyvalue};
 int xobjstreamdictitems(Params *pParams)
 {
 	while ( T_NAME == pParams->myToken.Type )
@@ -16851,14 +16845,14 @@ int xobjcontentkeyvalue(Params *pParams)
 
 					pParams->CurrentContent.LengthFromPdf = pParams->nCurrentStreamLenghtFromObjNum;
 				}
-				//else if ( strncmp(pParams->szCurrKeyName, "Resources", 1024) == 0 )
+				//else if ( strncmp(pParams->szCurrKeyName, "Resources", 1024) = 0 )
 				//{
-				//	pParams->nCurrentXObjResourcesRef = n1;
+				// pParams->nCurrentXObjResourcesRef = n1;
 				//}
 
 				if ( pParams->bInXObj )
 				{
-					//if ( 0 == pParams->bXObjIsIndirect )
+					//if ( 0 == pParams->bXObjIsIndirect)
 					//{
 						if ( strncmp(pParams->szCurrResourcesKeyName, "XObject", 4096) != 0  )
 						{
@@ -16870,13 +16864,13 @@ int xobjcontentkeyvalue(Params *pParams)
 
 							PageScope = pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT_XObjRef;
 							len = strnlen(pParams->szCurrResourcesKeyName, 128);
-							//nRes = scopeFind(&(pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT_XObjRef), pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&n1, &nDataSize, &bContentAlreadyProcessed, 1);
+							//nRes = discoveredFind(&(pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT XObjRef), pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&n1, &nDataSize, &bCont
 							nRes = scopeFind(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&n1, &nDataSize, &bContentAlreadyProcessed, 1);
-							if ( nRes < 0 ) // NON TROVATO
+							if ( nRes < 0 ) // NOT FIND
 							{
 								bContentAlreadyProcessed = 0;
 								nRes = scopeInsert(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&n1, sizeof(n1), bContentAlreadyProcessed);
-								//nRes = scopeInsert(&(pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT_XObjRef), pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&n1, sizeof(n1), bContentAlreadyProcessed);
+								//nRes = discoveredInsert(&(pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT XObjRef), pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&n1, sizeof(n1), bContread
 								if ( nRes )
 								{
 									#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMXOBJ) || defined(MYDEBUG_PRINT_ON_ManageContent_FN)
@@ -16898,8 +16892,8 @@ int xobjcontentkeyvalue(Params *pParams)
 					//}
 					//else
 					//{
-					//	pParams->bInXObj = 0;
-					//	pParams->nXObjRef = n1;
+					// pParams->bInXObj = 0;
+					// pParams->nXObjRef = n1;
 					//}
 				}
 				else if ( pParams->bInFontObj )
@@ -16922,12 +16916,12 @@ int xobjcontentkeyvalue(Params *pParams)
 							PageScope = pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT_FontsRef;
 							len = strnlen(pParams->szCurrResourcesKeyName, 128);
 							nRes = scopeFind(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&n1, &nDataSize, &bContentAlreadyProcessed, 1);
-							//nRes = scopeFind(&(pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT_FontsRef), pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&n1, &nDataSize, &bContentAlreadyProcessed, 1);
-							if ( nRes < 0 ) // NON TROVATO
+							//nRes = discoveredFind(&(pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT FontsRef), pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&n1, &nDataSize, &bCont
+							if ( nRes < 0 ) // NOT FIND
 							{
 								bContentAlreadyProcessed = 0;
 								nRes = scopeInsert(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&n1, sizeof(n1), bContentAlreadyProcessed);
-								//nRes = scopeInsert(&(pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT_FontsRef), pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&n1, sizeof(n1), bContentAlreadyProcessed);
+								//nRes = bContentAlready
 								if ( nRes )
 								{
 									#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMXOBJ) || defined(MYDEBUG_PRINT_ON_ManageContent_FN)
@@ -16949,13 +16943,13 @@ int xobjcontentkeyvalue(Params *pParams)
 					//}
 					//else
 					//{
-					//	pParams->bInFontObj = 0;
-					//	pParams->nFontObjRef = n1;
+					// pParams->bInFontObj = 0;
+					// pParams->nFontObjRef = n1;
 					//}
 				}
 				else if ( pParams->bInGsObj )
 				{
-					//if ( 0 == pParams->bGsObjIsIndirect )
+					//if ( 0 == pParams->bGsObjIsIndirect)
 					//{
 						if ( strncmp(pParams->szCurrResourcesKeyName, "ExtGState", 4096) != 0  )
 						{
@@ -16968,12 +16962,12 @@ int xobjcontentkeyvalue(Params *pParams)
 							PageScope = pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT_GsRef;
 							len = strnlen(pParams->szCurrResourcesKeyName, 128);
 							nRes = scopeFind(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&n1, &nDataSize, &bContentAlreadyProcessed, 1);
-							//nRes = scopeFind(&(pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT_GsRef), pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&n1, &nDataSize, &bContentAlreadyProcessed, 1);
-							if ( nRes < 0 ) // NON TROVATO
+							//nRes = discoveredFind(&(pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT GsRef), pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&n1, &nDataSize, &bContentAlread
+							if ( nRes < 0 ) // NOT FIND
 							{
 								bContentAlreadyProcessed = 0;
 								nRes = scopeInsert(&PageScope, pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&n1, sizeof(n1), bContentAlreadyProcessed);
-								//nRes = scopeInsert(&(pParams->pPagesArray[pParams->nCurrentPageNum].myScopeHT_GsRef), pParams->szCurrResourcesKeyName, len + sizeof(char), (void*)&n1, sizeof(n1), bContentAlreadyProcessed);
+								//nRes = bContentAlready
 								if ( nRes )
 								{
 									#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMXOBJ) || defined(MYDEBUG_PRINT_ON_ManageContent_FN)
@@ -16995,13 +16989,13 @@ int xobjcontentkeyvalue(Params *pParams)
 					//}
 					//else
 					//{
-					//	pParams->bInGsObj = 0;
-					//	pParams->nGsObjRef = n1;
+					// pParams->bInGsObj = 0;
+					// pParams->nGsObjRef = n1;
 					//}
 				}
 				else
 				{
-					//if ( ('\0' == pParams->szCurrResourcesKeyName[0]) && (strncmp(pParams->szCurrKeyName, "Resources", 1024) == 0) )
+					//('\0' == pParams->szCurrResourcesKeyName[0]) && (strncmp(pParams->szCurrKeyName, "Resources", 1024) = 0)
 					if ( !(pParams->bInternalDict) && (strncmp(pParams->szCurrKeyName, "Resources", 1024) == 0) )
 					{
 						pParams->nCurrentXObjResourcesRef = n1;
@@ -17027,7 +17021,7 @@ int xobjcontentkeyvalue(Params *pParams)
 			}
 			else if ( strncmp(pParams->szCurrKeyName, "Subtype", 1024) == 0 )
 			{
-				//if ( strncmp(pParams->myToken.vString, "Image", 128) == 0 )
+				//if ( strncmp(pParams->myToken.vString, "Image", 128) = 0 )
 				if ( 'I' == pParams->myToken.vString[0] )
 				{
 					#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMXOBJ)
@@ -17103,7 +17097,7 @@ int xobjcontentkeyvalue(Params *pParams)
 			#endif
 			snprintf(pParams->szError, 8192, "ERRORE xobjcontentkeyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//fwprintf(pParams->fpErrors, L"ERRORE xobjcontentkeyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"ERRORE xobjcontentkeyvalue: Waited for one of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d:\n", pParams->myToken.Type);
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			return 0;
 			break;
@@ -17112,7 +17106,7 @@ int xobjcontentkeyvalue(Params *pParams)
 	return 1;
 }
 
-// xobjcontentkeyarray : T_QOPAREN xobjcontentkeyvalue T_QCPAREN;
+// xobjcontentkeyarray: T QOPAREN xobjcontentkeyvalue T QCPAREN;
 int xobjcontentkeyarray(Params *pParams)
 {
 	int countOpen = 0;
@@ -17128,10 +17122,10 @@ int xobjcontentkeyarray(Params *pParams)
 
 	countOpen = 1;
 
-	//if ( !xobjcontentkeyvalue(pParams) )
-	//	return 0;
+	//if (!xobjcontentkeyvalue(pParams) )
+	// return 0;
 
-	//#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMXOBJ)
+	//#if defined(MYDEBUG PRINT ALL) || defined(MYDEBUG PRINT ON PARSE STREAMXOBJ)
 	//wprintf(L"\tcountOpen = %d\n", countOpen);
 	//#endif
 
@@ -17166,7 +17160,7 @@ int xobjcontentkeyarray(Params *pParams)
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMXOBJ)
 		wprintf(L"xobjcontentkeyarray -> ");
 		PrintToken(&(pParams->myToken), ' ', ' ', 1);
-		//wprintf(L"\tcountOpen = %d è maggiore di zero, ricomincio.\n", countOpen);
+		//wprintf(L"\tcountOpen = %d is greater than zero, I rename. \n, countOpen);
 		#endif
 
 		GetNextToken(pParams);
@@ -17174,14 +17168,14 @@ int xobjcontentkeyarray(Params *pParams)
 		if ( T_QOPAREN == pParams->myToken.Type )
 		{
 			countOpen++;
-			//#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMXOBJ)
+			//#if defined(MYDEBUG PRINT ALL) || defined(MYDEBUG PRINT ON PARSE STREAMXOBJ)
 			//wprintf(L"\tcountOpen = %d\n", countOpen);
 			//#endif
 		}
 		else if ( T_QCPAREN == pParams->myToken.Type )
 		{
 			countOpen--;
-			//#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMXOBJ)
+			//#if defined(MYDEBUG PRINT ALL) || defined(MYDEBUG PRINT ON PARSE STREAMXOBJ)
 			//wprintf(L"\tcountOpen = %d\n", countOpen);
 			//#endif
 		}
@@ -17192,7 +17186,7 @@ int xobjcontentkeyarray(Params *pParams)
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMXOBJ)
 	wprintf(L"xobjcontentkeyarray -> ");
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
-	//wprintf(L"\tcountOpen = %d non è maggiore di zero, esco.\n", countOpen);
+	//wprintf(L"\tcountOpen = %d is not greater than zero, esco. \n, countOpen);
 	#endif
 
 	if ( !match(pParams, T_QCPAREN, "xobjcontentkeyarray") )
@@ -17201,7 +17195,7 @@ int xobjcontentkeyarray(Params *pParams)
 	return 1;
 }
 
-// xobjcontentkeydict  : T_DICT_BEGIN { T_NAME xobjcontentkeyvalue } T_DICT_END;
+// xobjcontentkeydict: T DICT BEGIN {T NAME xobjcontentkeyvalue} T DICT END;
 int xobjcontentkeydict(Params *pParams)
 {
 	int len = 0;
@@ -17254,8 +17248,8 @@ int xobjcontentkeydict(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "ERRORE xobjcontentkeydict: impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE xobjcontentkeydict: impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
-			//fwprintf(pParams->fpErrors, L"ERRORE xobjcontentkeydict: impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
+			//wprintf(L"ERRORE xobjcontentkeydict: impossible to allocate %lu bytes memory for pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
+			//fwprintf(pParams->fpErrors, L"ERRORE xobjcontentkeydict: impossible to allocate %lu bytes memory for pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
 			return 0;
 		}
 		strncpy(pParams->myDataDecodeParams.pszKey, pParams->myToken.vString, len + sizeof(char));
@@ -17295,7 +17289,7 @@ int xobjcontentkeydict(Params *pParams)
 
 // ************************************************************************************************************************
 
-// gsobj   : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ gsobjbody T_KW_ENDOBJ;
+// :
 int gsobj(Params *pParams)
 {
 	pParams->nCurrentGsObjFontObjNum = 0;
@@ -17316,8 +17310,8 @@ int gsobj(Params *pParams)
 
 	GetNextToken(pParams);
 
-	//if ( !match(pParams, T_INT_LITERAL, "gsobj") )
-	//	return 0;
+	//if (!match(pParams, T INT LITERAL, "gsobj")
+	// return 0;
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_GSOBJ)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -17349,7 +17343,7 @@ int gsobj(Params *pParams)
 	return 1;
 }
 
-// gsobjbody : T_DICT_BEGIN gsobjbody T_DICT_END;
+// gsobjbody: T DICT BEGIN gsobjbody T DICT END;
 int gsobjbody(Params *pParams)
 {
 	int countOpen = 0;
@@ -17428,7 +17422,7 @@ int gsobjbody(Params *pParams)
 				return 0;
 			}
 
-			// Passa oltre la dimensione del font: il token successivo deve essere ']'
+			// Pass over the font size: the next token must be ']'
 			GetNextToken(pParams);
 
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_GSOBJ)
@@ -17439,8 +17433,8 @@ int gsobjbody(Params *pParams)
 			if ( !match(pParams, T_QCPAREN, "gsobjbody") )
 				return 0;
 
-			// match() ha gia' letto il token successivo a ']': lo esamino qui e riparto dal ciclo,
-			// senza il GetNextToken in fondo, che altrimenti salterebbe ad es. il '>>' di chiusura.
+			// match() has already read the token after ']': I examine it here and depart from the cycle,
+			// without the GetNextToken at the bottom, which otherwise would jump to e.g. the '>' closure.
 			if ( T_DICT_BEGIN == pParams->myToken.Type )
 				countOpen++;
 			else if ( T_DICT_END == pParams->myToken.Type )
@@ -17494,7 +17488,7 @@ int gsobjbody(Params *pParams)
 
 // ************************************************************************************************************************
 
-// widthsarrayobj         : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ widthsarrayobjbody T_KW_ENDOBJ;
+// widthsarrayobj: T INT LITERAL T INT LITERAL T KW OBJ widthsarrayobjbody T KW ENDOBJ;
 int widthsarrayobj(Params *pParams)
 {
 	if ( T_INT_LITERAL != pParams->myToken.Type )
@@ -17536,7 +17530,7 @@ int widthsarrayobj(Params *pParams)
 	return 1;
 }
 
-// widthsarrayobjbody         : T_QOPAREN {T_INT_LITERAL | T_REAL_LITERAL}  T_QCPAREN;
+// widthsarrayobjbody: T QOPAREN {T INT LITERAL | T REAL LITERAL} T QCPAREN;
 int widthsarrayobjbody(Params *pParams)
 {
 	int x = 0;
@@ -17605,7 +17599,7 @@ int widthsarrayobjbody(Params *pParams)
 									}
 
 									//wprintf(L"n1 = %d\n", n1);
-									//wprintf(L"\tpParams->myObjsTable[%d]->pGlyphsWidths->pWidths[%d] = %f\n", pParams->nCurrentParsingFontObjNum, n1, dblWidth);
+									//wprintf(L)\tpParams->myObjsTable[%d]->pGlyphsWidths->pWidths[%d] = %f\n", pParams->nCurrentParsingFontObjNum, n1, dblWidth);
 									pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[n1] = dblWidth;
 									n1++;
 								}
@@ -17757,9 +17751,9 @@ int widthsarrayobjbody(Params *pParams)
 		}
 		else if ( strncmp(pParams->szExtArraySizeCurrKeyName, "W2", 1024) == 0 )
 		{
-			//snprintf(pParams->szError, 8192, "ERRORE fontobjcontentkeyarray: W2, PER IL MOMENTO, NON IMPLEMENTATO.\n");
+			//snprintf(pParams->szError, 8192, "ERRORE fontobjcontentkeyarray: W2, FOR THE MOMENT, NOT IMPLEMENTATO.\n");
 			//myShowErrorMessage(pParams, pParams->szError, 1);
-			//PrintToken(&(pParams->myToken), ' ', ' ', 1);
+			//PrintToken(&(pParams->myToken), ', ', ', 1);
 			//return 0;
 
 			while ( pParams->myToken.Type == T_INT_LITERAL )
@@ -17847,7 +17841,7 @@ int widthsarrayobjbody(Params *pParams)
 								break;
 							}
 
-							// IGNORIAMO I SUCCESSIVI DUE NUMERI v1, v2:
+							// 
 							// v1:
 							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
 							PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -17922,7 +17916,7 @@ int widthsarrayobjbody(Params *pParams)
 									pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[k] = dblWidth;
 								}
 
-								// IGNORIAMO I SUCCESSIVI DUE NUMERI v1, v2:
+								// 
 								// v1:
 								#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
 								PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -17976,7 +17970,7 @@ int widthsarrayobjbody(Params *pParams)
 									pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[k] = dblWidth;
 								}
 
-								// IGNORIAMO I SUCCESSIVI DUE NUMERI v1, v2:
+								// 
 								// v1:
 								#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
 								PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -18035,7 +18029,7 @@ int widthsarrayobjbody(Params *pParams)
 		{
 			if ( T_INT_LITERAL == pParams->myToken.Type )
 			{
-				//dblWidth = (double)pParams->myToken.vInt;
+				//dblWidth = (double)pParams->myToken. vInt;
 				//pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->DW2.v = dblWidth;
 			}
 			else if ( T_REAL_LITERAL == pParams->myToken.Type )
@@ -18161,13 +18155,13 @@ int widthsarrayobjbody(Params *pParams)
 				x++;
 			}
 			break;
-			//case T_QCPAREN:
-			//	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
-			//	PrintToken(&(pParams->myToken), ' ', ' ', 1);
-			//	#endif
-			//	GetNextToken(pParams);
-			//	return 1;
-			//	break;
+			//T QCPAREN houses:
+			// #if defined(MYDEBUG PRINT ALL) || defined(MYDEBUG PRINT ON PARSE FONTOBJ)
+			// PrintToken(&(pParams->myToken), ', ', ', 1);
+			// #endif
+			// GetNextToken(pParams);
+			// return 1;
+			// break;
 			default:
 			{
 				snprintf(pParams->szError, 8192, "ERRORE widthsarrayobjbody: atteso T_INT_LITERAL o T_REAL_LITERAL; trovato token n° pParams->myToken.Type.\n");
@@ -18199,15 +18193,15 @@ int widthsarrayobjbody(Params *pParams)
 
 // ************************************************************************************************************************
 
-// fontdescriptorobj         : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ fontdescriptorobjbody T_KW_ENDOBJ;
+// fontdescriptorobj: T INT LITERAL T INT LITERAL T KW OBJ fontdescriptorobjbody T KW ENDOBJ;
 int fontdescriptorobj(Params *pParams)
 {
 	if ( T_INT_LITERAL != pParams->myToken.Type )
 	{
 		snprintf(pParams->szError, 8192, "ERRORE fontdescriptorobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE contentfontobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE contentfontobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
+		//wprintf(L"ERRORE contentfontobj: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE contentfontobj: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
 		PrintToken(&(pParams->myToken), '\t', ' ', 1);
 		return 0;
 	}
@@ -18225,8 +18219,8 @@ int fontdescriptorobj(Params *pParams)
 
 	GetNextToken(pParams);
 
-	//if ( !match(pParams, T_INT_LITERAL, "contentfontobj") )
-	//	return 0;
+	//if (!match(pParams, T INT LITERAL, "contentfontobj")
+	// return 0;
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTDESCRIPTOROBJ)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -18250,7 +18244,7 @@ int fontdescriptorobj(Params *pParams)
 	return 1;
 }
 
-// fontdescriptorobjbody     : T_DICT_BEGIN fontdescriptorobjbodydictitems T_DICT_END;
+// fontdescriptorobjbody: T DICT BEGIN fontdescriptorobjbodydictitems T DICT END;
 int fontdescriptorobjbody(Params *pParams)
 {
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTDESCRIPTOROBJ)
@@ -18273,7 +18267,7 @@ int fontdescriptorobjbody(Params *pParams)
 	return 1;
 }
 
-// fontdescriptorobjbodydictitems : {T_NAME fontdescriptorobjkeyvalue};
+// fontdescriptorobjbodydictitems: {T NAME fontdescriptorobjkeyvalue};
 int fontdescriptorobjbodydictitems(Params *pParams)
 {
 	while ( pParams->myToken.Type == T_NAME )
@@ -18293,13 +18287,13 @@ int fontdescriptorobjbodydictitems(Params *pParams)
 	return 1;
 }
 
-//fontdescriptorobjkeyvalue : T_INT_LITERAL [ T_INT_LITERAL T_KW_R ]
+//fontdescriptorobjkeyvalue: T INT LITERAL [T INT LITERAL T KW R]
 //                       | T_REAL_LITERAL
-//                       | T_STRING_LITERAL
-//                       | T_STRING_HEXADECIMAL
+//                       
+//                       
 //                       | T_NAME
 //                       | fontdescriptorobjkeyarray
-//                       | T_DICT_BEGIN fontdescriptorobjkeydict T_DICT_END
+//                       | T DICT BEGIN
 //                       ;
 int fontdescriptorobjkeyvalue(Params *pParams)
 {
@@ -18405,8 +18399,8 @@ int fontdescriptorobjkeyvalue(Params *pParams)
 		default:
 			snprintf(pParams->szError, 8192, "ERRORE fontdescriptorobjkeyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE fontobjcontentkeyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"ERRORE fontobjcontentkeyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
+			//wprintf(L"ERRORE fontobjcontentkeyvalue: Waited for one of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d:\n", pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"ERRORE fontobjcontentkeyvalue: Waited for one of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d:\n", pParams->myToken.Type);
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			return 0;
 			break;
@@ -18415,7 +18409,7 @@ int fontdescriptorobjkeyvalue(Params *pParams)
 	return 1;
 }
 
-// fontdescriptorobjkeyarray : T_QOPAREN { T_INT_LITERAL | T_REAL_LITERAL} T_QCPAREN;
+// fontdescriptorobjkeyarray: T QOPAREN {T INT LITERAL | T REAL LITERAL} T QCPAREN;
 int fontdescriptorobjkeyarray(Params *pParams)
 {
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTDESCRIPTOROBJ)
@@ -18448,7 +18442,7 @@ int fontdescriptorobjkeyarray(Params *pParams)
 	return 1;
 }
 
-// fontdescriptorobjkeydict  : {T_NAME fontdescriptorobjkeyvalue};
+// fontdescriptorobjkeydict: {T NAME fontdescriptorobjkeyvalue};
 int fontdescriptorobjkeydict(Params *pParams)
 {
 	while ( T_NAME == pParams->myToken.Type )
@@ -18466,16 +18460,16 @@ int fontdescriptorobjkeydict(Params *pParams)
 	return 1;
 }
 
-// ********************************************************************** INIZIO ENCRYPT ******************************************************************
+// (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (B
 
-// encryptobj         : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ encryptobjbody T_KW_ENDOBJ;
+// encryptobj: T INT LITERAL T INT LITERAL T KW OBJ encryptobjbody T KW ENDOBJ;
 int encryptobj(Params *pParams)
 {
 	if ( T_INT_LITERAL != pParams->myToken.Type )
 	{
 		snprintf(pParams->szError, 8192, "ERRORE encryptobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//fwprintf(pParams->fpErrors, L"ERRORE encryptobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE encryptobj: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
 		PrintToken(&(pParams->myToken), '\t', ' ', 1);
 		return 0;
 	}
@@ -18491,15 +18485,15 @@ int encryptobj(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE parsing encryptobj: il numero %d specificato nel trailer, non corrisponde col numero corrente -> %d\n", pParams->nObjToParse, pParams->nCurrentObjNum);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE parsing encryptobj: il numero %d specificato nel trailer, non corrisponde col numero corrente -> %d\n", pParams->nObjToParse, pParams->nCurrentObjNum);
-		//fwprintf(pParams->fpErrors, L"ERRORE parsing encryptobj: il numero %d specificato nel trailer, non corrisponde col numero corrente -> %d\n", pParams->nObjToParse, pParams->nCurrentObjNum);
+		//wprintf(L"ERRORE parsing encryptobj: the %d number specified in the trailer, does not correspond with the current number -> %d\n", pParams->nObjToParse, pParams->nCurrentObjNum);
+		//fwprintf(pParams->fpErrors, L"ERRORE parsing encryptobj: the %d number specified in the trailer, does not match the current number -> %d\n", pParams->nObjToParse, pParams->nCurrentObjNum);
 		return 0;
 	}
 
 	GetNextToken(pParams);
 
-	//if ( !match(pParams, T_INT_LITERAL, "encryptobj") )
-	//	return 0;
+	//if (!match(pParams, T INT LITERAL, "encryptobj") )
+	// return 0;
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_ENCRYPT_OBJ)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -18528,7 +18522,7 @@ int encryptobj(Params *pParams)
 	return 1;
 }
 
-// Restituisce il valore numerico di una cifra esadecimale.
+// Returns the numerical value of a hexadecimal number.
 static int PdfEncryptHexDigitValue(unsigned char c)
 {
     if (c >= '0' && c <= '9')
@@ -18543,15 +18537,15 @@ static int PdfEncryptHexDigitValue(unsigned char c)
     return -1;
 }
 
-// Riconosce gli spazi ammessi nelle stringhe esadecimali PDF.
+// Recognizes spaces allowed in hexadecimal strings PDF.
 static int IsPdfEncryptHexWhitespace(unsigned char c)
 {
     return c == 0x00 || c == 0x09 || c == 0x0A ||
            c == 0x0C || c == 0x0D || c == 0x20;
 }
 
-// Copia una stringa letterale oppure converte una stringa esadecimale
-// nei byte reali, senza utilizzare strlen() sui dati binari.
+// Copy a literal string or convert a hexadecimal string
+// in real bytes, without using strlen() on binary data.
 static int CopyEncryptTokenToBytes(
     const Token *pToken,
     unsigned char **ppBytes,
@@ -18584,7 +18578,7 @@ static int CopyEncryptTokenToBytes(
         size_t digits = 0;
         int highNibble = -1;
 
-        // Prima verifica le cifre e calcola la lunghezza binaria.
+        // First check the digits and calculate the binary length.
         for (i = 0; i < (size_t)pToken->vStringLen; ++i)
         {
             unsigned char c = (unsigned char)pToken->vString[i];
@@ -18598,8 +18592,8 @@ static int CopyEncryptTokenToBytes(
             ++digits;
         }
 
-        // Una cifra esadecimale dispari viene completata con uno zero
-        // come nibble meno significativo, secondo la sintassi PDF.
+        // An odd hexadecimal digit is completed with a zero
+        // as less significant nibbles, according to the PDF syntax.
         outLen = (digits + 1U) / 2U;
 
         pBytes = (unsigned char *)malloc(outLen ? outLen : 1U);
@@ -18649,7 +18643,7 @@ static int CopyEncryptTokenToBytes(
     return 1;
 }
 
-// Registra in PdfCryptoParams il valore della chiave principale corrente.
+// Record in PdfCryptoParams the value of the current main key.
 static int StoreEncryptTopLevelValue(Params *pParams, const char *pszKey)
 {
     PdfCryptoParams *cp;
@@ -18665,7 +18659,7 @@ static int StoreEncryptTopLevelValue(Params *pParams, const char *pszKey)
 
     cp = pParams->pCryptoParams;
 
-    // Questi campi appartengono al dizionario principale /Encrypt.
+    // These fields belong to the main /Encrypt dictionary.
     if (strcmp(pszKey, "R") == 0 ||
         strcmp(pszKey, "V") == 0 ||
         strcmp(pszKey, "Length") == 0 ||
@@ -18699,14 +18693,14 @@ static int StoreEncryptTopLevelValue(Params *pParams, const char *pszKey)
         return 1;
     }
 
-    // Registra il filtro crittografico selezionato per gli stream.
+    // Record the selected cryptographic filter for streams.
     if (strcmp(pszKey, "StmF") == 0)
     {
         if (pParams->myToken.Type != T_NAME ||
             pParams->myToken.vString == NULL)
             goto valore_non_valido;
 
-        // Identity indica che gli stream non devono essere decifrati.
+        // Identity indicates that streams should not be deciphered.
         if (strcmp(
                 (const char *)pParams->myToken.vString,
                 "Identity") == 0)
@@ -18714,12 +18708,12 @@ static int StoreEncryptTopLevelValue(Params *pParams, const char *pszKey)
             cp->streamMethod = PDF_CRYPT_NONE;
         }
 
-        // Per un nome diverso da Identity, il metodo /CFM
-        // è stato registrato durante l'analisi del dizionario /CF.
+        // For a name other than Identity, the /CFM method
+        // was recorded during the analysis of the /CF dictionary.
         return 1;
     }
 
-    // Seleziona il buffer corretto per le stringhe binarie.
+    // Select the correct buffer for binary strings.
     if (strcmp(pszKey, "O") == 0)
     {
         ppOwned = &pParams->pCryptoOwnedO;
@@ -18751,7 +18745,7 @@ static int StoreEncryptTopLevelValue(Params *pParams, const char *pszKey)
         pCryptoLen = &cp->lenPerms;
     }
 
-    // Le altre chiavi vengono gestite dal parser, ma non da questo helper.
+    // The other keys are managed by the parser, but not by this helper.
     if (ppOwned == NULL)
         return 1;
 
@@ -18763,7 +18757,7 @@ static int StoreEncryptTopLevelValue(Params *pParams, const char *pszKey)
             &pParams->myToken, &pNewBytes, &newLen))
         goto valore_non_valido;
 
-    // Sostituisce l'eventuale copia precedente solo dopo una copia riuscita.
+    // Replaces the previous copy only after a successful copy.
     free(*ppOwned);
 
     *ppOwned = pNewBytes;
@@ -18787,7 +18781,7 @@ valore_non_valido:
     return 0;
 }
 
-// encryptobjbody     : T_DICT_BEGIN encryptobjdictitems T_DICT_END;
+// encryptobjbody: T DICT BEGIN encryptobjdictitems T DICT END;
 int encryptobjbody(Params *pParams)
 {
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_ENCRYPT_OBJ)
@@ -18810,8 +18804,8 @@ int encryptobjbody(Params *pParams)
 	return 1;
 }
 
-// encryptobjdictitems : T_NAME encryptobjkeyvalue
-//                       { T_NAME encryptobjkeyvalue };
+// encryptobjdictitems: T NAME encryptobjkeyvalue
+//                       { T NAME encryptobjkeyvalue
 int encryptobjdictitems(Params *pParams)
 {
     char szKey[128];
@@ -18821,7 +18815,7 @@ int encryptobjdictitems(Params *pParams)
         if (pParams->myToken.vString == NULL)
             return 0;
 
-        // Copia il nome prima di avanzare: il lexer riutilizza il buffer.
+        // Copy the name before moving: the lexer reuses the buffer.
         snprintf(
             szKey,
             sizeof(szKey),
@@ -18832,11 +18826,11 @@ int encryptobjdictitems(Params *pParams)
         PrintToken(&(pParams->myToken), ' ', ' ', 1);
         #endif
 
-        // Consuma la chiave; il token corrente diventa il suo valore.
+        // Consume the key; the current token becomes its value.
         if (!match(pParams, T_NAME, "encryptobjdictitems"))
             return 0;
 
-        // Registra il valore prima che encryptobjkeyvalue avanzi il lexer.
+        // Record the value before encryptobjkeyvalue advance the lexer.
         if (!StoreEncryptTopLevelValue(pParams, szKey))
             return 0;
 
@@ -18847,11 +18841,11 @@ int encryptobjdictitems(Params *pParams)
     return 1;
 }
 
-// encryptobjkeyvalue : T_INT_LITERAL [ T_INT_LITERAL T_KW_R ]
+// 
 //                           | T_NAME
 //                           | TSTRING_LITERAL
-//                           | T_STRING_HEXADECIMAL
-//   					     | T_KW_TRUE
+//                           
+//             | T KW TRUE
 //                           | T_KW_FALSE
 //                           | encryptobjkeydict
 //                           ;
@@ -18868,7 +18862,7 @@ int encryptobjkeyvalue(Params *pParams)
 
 		case T_STRING_LITERAL:
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_ENCRYPT_OBJ)
-			//PrintToken(&(pParams->myToken), ' ', ' ', 1);
+			//PrintToken(&(pParams->myToken), ', ', ', 1);
 			wprintf(L"\n[DEBUG] T_STRING_LITERAL: ");
 			PrintTokenHex(&(pParams->myToken));
 			wprintf(L"\n");
@@ -18923,7 +18917,7 @@ int encryptobjkeyvalue(Params *pParams)
 	return 1;
 }
 
-// encryptobjkeydict : T_DICT_BEGIN { T_NAME encryptobjkeyvalue } T_DICT_END;
+// encryptobjkeydict: T DICT BEGIN {T NAME encryptobjkeyvalue } T DICT END;
 int encryptobjkeydict(Params *pParams)
 {
     PdfCryptoParams *cp = NULL;
@@ -18940,13 +18934,13 @@ int encryptobjkeydict(Params *pParams)
     if (!match(pParams, T_DICT_BEGIN, "encryptobjkeydict"))
         return 0;
 
-    // Ogni elemento del dizionario è composto da:
-    // T_NAME (chiave) + encryptobjkeyvalue (valore).
+    // Each element of the dictionary is composed of:
+    // T NAME (key) + encryptobjkeyvalue (value).
     while (pParams->myToken.Type == T_NAME)
     {
         int bKeyIsCFM = 0;
 
-        // Memorizza se la chiave corrente è CFM prima di consumarla.
+        // Stores if the current key is CFM before consuming it.
         if (pParams->myToken.vString != NULL &&
             strcmp((const char *)pParams->myToken.vString, "CFM") == 0)
         {
@@ -18957,11 +18951,11 @@ int encryptobjkeydict(Params *pParams)
         PrintToken(&(pParams->myToken), ' ', ' ', 1);
         #endif
 
-        // Consuma la chiave del dizionario.
+        // Consume the dictionary key.
         if (!match(pParams, T_NAME, "encryptobjkeydict"))
             return 0;
 
-        // Dopo match(), myToken contiene il valore associato alla chiave.
+        // After match(), myToken contains the value associated with the key.
         if (bKeyIsCFM)
         {
             const char *pszCFM = NULL;
@@ -18981,7 +18975,7 @@ int encryptobjkeydict(Params *pParams)
 
             pszCFM = (const char *)pParams->myToken.vString;
 
-            // Metodo indicato dal crypt filter.
+            // Method indicated by crypt filter.
             if (strcmp(pszCFM, "None") == 0)
                 cp->streamMethod = PDF_CRYPT_NONE;
             else if (strcmp(pszCFM, "V2") == 0)
@@ -19003,7 +18997,7 @@ int encryptobjkeydict(Params *pParams)
             }
         }
 
-        // Analizza il valore associato alla chiave.
+        // Analyze the value associated with the key.
         if (!encryptobjkeyvalue(pParams))
             return 0;
     }
@@ -19018,9 +19012,9 @@ int encryptobjkeydict(Params *pParams)
     return 1;
 }
 
-// ********************************************************************** FINE ENCRYPT ******************************************************************
+// (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (Bleep) (B
 
-// contentfontobj         : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ contentfontobjbody T_KW_ENDOBJ;
+// contentfontobj: T INT LITERAL T INT LITERAL T KW OBJ contentfontobjbody T KW ENDOBJ
 int contentfontobj(Params *pParams)
 {
 	int k = 0;
@@ -19088,8 +19082,8 @@ int contentfontobj(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE contentfontobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE contentfontobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE contentfontobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
+		//wprintf(L"ERRORE contentfontobj: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE contentfontobj: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
 		PrintToken(&(pParams->myToken), '\t', ' ', 1);
 		return 0;
 	}
@@ -19131,7 +19125,7 @@ int contentfontobj(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontLmWidth = 0.0;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontUmWidth = 0.0;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->WritingMode = WRITING_MODE_HORIZONTAL;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->DW = 1.0; // default del PDF (1000/1000); i font Type0 lo reimpostano
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->DW = 1.0; // PDF default (1000/1000); Type0 fonts reset it
 
 	pParams->nCurrFontWritingMode = WRITING_MODE_HORIZONTAL;
 
@@ -19147,8 +19141,8 @@ int contentfontobj(Params *pParams)
 
 	GetNextToken(pParams);
 
-	//if ( !match(pParams, T_INT_LITERAL, "contentfontobj") )
-	//	return 0;
+	//if (!match(pParams, T INT LITERAL, "contentfontobj")
+	// return 0;
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -19254,7 +19248,7 @@ int contentfontobj(Params *pParams)
 
 				pParams->bEncodigArrayAlreadyInit = 1;
 			}
-			else if ( pParams->szUseCMap[0] != '\0' )   // QUI GESTIONE CMAP PREDEFINITO
+			else if ( pParams->szUseCMap[0] != '\0' )   // 
 			{
 				// Identity-H Identity-V
 				if ( strncmp(pParams->szUseCMap, "Identity-H", strnlen(pParams->szUseCMap, 4096) + 1) == 0 )
@@ -19346,7 +19340,7 @@ int contentfontobj(Params *pParams)
 
 			pParams->pCurrentEncodingArray = &(pParams->paCustomizedFont_CharSet[0]);
 		}
-		else   // QUI GESTIONE CMAP PREDEFINITO
+		else   // 
 		{
 			pParams->pCurrentEncodingArray = &(pParams->paCustomizedFont_CharSet[0]);
 
@@ -19472,7 +19466,7 @@ int contentfontobj(Params *pParams)
 
 			pParams->bEncodigArrayAlreadyInit = 1;
 		}
-		else if ( pParams->szUseCMap[0] != '\0' )   // QUI GESTIONE USECMAP TOUNICODE PREDEFINITO
+		else if ( pParams->szUseCMap[0] != '\0' )   // HER MANAGEMENT
 		{
 			// Identity-H Identity-V
 			if ( strncmp(pParams->szUseCMap, "Identity-H", strnlen(pParams->szUseCMap, 4096) + 1) == 0 )
@@ -19940,7 +19934,7 @@ uscita:
 	return 1;
 }
 
-// contentfontobjbody     : T_DICT_BEGIN fontobjstreamdictitems T_DICT_END;
+// contentfontobjbody: T DICT BEGIN fontobjstreamdictitems T DICT END;
 int contentfontobjbody(Params *pParams)
 {
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
@@ -19963,7 +19957,7 @@ int contentfontobjbody(Params *pParams)
 	return 1;
 }
 
-// fontobjstreamdictitems : {T_NAME fontobjcontentkeyvalue};
+// fontobjstreamdictitems: {T NAME fontobjcontentkeyvalue};
 int fontobjstreamdictitems(Params *pParams)
 {
 	while ( pParams->myToken.Type == T_NAME )
@@ -19986,7 +19980,7 @@ int fontobjstreamdictitems(Params *pParams)
 	return 1;
 }
 
-//fontobjcontentkeyvalue : T_INT_LITERAL [ T_INT_LITERAL T_KW_R ]
+//T INT LITERAL [T INT LITERAL]
 //                       | T_NAME
 //                       | fontobjcontentkeyarray
 //                       | fontobjcontentkeydict
@@ -20189,8 +20183,8 @@ int fontobjcontentkeyvalue(Params *pParams)
 		default:
 			snprintf(pParams->szError, 8192, "ERRORE fontobjcontentkeyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE fontobjcontentkeyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"ERRORE fontobjcontentkeyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
+			//wprintf(L"ERRORE fontobjcontentkeyvalue: Waited for one of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d:\n", pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"ERRORE fontobjcontentkeyvalue: Waited for one of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d:\n", pParams->myToken.Type);
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			return 0;
 			break;
@@ -20199,7 +20193,7 @@ int fontobjcontentkeyvalue(Params *pParams)
 	return 1;
 }
 
-//encodingobjarray              : T_QOPAREN { T_INT_LITERAL T_NAME {T_NAME} } T_QCPAREN;
+//encodingobjarray: T QOPAREN {T INT LITERAL T NAME {T NAME} T QCPAREN;
 int fontdirectencodingobjarray(Params *pParams)
 {
 	int keyValue;
@@ -20232,8 +20226,8 @@ int fontdirectencodingobjarray(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "ERRORE fontdirectencodingobjarray: Atteso T_NAME, trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE fontdirectencodingobjarray: Atteso T_NAME, trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"ERRORE fontdirectencodingobjarray: Atteso T_NAME, trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
+			//wprintf(L"ERRORE fontdirectencodingobjarray: T NAME, found instead TOKEN n° %d:\n", pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"ERRORE fontdirectencodingobjarray: T NAME expected, found instead TOKEN n° %d:\n", pParams->myToken.Type);
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			return 0;
 		}
@@ -20250,7 +20244,7 @@ int fontdirectencodingobjarray(Params *pParams)
 		}
 		else
 		{
-			//wprintf(L"encodingobjarray -> WARNING: KEY '%s' NON TROVATA\n", pParams->myToken.vString);
+			//wprintf(L"encodingobjarray -> WARNING: KEY '%s' NOT TROVATA\n, pParams->myToken.vString);
 			pParams->paCustomizedFont_CharSet[keyValue] = L' ';
 		}
 
@@ -20295,7 +20289,7 @@ int fontdirectencodingobjarray(Params *pParams)
 	return 1;
 }
 
-// fontobjcontentkeyarray : T_QOPAREN { T_INT_LITERAL [T_INT_LITERAL T_KW_R ] | T_REAL_LITERAL} T_QCPAREN;
+// (T INT LITERAL [T INT LITERAL T KW R]
 int fontobjcontentkeyarray(Params *pParams)
 {
 	int n1 = -1;
@@ -20409,17 +20403,17 @@ int fontobjcontentkeyarray(Params *pParams)
 	return 1;
 }
 
-//fontobjcontentkeydict  : T_DICT_BEGIN { T_NAME fontobjcontentkeyvalue } T_DICT_END;
+//fontobjcontentkeydict: T DICT BEGIN {T NAME fontobjcontentkeyvalue } T DICT END;
 int fontobjcontentkeydict(Params *pParams)
 {
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
 	#endif
 
-	// Inutile matchare qui. Già matchato in fontobjcontentkeyvalue
-	//if ( !match(pParams, T_DICT_BEGIN, "fontobjcontentkeydict") )
+	// Needless to match here. Already matchd in fontobjcontentkeyvalue
+	//if (!match(pParams, T DICT BEGIN, "fontobjcontentkeydict")
 	//{
-	//	return 0;
+	// return 0;
 	//}
 	GetNextToken(pParams);
 
@@ -20449,7 +20443,7 @@ int fontobjcontentkeydict(Params *pParams)
 
 // ************************************************************************************************************************
 
-// cidfontobj         : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ cidfontobjbody T_KW_ENDOBJ;
+// T INT LITERAL T INT LITERAL T KW OBJ cidfontobjbody T KW ENDOBJ
 int cidfontobj(Params *pParams)
 {
 	//int k;
@@ -20497,8 +20491,8 @@ int cidfontobj(Params *pParams)
 
 	GetNextToken(pParams);
 
-	//if ( !match(pParams, T_INT_LITERAL, "contentfontobj") )
-	//	return 0;
+	//if (!match(pParams, T INT LITERAL, "contentfontobj")
+	// return 0;
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -20660,12 +20654,12 @@ int cidfontobj(Params *pParams)
 			);
 	#endif
 
-	//uscita:
+	//output:
 
 	return 1;
 }
 
-// cidfontobjbody     : T_DICT_BEGIN cidfontobjdictitems T_DICT_END;
+// cidfontobjbody: T DICT BEGIN cidfontobjdictitems T DICT END;
 int cidfontobjbody(Params *pParams)
 {
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
@@ -20735,7 +20729,7 @@ int cidfontobjbody(Params *pParams)
 	return 1;
 }
 
-// cidfontobjdictitems : {T_NAME cidfontobjkeyvalue};
+// cidfontobjdictitems:
 int cidfontobjdictitems(Params *pParams)
 {
 	pParams->bParsingCIDSystemInfo = 0;
@@ -20802,10 +20796,10 @@ int cidfontobjdictitems(Params *pParams)
 	return 1;
 }
 
-//cidfontobjkeyvalue : T_INT_LITERAL [ T_INT_LITERAL T_KW_R ]
+//T INT LITERAL [T INT LITERAL]
 //                       | T_NAME
-//                       | T_T_STRING_LITERAL
-//                       | T_STRING_HEXADECIMAL
+//                       
+//                       
 //                       | fontobjcontentkeyarray
 //                       | fontobjcontentkeydict
 //                       ;
@@ -20978,16 +20972,16 @@ int cidfontobjkeyvalue(Params *pParams)
 			#endif
 			GetNextToken(pParams);
 
-		//	GetNextToken(pParams);
+		// GetNextToken(pParams);
 			break;
 		case T_QOPAREN:
 			if ( !cidfontobjkeyarray(pParams) )
 				return 0;
 			break;
-		//case T_DICT_BEGIN:
-		//	if ( !cidfontobjkeydict(pParams) )
-		//		return 0;
-		//	break;
+		//T DICT BEGIN houses:
+		// if (!cidfontobjkeydict(pParams) )
+		//  return 0;
+		// break;
 		case T_DICT_BEGIN:
 			if ( strncmp(pParams->szCurrKeyName, "CIDSystemInfo", 1024) == 0 )
 				pParams->bParsingCIDSystemInfo = 1;
@@ -21007,7 +21001,7 @@ int cidfontobjkeyvalue(Params *pParams)
 	return 1;
 }
 
-// cidfontobjkeyarray : T_QOPAREN { T_INT_LITERAL [T_INT_LITERAL T_KW_R ] | T_REAL_LITERAL} T_QCPAREN;
+// T QCPAREN
 int cidfontobjkeyarray(Params *pParams)
 {
 	int n1 = -1;
@@ -21306,7 +21300,7 @@ int cidfontobjkeyarray(Params *pParams)
 							break;
 						}
 
-						// IGNORIAMO I SUCCESSIVI DUE NUMERI v1, v2:
+						// 
 						// v1:
 						#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
 						PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -21381,7 +21375,7 @@ int cidfontobjkeyarray(Params *pParams)
 								pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[k] = dblWidth;
 							}
 
-							// IGNORIAMO I SUCCESSIVI DUE NUMERI v1, v2:
+							// 
 							// v1:
 							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
 							PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -21435,7 +21429,7 @@ int cidfontobjkeyarray(Params *pParams)
 								pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[k] = dblWidth;
 							}
 
-							// IGNORIAMO I SUCCESSIVI DUE NUMERI v1, v2:
+							// 
 							// v1:
 							#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
 							PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -21494,7 +21488,7 @@ int cidfontobjkeyarray(Params *pParams)
 	{
 		if ( T_INT_LITERAL == pParams->myToken.Type )
 		{
-			//dblWidth = (double)pParams->myToken.vInt;
+			//dblWidth = (double)pParams->myToken. vInt;
 			//pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->DW2.v = dblWidth;
 		}
 		else if ( T_REAL_LITERAL == pParams->myToken.Type )
@@ -21549,17 +21543,17 @@ int cidfontobjkeyarray(Params *pParams)
 	return 1;
 }
 
-// cidfontobjkeydict  : T_DICT_BEGIN { T_NAME cidfontobjkeyvalue } T_DICT_END;
+// T DICT BEGIN {T NAME cidfontobjkeyvalue } T DICT END;
 int cidfontobjkeydict(Params *pParams)
 {
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_FONTOBJ)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
 	#endif
 
-	// Inutile matchare qui. Già matchato in fontobjcontentkeyvalue
-	//if ( !match(pParams, T_DICT_BEGIN, "fontobjcontentkeydict") )
+	// Needless to match here. Already matchd in fontobjcontentkeyvalue
+	//if (!match(pParams, T DICT BEGIN, "fontobjcontentkeydict")
 	//{
-	//	return 0;
+	// return 0;
 	//}
 	GetNextToken(pParams);
 
@@ -21591,7 +21585,7 @@ int cidfontobjkeydict(Params *pParams)
 
 // ------------------------------------------------------------------------------------------------------------------------
 
-//encodingobj                   : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ encodingobjbody T_KW_ENDOBJ;
+//encodingobj: T INT LITERAL T INT LITERAL T KW OBJ encodingobjbody T KW ENDOBJ;
 int encodingobj(Params *pParams)
 {
 	int k;
@@ -21607,8 +21601,8 @@ int encodingobj(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE encodingobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE encodingobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE encodingobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
+		//wprintf(L"ERRORE encodingobj: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE encodingobj: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
 		PrintToken(&(pParams->myToken), '\t', ' ', 1);
 		return 0;
 	}
@@ -21620,8 +21614,8 @@ int encodingobj(Params *pParams)
 
 	GetNextToken(pParams);
 
-	//if ( !match(pParams, T_INT_LITERAL, "encodingobj") )
-	//	return 0;
+	//if (!match(pParams, T INT LITERAL, "encodingobj")
+	// return 0;
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_ENCODINGOBJ)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -21688,7 +21682,7 @@ int encodingobj(Params *pParams)
 	return 1;
 }
 
-//encodingobjbody               : T_NAME | T_DICT_BEGIN encodingobjdictitems T_DICT_END;
+//encodingobjbody: T NAME | T DICT BEGIN encodingobjdictitems T DICT END;
 int encodingobjbody(Params *pParams)
 {
 	if ( pParams->myToken.Type == T_NAME )
@@ -21742,8 +21736,8 @@ int encodingobjbody(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE encodingobjbody: Atteso uno di questi token: T_NAME, TDICT_BEGIN; trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE encodingobjbody: Atteso uno di questi token: T_NAME, TDICT_BEGIN; trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
-		//fwprintf(pParams->fpErrors, L"ERRORE encodingobjbody: Atteso uno di questi token: T_NAME, TDICT_BEGIN; trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
+		//wprintf(L"ERRORE encodingobjbody: Waited for one of these tokens: T NAME, TDICT BEGIN; found instead TOKEN n° %d:\n", pParams->myToken.Type);
+		//fwprintf(pParams->fpErrors, L"ERRORE encodingobjbody: Waited for one of these tokens: T NAME, TDICT BEGIN; found instead TOKEN n° %d:\n", pParams->myToken.Type);
 		PrintToken(&(pParams->myToken), ' ', ' ', 1);
 		return 0;
 	}
@@ -21751,7 +21745,7 @@ int encodingobjbody(Params *pParams)
 	return 1;
 }
 
-//encodingobjdictitems          : {T_NAME encodingobjdictitemskeyvalues};
+//encodingobjdictitems:
 int encodingobjdictitems(Params *pParams)
 {
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_ENCODINGOBJ)
@@ -21775,7 +21769,7 @@ int encodingobjdictitems(Params *pParams)
 	return 1;
 }
 
-//encodingobjdictitemskeyvalues : T_NAME
+//encodingobjdictitemskeyvalues: T NAME
 //                              | T_INT_LITERAL
 //                              | encodingobjarray
 //                              ;
@@ -21811,7 +21805,7 @@ int encodingobjdictitemskeyvalues(Params *pParams)
 	return 1;
 }
 
-//encodingobjarray              : T_QOPAREN { T_INT_LITERAL T_NAME {T_NAME} } T_QCPAREN;
+//encodingobjarray: T QOPAREN {T INT LITERAL T NAME {T NAME} T QCPAREN;
 int encodingobjarray(Params *pParams)
 {
 	int keyValue;
@@ -21844,8 +21838,8 @@ int encodingobjarray(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "ERRORE encodingobjarray: Atteso T_NAME, trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE encodingobjarray: Atteso T_NAME, trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"ERRORE encodingobjarray: Atteso T_NAME, trovato invece TOKEN n° %d:\n", pParams->myToken.Type);
+			//wprintf(L"ERRORE encodingobjarray: Atteso T NAME, found instead TOKEN n° %d:\n", pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"ERRORE encodingobjarray: T NAME expected, found instead TOKEN n° %d:\n", pParams->myToken.Type);
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			return 0;
 		}
@@ -21914,15 +21908,15 @@ int encodingobjarray(Params *pParams)
 
 // ************************************************************************************************************************
 
-//xrefstream_obj      : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ xrefstream_objbody T_KW_ENDOBJ;
+//xrefstream obj: T INT LITERAL T INT LITERAL T KW OBJ xrefstream objbody T KW ENDOBJ
 int xrefstream_obj(Params *pParams)
 {
 	pParams->nCountDecodeParams = pParams->nCountFilters = 0;
 
 	pParams->myPdfTrailer.Prev = 0;
-	//pParams->myPdfTrailer.Root.Number = 0;
-	//pParams->myPdfTrailer.Root.Generation = 0;
-	//pParams->myPdfTrailer.Size = 0;
+	//pParams->myPdfTrailer. Root.Number = 0;
+	//pParams->myPdfTrailer. Root.Generation = 0;
+	//pParams->myPdfTrailer. Size = 0;
 
 	pParams->trailerW1 = -1;
 	pParams->trailerW2 = -1;
@@ -21932,8 +21926,8 @@ int xrefstream_obj(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE xrefstream_obj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE xrefstream_obj: la chiave 'Length' e' assente.\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE xrefstream_obj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
+		//wprintf(L"ERRORE xrefstream obj: the key 'Length' is absent. \n);
+		//fwprintf(pParams->fpErrors, L"ERRORE xrefstream obj: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
 		PrintToken(&(pParams->myToken), '\t', ' ', 1);
 		return 0;
 	}
@@ -21945,8 +21939,8 @@ int xrefstream_obj(Params *pParams)
 
 	GetNextToken(pParams);
 
-	//if ( !match(pParams, T_INT_LITERAL, "xrefstream_obj") )
-	//	return 0;
+	//if (!match(pParams, T INT LITERAL, "xrefstream obj")
+	// return 0;
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -21985,7 +21979,7 @@ int xrefstream_obj(Params *pParams)
 
 		snprintf(pParams->szError, 8192, "ERRORE xrefstream_obj: la chiave 'Length' e' assente.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//fwprintf(pParams->fpErrors, L"ERRORE xrefstream_obj: la chiave 'Length' e' assente.\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE xrefstream obj: the 'Length' key is absent. \n);
 		return 0;
 	}
 
@@ -22009,7 +22003,7 @@ int xrefstream_obj(Params *pParams)
 
 		snprintf(pParams->szError, 8192, "ERRORE xrefstream_obj: la chiave 'W' e' assente.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//fwprintf(pParams->fpErrors, L"ERRORE xrefstream_obj: la chiave 'W' e' assente.\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE xrefstream obj: the 'W' key is absent. \n);
 		return 0;
 	}
 	myintqueuelist_Dequeue(&(pParams->queueTrailerW), &(pParams->trailerW3) );
@@ -22037,8 +22031,8 @@ int xrefstream_obj(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "ERRORE refstream_obj: impossibile allocare la memoria per pParams->myPdfTrailer.pIndexArray.\n");
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE refstream_obj: impossibile allocare la memoria per pParams->myPdfTrailer.pIndexArray.\n");
-			//fwprintf(pParams->fpErrors, L"ERRORE refstream_obj: impossibile allocare la memoria per pParams->myPdfTrailer.pIndexArray.\n");
+			//wprintf(L"ERRORE refstream obj: impossible to allocate memory for pParams->myPdfTrailer. pIndexArray. \n);
+			//fwprintf(pParams->fpErrors, L"ERRORE refstream obj: impossible to allocate memory for pParams->myPdfTrailer. pIndexArray. \n);
 			return 0;
 		}
 
@@ -22047,8 +22041,8 @@ int xrefstream_obj(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "ERRORE refstream_obj: impossibile allocare la memoria per pParams->myPdfTrailer.pIndexArray[0].\n");
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE refstream_obj: impossibile allocare la memoria per pParams->myPdfTrailer.pIndexArray[0].\n");
-			//fwprintf(pParams->fpErrors, L"ERRORE refstream_obj: impossibile allocare la memoria per pParams->myPdfTrailer.pIndexArray[0].\n");
+			//wprintf(L"ERRORE refstream obj: impossible to allocate memory for pParams->myPdfTrailer. pIndexArray[0]. \n);
+			//fwprintf(pParams->fpErrors, L"ERRORE refstream obj: impossible to allocate memory for pParams->myPdfTrailer. pIndexArray[0]. \n);
 			return 0;
 		}
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
@@ -22082,7 +22076,7 @@ int xrefstream_obj(Params *pParams)
 
 			snprintf(pParams->szError, 8192, "ERRORE refstream_obj: pParams->myPdfTrailer.pIndexArray deve contenere un numero pari di coppie di interi.\n");
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//fwprintf(pParams->fpErrors, L"ERRORE refstream_obj: pParams->myPdfTrailer.pIndexArray deve contenere un numero pari di coppie di interi.\n");
+			//fwprintf(pParams->fpErrors, L"ERRORE refstream obj: pParams->myPdfTrailer. pIndexArray must contain an equal number of whole pairs. \n);
 			return 0;
 		}
 
@@ -22103,8 +22097,8 @@ int xrefstream_obj(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "ERRORE refstream_obj 1: impossibile allocare la memoria per pParams->myPdfTrailer.pIndexArray.\n");
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE refstream_obj 1: impossibile allocare la memoria per pParams->myPdfTrailer.pIndexArray.\n");
-			//fwprintf(pParams->fpErrors, L"ERRORE refstream_obj 2: impossibile allocare la memoria per pParams->myPdfTrailer.pIndexArray.\n");
+			//wprintf(L"ERRORE refstream obj 1: impossible to allocate memory for pParams->myPdfTrailer. pIndexArray. \n);
+			//fwprintf(pParams->fpErrors, L"ERRORE refstream obj 2: impossible to allocate memory for pParams->myPdfTrailer. pIndexArray. \n);
 			return 0;
 		}
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
@@ -22128,8 +22122,8 @@ int xrefstream_obj(Params *pParams)
 			{
 				snprintf(pParams->szError, 8192, "ERRORE refstream_obj 2: impossibile allocare la memoria per pParams->myPdfTrailer.pIndexArray.\n");
 				myShowErrorMessage(pParams, pParams->szError, 1);
-				//wprintf(L"ERRORE refstream_obj 2: impossibile allocare la memoria per pParams->myPdfTrailer.pIndexArray.\n");
-				//fwprintf(pParams->fpErrors, L"ERRORE refstream_obj 2: impossibile allocare la memoria per pParams->myPdfTrailer.pIndexArray.\n");
+				//wprintf(L"ERRORE refstream obj 2: impossible to allocate memory for pParams->myPdfTrailer. pIndexArray. \n);
+				//fwprintf(pParams->fpErrors, L"ERRORE refstream obj 2: impossible to allocate memory for pParams->myPdfTrailer. pIndexArray. \n);
 				return 0;
 			}
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
@@ -22139,8 +22133,8 @@ int xrefstream_obj(Params *pParams)
 			}
 			#endif
 
-			//pParams->myPdfTrailer.pIndexArray[myIdx]->FirstObjNumber = num1;
-			//pParams->myPdfTrailer.pIndexArray[myIdx]->NumberOfEntries = num2;
+			//pParams->myPdfTrailer. pIndexArray[myIdx]->FirstObjNumber = num1;
+			//pParams->myPdfTrailer. pIndexArray[myIdx]->NumberOfEntries = num2;
 			pParams->myPdfTrailer.pIndexArray[myIdx]->FirstObjNumber = num2;
 			pParams->myPdfTrailer.pIndexArray[myIdx]->NumberOfEntries = num1;
 
@@ -22186,7 +22180,7 @@ int xrefstream_obj(Params *pParams)
 	return 1;
 }
 
-// xrefstream_objbody  : T_DICT_BEGIN xrefstream_streamdictitems T_DICT_END T_KW_STREAM T_STRING T_KW_ENDSTREAM;
+// xrefstream objbody: T DICT BEGIN xrefstream streamdictitems T DICT END T KW STREAM T STREAM T KW ENDSTREAM;
 int xrefstream_objbody(Params *pParams)
 {
 	int retValue = 1;
@@ -22237,8 +22231,8 @@ int xrefstream_objbody(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE xrefstream_objbody: Atteso token T_KW_STREAM, trovato TOKEN n° %d\n", pParams->myToken.Type);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE xrefstream_objbody: Atteso token T_KW_STREAM, trovato TOKEN n° %d\n", pParams->myToken.Type);
-		//fwprintf(pParams->fpErrors, L"ERRORE xrefstream_objbody: Atteso token T_KW_STREAM, trovato TOKEN n° %d\n", pParams->myToken.Type);
+		//wprintf(L"ERRORE xrefstream objbody: T KW STREAM, found TOKEN n° %d\n", pParams->myToken.Type);
+		//fwprintf(pParams->fpErrors, L"ERRORE xrefstream objbody: T KW STREAM, found TOKEN n° %d\n", pParams->myToken.Type);
 		PrintToken(&(pParams->myToken), ' ', ' ', 1);
 		retValue = 0;
 		goto uscita;
@@ -22257,13 +22251,13 @@ int xrefstream_objbody(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE xrefstream_objbody: fseek\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE xrefstream_objbody: fseek\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE xrefstream_objbody: fseek\n");
+		//wprintf(L"ERRORE xrefstream objbody: fseek\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE xrefstream objbody: fseek\n");
 		retValue = 0;
 		goto uscita;
 	}
 	//pos2 = ftell(pParams->fp);
-	//wprintf(L"\n\npos1 = %lu <> pos2 = %lu <> Length = %lu <> pos2 - pos1 = %lu\n\n", pos1, pos2, pParams->CurrentContent.LengthFromPdf, pos2 - pos1);
+	//wprintf(L)\n\npos1 = %lu <> pos2 = %lu <> Length = %lu < pos2 - pos1 = %lu\n\n", pos1, pos2, pParams->CurrentContent.LengthFromPdf, pos2 - pos1);
 
 	pParams->blockLen = fread(pParams->myBlock, 1, BLOCK_SIZE, pParams->fp);
 	if ( pParams->blockLen == 0 )
@@ -22292,8 +22286,8 @@ int xrefstream_objbody(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "ERRORE parsing xrefstream_objbody: il numero di DecodeParams(%d) non coincide col numero di Filters(%d)\n", pParams->nCountDecodeParams, pParams->nCountFilters);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE parsing xrefstream_objbody: il numero di DecodeParams(%d) non coincide col numero di Filters(%d)\n", pParams->nCountDecodeParams, pParams->nCountFilters);
-			//fwprintf(pParams->fpErrors, L"ERRORE parsing xrefstream_objbody: il numero di DecodeParams(%d) non coincide col numero di Filters(%d)\n", pParams->nCountDecodeParams, pParams->nCountFilters);
+			//wprintf(L"ERRORE parsing xrefstream objbody: the number of DecodeParams(%d) does not coincide with the number of Filters(%d)\n", pParams->nCountDecodeParams, pParams->nCountFilters);
+			//fwprintf(pParams->fpErrors, L"ERRORE parsing xrefstream objbody: the number of DecodeParams(%d) does not coincide with the number of Filters(%d)\n", pParams->nCountDecodeParams, pParams->nCountFilters);
 			retValue = 0;
 			goto uscita;
 		}
@@ -22304,7 +22298,7 @@ uscita:
 	return retValue;
 }
 
-// xrefstream_streamdictitems : {T_NAME xrefstream_keyvalue};
+// xrefstream streamdictitems: {T NAME xrefstream keyvalue};
 int xrefstream_streamdictitems(Params *pParams)
 {
 	while ( pParams->myToken.Type ==  T_NAME )
@@ -22346,9 +22340,9 @@ int xrefstream_keyvalue(Params *pParams)
 	int n2 = -1;
 	//int len;
 
-	//pParams->myPdfTrailer.Prev = 0;
-	//pParams->myPdfTrailer.Root = 0;
-	//pParams->myPdfTrailer.Size = 0;
+	//pParams->myPdfTrailer. Prev = 0;
+	//pParams->myPdfTrailer. Root = 0;
+	//pParams->myPdfTrailer. Size = 0;
 
 	switch ( pParams->myToken.Type )
 	{
@@ -22413,8 +22407,8 @@ int xrefstream_keyvalue(Params *pParams)
 					{
 						snprintf(pParams->szError, 8192, "ERRORE xrefstream_keyvalue: ParseLengthObject: streamobj number %d\n", n1);
 						myShowErrorMessage(pParams, pParams->szError, 1);
-						//wprintf(L"ERRORE xrefstream_keyvalue streamobj number %d\n", n1);
-						//fwprintf(pParams->fpErrors, L"ERRORE xrefstream_keyvalue: ParseLengthObject: streamobj number %d\n", n1);
+						//wprintf(L"ERRORE xrefstream keyvalue streamobj number %d\n", n1);
+						//fwprintf(pParams->fpErrors, L"ERRORE xrefstream keyvalue: ParseLengthObject: streamobj number %d\n", n1);
 						return 0;
 					}
 
@@ -22442,8 +22436,8 @@ int xrefstream_keyvalue(Params *pParams)
 				{
 					snprintf(pParams->szError, 8192, "ERRORE xrefstream_keyvalue(bStreamStateToUnicode): Flitri diversi da FlateDecode non supportati in questa versione del programma.\n");
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"ERRORE xrefstream_keyvalue(bStreamStateToUnicode): Flitri diversi da FlateDecode non supportati in questa versione del programma.\n");
-					//fwprintf(pParams->fpErrors, L"ERRORE xrefstream_keyvalue(bStreamStateToUnicode): Flitri diversi da FlateDecode non supportati in questa versione del programma.\n");
+					//wprintf(L"ERRORE xrefstream keyvalue(bStreamStateToUnicode): Fliters other than FlateDecode not supported in this version of the program. \n);
+					//fwprintf(pParams->fpErrors, L"ERRORE xrefstream keyvalue(bStreamStateToUnicode): Fliters other than FlateDecode not supported in this version of the program. \n);
 					return 0;
 				}
 
@@ -22502,8 +22496,8 @@ int xrefstream_keyvalue(Params *pParams)
 		default:
 			snprintf(pParams->szError, 8192, "ERRORE xrefstream_keyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE xrefstream_keyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"ERRORE xrefstream_keyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
+			//wprintf(L"ERRORE xrefstream keyvalue: Waited for one of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d\n", pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"ERRORE xrefstream keyvalue: Waited for one of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d\n", pParams->myToken.Type);
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			return 0;
 			break;
@@ -22512,7 +22506,7 @@ int xrefstream_keyvalue(Params *pParams)
 	return 1;
 }
 
-// xrefstream_keyarray : T_QOPAREN ( {T_INT_LITERAL} | T_STRING_HEXADECIMAL T_STRING_HEXADECIMAL |  {TNAME} | {T_KW_NULL | xrefstream_keydict}) T_QCPAREN;
+// (T INT LITERAL)
 int xrefstream_keyarray(Params *pParams)
 {
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
@@ -22616,8 +22610,8 @@ int xrefstream_keyarray(Params *pParams)
 		default:
 			snprintf(pParams->szError, 8192, "ERRORE xrefstream_keyarray: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_KW_NULL, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE xrefstream_keyarray: Atteso uno di questi token: T_NAME, T_KW_NULL, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"ERRORE xrefstream_keyarray: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_KW_NULL, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
+			//wprintf(L"ERRORE xrefstream keyarray: Waited for one of these tokens: T NAME, T KW NULL, TDICT BEGIN; found instead TOKEN n° %d\n", pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"ERRORE xrefstream keyarray: Waited for one of these tokens: T INT LITERAL, T NAME, T KW NULL, TDICT BEGIN; found instead TOKEN n° %d\n", pParams->myToken.Type);
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			return 0;
 			break;
@@ -22635,7 +22629,7 @@ int xrefstream_keyarray(Params *pParams)
 	return 1;
 }
 
-// xrefstream_keydict  : T_DICT_BEGIN T_NAME xrefstream_keyvalueinternal { T_NAME xrefstream_keyvalueinternal } T_DICT_END;
+// xrefstream keydict: T DICT BEGIN T NAME xrefstream keyvaluein {ternal T NAME xrefstream keyvalueinternal} T DICT END;
 int xrefstream_keydict(Params *pParams)
 {
 	int len = 0;
@@ -22662,8 +22656,8 @@ int xrefstream_keydict(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE xrefstream_keydict: impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE xrefstream_keydict: impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
-		//fwprintf(pParams->fpErrors, L"ERRORE xrefstream_keydict: impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
+		//wprintf(L"ERRORE xrefstream keydict: impossible to allocate %lu bytes memory for pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
+		//fwprintf(pParams->fpErrors, L"ERRORE xrefstream keydict: impossible to allocate %lu bytes memory for pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
 		return 0;
 	}
 	strncpy(pParams->myDataDecodeParams.pszKey, pParams->myToken.vString, len + sizeof(char));
@@ -22690,8 +22684,8 @@ int xrefstream_keydict(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "ERRORE xrefstream_keydict: impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE xrefstream_keydict: impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
-			//fwprintf(pParams->fpErrors, L"ERRORE xrefstream_keydict: impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
+			//wprintf(L"ERRORE xrefstream keydict: impossible to allocate %lu bytes memory for pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
+			//fwprintf(pParams->fpErrors, L"ERRORE xrefstream keydict: impossible to allocate %lu bytes memory for pParams->myDataDecodeParams.pszKey\n", sizeof(char) * len + sizeof(char));
 			return 0;
 		}
 		strncpy(pParams->myDataDecodeParams.pszKey, pParams->myToken.vString, len + sizeof(char));
@@ -22821,8 +22815,8 @@ int xrefstream_keyvalueinternal(Params *pParams)
 		default:
 			snprintf(pParams->szError, 8192, "ERRORE xrefstream_keyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE xrefstream_keyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"ERRORE xrefstream_keyvalue: Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myToken.Type);
+			//wprintf(L"ERRORE xrefstream keyvalue: Waited for one of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d\n", pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"ERRORE xrefstream keyvalue: Waited for one of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d\n", pParams->myToken.Type);
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			return 0;
 			break;
@@ -22831,7 +22825,7 @@ int xrefstream_keyvalueinternal(Params *pParams)
 	return 1;
 }
 
-// xrefstream_keyarrayinternal : T_QOPAREN T_STRING_HEXADECIMAL T_STRING_HEXADECIMAL T_QCPAREN
+// xrefstream keyarrayinternal
 int xrefstream_keyarrayinternal(Params *pParams)
 {
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STREAMOBJ) || defined(MYDEBUG_PRINT_ON_PARSE_XREF_STREAMOBJ)
@@ -22894,8 +22888,8 @@ int getObjStmDataFromDecodedStream(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "\n\nERRORE getObjStmDataFromDecodedStream(num = %u, gen = %u): malloc failed\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"\n\nERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): malloc failed\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
-		//fwprintf(pParams->fpErrors, L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): malloc failed.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
+		//
+		//fwprintf(pParams->fpErrors, L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): malloc failed. \n, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 		retValue = 0;
 		goto uscita;
 	}
@@ -22905,8 +22899,8 @@ int getObjStmDataFromDecodedStream(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE getObjStmDataFromDecodedStream(num = %u, gen = %u): atteso T_INT_LITERAL; trovato carattere(hex) %X.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, cPrev);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): atteso T_INT_LITERAL; trovato carattere(hex) %X.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, cPrev);
-		//fwprintf(pParams->fpErrors, L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): atteso T_INT_LITERAL; trovato carattere(hex) %X.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, cPrev);
+		//wprintf(L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): expected T INT LITERAL; found character(hex) %X. \n, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, cPrev);
+		//fwprintf(pParams->fpErrors, L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): expected T INT LITERAL; found character(hex) %X. \n, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, cPrev);
 		PrintThisObject(pParams, pParams->nCurrentParsingObj, 1, 0, pParams->fpErrors);
 		retValue = 0;
 		goto uscita;
@@ -22930,8 +22924,8 @@ int getObjStmDataFromDecodedStream(Params *pParams)
 			{
 				snprintf(pParams->szError, 8192, "ERRORE getObjStmDataFromDecodedStream(num = %u, gen = %u): atteso T_INT_LITERAL; trovato SPAZIO.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 				myShowErrorMessage(pParams, pParams->szError, 1);
-				//wprintf(L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): atteso T_INT_LITERAL; trovato SPAZIO.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
-				//fwprintf(pParams->fpErrors, L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): atteso T_INT_LITERAL; trovato SPAZIO.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
+				//wprintf(L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): expected T INT LITERAL; found SPAZIO. \n, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
+				//fwprintf(pParams->fpErrors, L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): expected T INT LITERAL; found SPACE. \n, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 				PrintThisObject(pParams, pParams->nCurrentParsingObj, 1, 0, pParams->fpErrors);
 				retValue = 0;
 				goto uscita;
@@ -22948,8 +22942,8 @@ int getObjStmDataFromDecodedStream(Params *pParams)
 				{
 					snprintf(pParams->szError, 8192, "Errore getObjStmDataFromDecodedStream: objNum non valido -> %d; pParams->nObjsTableSizeFromPrescanFile = %u\n", objNum, pParams->nObjsTableSizeFromPrescanFile);
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"Errore getObjStmDataFromDecodedStream: objNum non valido -> %d; pParams->nObjsTableSizeFromPrescanFile = %lu\n", objNum, pParams->nObjsTableSizeFromPrescanFile);
-					//fwprintf(pParams->fpErrors, L"Errore getObjStmDataFromDecodedStream: objNum non valido -> %d; pParams->nObjsTableSizeFromPrescanFile = %lu\n", objNum, pParams->nObjsTableSizeFromPrescanFile);
+					//wprintf(L"Errore getObjStmDataFromDecodedStream: not valid objNum -> %d; pParams->nObjsTableSizeFromPrescanFile = %lu\n", objNum, pParams->nObjsTableSizeFromPrescanFile);
+					//fwprintf(pParams->fpErrors, L"Error getObjStmDataFromDecodedStream: invalid objNum -> %d; pParams->nObjsTableSizeFromPrescanFile = %lu\n", objNum, pParams->nObjsTableS
 					retValue = 0;
 					goto uscita;
 				}
@@ -22974,7 +22968,7 @@ int getObjStmDataFromDecodedStream(Params *pParams)
 					pArray[idx].Generation = idx;   // The object number of the object stream in which this object is stored. (The generation number of the object stream shall be implicitly 0.)
 					pArray[idx].Offset = pParams->nCurrentParsingObj;
 					pArray[idx].StreamOffset = objOffset;
-					//pArray[idx].StreamLength = objOffset - objOffsetPrev;
+					//pArray[idx]. StreamLength = objOffset - objOffsetPrev;
 					pArray[idx].StreamLength = 0;
 					pArray[idx].numObjParent = -1;
 					pArray[idx].genObjParent = 0;
@@ -22983,8 +22977,8 @@ int getObjStmDataFromDecodedStream(Params *pParams)
 				{
 					snprintf(pParams->szError, 8192, "ERRORE getObjStmDataFromDecodedStream(num = %u, gen = %u): N = %d; idx = %u\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->currentObjStm.N, idx);
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): bjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->currentObjStm.pszDecodedStream[k]);
-					//fwprintf(pParams->fpErrors, L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): N = %d; idx = %lu\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->currentObjStm.N, idx);
+					//wprintf(L"ERRORE getObjStmDataFromDecodedStream(num =%lu, gen =%lu): bjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->currentObjStm. pszDecodedStream[k]);
+					//fwprintf(pParams->fpErrors, L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): N = %d; idx = %lu\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]
 					retValue = 0;
 					goto uscita;
 				}
@@ -23000,7 +22994,7 @@ int getObjStmDataFromDecodedStream(Params *pParams)
 		}
 		else
 		{
-			// >>> DUMP dei primi 100 byte per capire cosa c'è dentro <<<
+			// > > DUMP of the first 100 bytes to understand what is inside < <
 			uint32_t dumpLen = pParams->currentObjStm.nDecodedStreamSize < 100 ? pParams->currentObjStm.nDecodedStreamSize : 100;
 
 			wprintf(L"\n=== getObjStmDataFromDecodedStream DUMP ===\n");
@@ -23044,8 +23038,8 @@ int getObjStmDataFromDecodedStream(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE getObjStmDataFromDecodedStream(num = %u, gen = %u): odd numer of integer in ObjStm Decoded Stream.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): odd numer of integer in ObjStm Decoded Stream.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
-		//fwprintf(pParams->fpErrors, L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): odd numer of integer in ObjStm Decoded Stream.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
+		//wprintf(L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): odd number of integer in ObjStm Decoded Stream. \n, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
+		//fwprintf(pParams->fpErrors, L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): odd number of integer in ObjStm Decoded Stream. \n, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 		PrintThisObject(pParams, pParams->nCurrentParsingObj, 1, 0, pParams->fpErrors);
 		retValue = 0;
 		goto uscita;
@@ -23055,8 +23049,8 @@ int getObjStmDataFromDecodedStream(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE getObjStmDataFromDecodedStream(num = %u, gen = %u): NUMERO OGGETTI NON CORRISPONDENTE -> N = %d; idx = %u\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->currentObjStm.N, idx);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): NUMERO OGGETTI NON CORRISPONDENTE -> N = %d; idx = %lu\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->currentObjStm.N, idx);
-		//fwprintf(pParams->fpErrors, L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): NUMERO OGGETTI NON CORRISPONDENTE -> N = %d; idx = %lu\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->currentObjStm.N, idx);
+		//wprintf(L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu):  
+		//fwprintf(pParams->fpErrors, L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu):  
 		retValue = 0;
 		goto uscita;
 	}
@@ -23078,34 +23072,34 @@ int getObjStmDataFromDecodedStream(Params *pParams)
 
 
 
-	//wprintf(L"\n\n%d OBJECTS CONTAINED IN OBJSTM(%lu):\n", pParams->currentObjStm.N, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number);
+	//wprintf(L)\n\n%d OBJECTS CONTAINED IN OBJSTM(%lu):\n", pParams->currentObjStm.N, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number);
 	for ( uint32_t i = 0; i < idx; i++ )
 	{
-		//wprintf(L"\n\tOBJ(%lu %lu): pArray[%lu]->StreamOffset = %lu <> pArray[%lu]->StreamLength = %lu\n", pParams->myObjsTable[pArray[i].Number]->Obj.Number, pParams->myObjsTable[pArray[i].Number]->Obj.Generation, i, pParams->myObjsTable[pArray[i].Number]->Obj.StreamOffset, i, pParams->myObjsTable[pArray[i].Number]->Obj.StreamLength);
+		//wprintf(L"\n\tOBJ(%lu %lu): pArray[%lu]->StreamOffset = %lu < pArray[%lu]->StreamLength = %lu\n", pParams->myObjsTable[pArray]. Number]->Obj.Number, pParams->myObjsTable[pArray[i]. Number]->Obj.Generation, i, pParams->myObjsTable[pArray[i]. Number]->Obj.StreamOffset, i, pParams->myObjsTable[pArray[i]. Number]->Obj.StreamLength);
 
 		if ( NULL == pParams->myObjsTable[pArray[i].Number]->Obj.pszDecodedStream )
 		{
-			//if ( NULL != pParams->myObjsTable[pArray[i].Number]->Obj.pszDecodedStream )
+			//if ( NULL!= pParams->myObjsTable[pArray]. Number)
 			//{
-			//	free(pParams->myObjsTable[pArray[i].Number]->Obj.pszDecodedStream);
-			//	pParams->myObjsTable[pArray[i].Number]->Obj.pszDecodedStream = NULL;
+			// free(pParams->myObjsTable[pArray[i]. Number]->Obj.pszDecodedStream);
+			// pParams->myObjsTable[pArray[i]. Number]->Obj.pszDecodedStream = NULL;
 			//}
 			pParams->myObjsTable[pArray[i].Number]->Obj.pszDecodedStream = (unsigned char*)malloc(sizeof(unsigned char) * pParams->myObjsTable[pArray[i].Number]->Obj.StreamLength);
 			if ( NULL == pParams->myObjsTable[pArray[i].Number]->Obj.pszDecodedStream )
 			{
 				snprintf(pParams->szError, 8192, "ERRORE getObjStmDataFromDecodedStream(num = %u, gen = %u): malloc 2 failed.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 				myShowErrorMessage(pParams, pParams->szError, 1);
-				//wprintf(L"\n\nERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): malloc 2 failed\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
-				//fwprintf(pParams->fpErrors, L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): malloc 2 failed.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
+				//
+				//fwprintf(pParams->fpErrors, L"ERRORE getObjStmDataFromDecodedStream(num = %lu, gen = %lu): malloc 2 failed. \n, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 				retValue = 0;
 				goto uscita;
 			}
 			memcpy(pParams->myObjsTable[pArray[i].Number]->Obj.pszDecodedStream, pParams->currentObjStm.pszDecodedStream + pParams->myObjsTable[pArray[i].Number]->Obj.StreamOffset + k, pParams->myObjsTable[pArray[i].Number]->Obj.StreamLength);
 
-			//wprintf(L"\nStmObj -> ALLOC pParams->myObjsTable[%lu]->Obj.pszDecodedStream\n", pArray[i].Number);
+			//wprintf(L"\nStmObj -> ALLOC pParams->myObjsTable[%lu]->Obj.pszDecodedStream\n", pArray[i]. Number);
 		}
 
-		//PrintThisObject(pParams, pParams->myObjsTable[pArray[i].Number]->Obj.Number, 0, 0, NULL);
+		//PrintThisObject(pParams, pParams->myObjsTable[pArray[i]. Number]->Obj.Number, 0, 0, NULL);
 	}
 	//wprintf(L"\nFine pArray\n\n");
 
@@ -23124,7 +23118,7 @@ uscita:
 	return retValue;
 }
 
-//stmobj      : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ stmobjbody T_KW_ENDOBJ;
+//
 int stmobj(Params *pParams)
 {
 	pParams->nCountDecodeParams = pParams->nCountFilters = 0;
@@ -23133,8 +23127,8 @@ int stmobj(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE stmobj(num = %u, gen = %u): atteso T_INT_LITERAL; trovato token n° %d.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->myToken.Type);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE stmobj: atteso T_INT_LITERAL; trovato token n° pParams->myToken.Type.\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE stmobj(num = %lu, gen = %lu): atteso T_INT_LITERAL; trovato token n° %d.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->myToken.Type);
+		//wprintf(L"ERRORE stmobj: expected T INT LITERAL; found token n° pParams->myToken.Type.\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE stmobj(num = %lu, gen = %lu): expected T INT LITERAL; found token n° %d. \n, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->myToken
 		PrintToken(&(pParams->myToken), '\t', ' ', 1);
 		PrintThisObject(pParams, pParams->nCurrentParsingObj, 0, 0, pParams->fpErrors);
 		return 0;
@@ -23147,8 +23141,8 @@ int stmobj(Params *pParams)
 
 	GetNextToken(pParams);
 
-	//if ( !match(pParams, T_INT_LITERAL, "stmobj") )
-	//	return 0;
+	//if (!match(pParams, T INT LITERAL, "stmobj")
+	// return 0;
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STMOBJ)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -23182,7 +23176,7 @@ int stmobj(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERROR stmobj(num = %u, gne = %u): 'Length' key not found.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE stmobj: la chiave 'Length' e' assente.\n");
+		//wprintf(L"ERRORE stmobj: the key 'Length' is absent. \n);
 		//fwprintf(pParams->fpErrors, L"ERROR stmobj(num = %lu, gne = %lu): 'Length' key not found.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 		PrintThisObject(pParams, pParams->nCurrentParsingObj, 0, 0, pParams->fpErrors);
 		return 0;
@@ -23192,7 +23186,7 @@ int stmobj(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERROR parsing stmobj(num = %u, gen = %u): 'N' key not found.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//fwprintf(pParams->fpErrors, L"ERROR parsing stmobj(num = %d, gen = %d): 'N' key not found.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
+		//fwprintf(pParams->fpErrors, L"ERROR parsing stmobj(num = %d, gen = %d): 'N' key not found. \n, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 		PrintThisObject(pParams, pParams->nCurrentParsingObj, 0, 0, pParams->fpErrors);
 		return 0;
 	}
@@ -23201,7 +23195,7 @@ int stmobj(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERROR parsing stmobj(num = %u, gen = %u): 'First' key not found.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//fwprintf(pParams->fpErrors, L"ERROR parsing stmobj(num = %d, gen = %d): 'First' key not found.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
+		//fwprintf(pParams->fpErrors, L"ERROR parsing stmobj(num = %d, gen = %d): 'First' key not found. \n, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 		PrintThisObject(pParams, pParams->nCurrentParsingObj, 0, 0, pParams->fpErrors);
 		return 0;
 	}
@@ -23215,7 +23209,7 @@ int stmobj(Params *pParams)
 	return 1;
 }
 
-// stmobjbody  : T_DICT_BEGIN stmobjstreamdictitems T_DICT_END T_KW_STREAM T_STRING T_KW_ENDSTREAM;
+// stmobjbody: T DICT BEGIN stmobjstreamdictitems T DICT END T KW STREAM T STREAM T KW ENDSTREAM
 int stmobjbody(Params *pParams)
 {
 	int retValue = 1;
@@ -23226,7 +23220,7 @@ int stmobjbody(Params *pParams)
 	pParams->CurrentContent.LengthFromPdf = 0;
 	pParams->bStreamLengthIsPresent = 0;
 
-	// Memorizza l'identificativo dell'oggetto che contiene lo stream.
+	// Stores the object identifier that contains the stream.
 	pParams->CurrentContent.ObjectNumber =	pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number;
 	pParams->CurrentContent.GenerationNumber =	pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation;
 
@@ -23277,8 +23271,8 @@ int stmobjbody(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE stmobjbody(OBJ num = %u, gen = %u): Atteso token T_KW_STREAM, trovato TOKEN n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->myToken.Type);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE stmobjbody: Atteso token T_KW_STREAM, trovato TOKEN n° %d\n", pParams->myToken.Type);
-		//fwprintf(pParams->fpErrors, L"ERRORE stmobjbody(OBJ num = %lu, gen = %lu): Atteso token T_KW_STREAM, trovato TOKEN n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->myToken.Type);
+		//wprintf(L"ERRORE stmobjbody: T KW STREAM, found TOKEN n° %d\n", pParams->myToken.Type);
+		//fwprintf(pParams->fpErrors, L"ERRORE stmobjbody(OBJ num = %lu, gen = %lu): Atteso token T KW STREAM, found TOKEN n° %dX3X", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams-myObjsTable[pParams->nCurrentParsingObj]
 		PrintToken(&(pParams->myToken), ' ', ' ', 1);
 		retValue = 0;
 		goto uscita;
@@ -23296,7 +23290,7 @@ int stmobjbody(Params *pParams)
 		snprintf(pParams->szError, 8192, "ERRORE stmobjbody(OBJ num = %u, gen = %u): fseek\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 		myShowErrorMessage(pParams, pParams->szError, 1);
 		wprintf(L"ERRORE stmobjbody(OBJ num = %lu, gen = %lu): fseek\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
-		//fwprintf(pParams->fpErrors, L"ERRORE stmobjbody(OBJ num = %lu, gen = %lu): fseek\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
+		//
 		retValue = 0;
 		goto uscita;
 	}
@@ -23328,8 +23322,8 @@ int stmobjbody(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "ERRORE parsing stmobjbody(OBJ num = %u, gen = %u): il numero di DecodeParams(%d) non coincide col numero di Filters(%d)\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->nCountDecodeParams, pParams->nCountFilters);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE parsing stmobjbody(OBJ num = %lu, gen = %lu): il numero di DecodeParams(%d) non coincide col numero di Filters(%d)\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->nCountDecodeParams, pParams->nCountFilters);
-			//fwprintf(pParams->fpErrors, L"ERRORE parsing stmobjbody(OBJ num = %d, gen = %d): il numero di DecodeParams(%d) non coincide col numero di Filters(%d)\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->nCountDecodeParams, pParams->nCountFilters);
+			//
+			//
 			retValue = 0;
 			goto uscita;
 		}
@@ -23340,8 +23334,8 @@ int stmobjbody(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE parsing stmobjbody(OBJ num = %u, gen = %u): getDecodedStream failed.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE parsing stmobjbody(OBJ num = %d, gen = %d): getDecodedStream failed.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
-		//fwprintf(pParams->fpErrors, L"ERRORE parsing stmobjbody(OBJ num = %d, gen = %d): getDecodedStream failed.\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
+		//wprintf(L"ERRORE parsing stmobjbody(OBJ num = %d, gen = %d): getDecodedStream failed. \n, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
+		//fwprintf(pParams->fpErrors, L"ERRORE parsing stmobjbody(OBJ num = %d, gen = %d): getDecodedStream failed. \n, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation);
 		retValue = 0;
 		goto uscita;
 	}
@@ -23353,7 +23347,7 @@ uscita:
 	return retValue;
 }
 
-// stmobjstreamdictitems : {T_NAME stmobjkeyvalue};
+// stmobjstreamdictitems:
 int stmobjstreamdictitems(Params *pParams)
 {
 	while ( pParams->myToken.Type ==  T_NAME )
@@ -23444,8 +23438,8 @@ int stmobjkeyvalue(Params *pParams)
 					{
 						snprintf(pParams->szError, 8192, "ERRORE stmobjkeyvalue(OBJ num = %u, gen = %u) streamobj number %u\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, n1);
 						myShowErrorMessage(pParams, pParams->szError, 1);
-						//wprintf(L"ERRORE stmobjkeyvalue(OBJ num = %lu, gen = %lu) streamobj number %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, n1);
-						//fwprintf(pParams->fpErrors, L"ERRORE stmobjkeyvalue(OBJ num = %lu, gen = %lu) streamobj number %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, n1);
+						//
+						//
 						return 0;
 					}
 
@@ -23457,8 +23451,8 @@ int stmobjkeyvalue(Params *pParams)
 					{
 						snprintf(pParams->szError, 8192, "ERRORE stmobjkeyvalue(OBJ num = %u, gen = %u) streamobj number %u\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, n1);
 						myShowErrorMessage(pParams, pParams->szError, 1);
-						//wprintf(L"ERRORE stmobjkeyvalue(OBJ num = %lu, gen = %lu) streamobj number %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, n1);
-						//fwprintf(pParams->fpErrors, L"ERRORE stmobjkeyvalue(OBJ num = %lu, gen = %lu) streamobj number %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, n1);
+						//
+						//
 						return 0;
 					}
 
@@ -23470,8 +23464,8 @@ int stmobjkeyvalue(Params *pParams)
 					{
 						snprintf(pParams->szError, 8192, "ERRORE stmobjkeyvalue(OBJ num = %u, gen = %u) streamobj number %u\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, n1);
 						myShowErrorMessage(pParams, pParams->szError, 1);
-						//wprintf(L"ERRORE stmobjkeyvalue(OBJ num = %lu, gen = %lu) streamobj number %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, n1);
-						//fwprintf(pParams->fpErrors, L"ERRORE stmobjkeyvalue(OBJ num = %lu, gen = %lu) streamobj number %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, n1);
+						//
+						//
 						return 0;
 					}
 
@@ -23501,21 +23495,21 @@ int stmobjkeyvalue(Params *pParams)
 
 			GetNextToken(pParams);
 			break;
-		case T_STRING_LITERAL: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING_LITERAL: // File Specifications: see PDF3000 2008 on page 99
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_STRING_HEXADECIMAL: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING_HEXADECIMAL: // File Specifications: see PDF3000 2008 on page 99
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			#endif
 			// IGNORIAMO
 			GetNextToken(pParams);
 			break;
-		case T_STRING: // File Specifications: vedi su PDF3000_2008 a pag. 99
+		case T_STRING: // File Specifications: see PDF3000 2008 on page 99
 			// IGNORIAMO
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STMOBJ)
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -23535,8 +23529,8 @@ int stmobjkeyvalue(Params *pParams)
 		default:
 			snprintf(pParams->szError, 8192, "ERRORE stmobjkeyvalue(OBJ num = %u, gen = %u): Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE stmobjkeyvalue(OBJ num = %lu, gen = %lu): Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"ERRORE stmobjkeyvalue(OBJ num = %d, gen = %d): Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->myToken.Type);
+			//wprintf(L"ERRORE stmobjkeyvalue(OBJ num = %lu, gen = %lu): One of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams-my
+			//fwprintf(pParams->fpErrors, L"ERRORE stmobjkeyvalue(OBJ num = %d, gen = %d): One of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams-my
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			return 0;
 			break;
@@ -23545,7 +23539,7 @@ int stmobjkeyvalue(Params *pParams)
 	return 1;
 }
 
-// stmobjkeyarray : T_QOPAREN ( {T_INT_LITERAL} | T_STRING_HEXADECIMAL T_STRING_HEXADECIMAL |  {TNAME} | {T_KW_NULL | xrefstream_keydict}) T_QCPAREN;
+// (T INT LITERAL)
 int stmobjkeyarray(Params *pParams)
 {
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STMOBJ)
@@ -23640,8 +23634,8 @@ int stmobjkeyarray(Params *pParams)
 		default:
 			snprintf(pParams->szError, 8192, "ERRORE stmobjkeyvalue(OBJ num = %u, gen = %u): Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE stmobjkeyarray(OBJ num = %lu, gen = %lu): Atteso uno di questi token: T_NAME, T_KW_NULL, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"ERRORE stmobjkeyarray(OBJ num = %lu, gen = %lu): Atteso uno di questi token: T_NAME, T_KW_NULL, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->myToken.Type);
+			//wprintf(L"ERRORE stmobjkeyarray(OBJ num = %lu, gen = %lu): One of these tokens: T NAME, T KW NULL, TDICT BEGIN; found instead TOKEN n° %dX3X", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[
+			//fwprintf(pParams->fpErrors, L"ERRORE stmobjkeyarray(OBJ num = %lu, gen = %lu): One of these tokens: T NAME, T KW NULL, TDICT BEGIN; found instead TOKEN n° %dX3X", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			return 0;
 			break;
@@ -23655,7 +23649,7 @@ int stmobjkeyarray(Params *pParams)
 	return 1;
 }
 
-// stmobjkeydict  : T_DICT_BEGIN T_NAME stmobjkeyvalueinternal { T_NAME stmobjkeyvalueinternal } T_DICT_END;
+// stmobjkeydict: T DICT BEGIN T NAME stmobjkeyvalueinternal
 int stmobjkeydict(Params *pParams)
 {
 	int len = 0;
@@ -23682,8 +23676,8 @@ int stmobjkeydict(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE stmobjkeydict(OBJ num = %u, gen = %u): impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, sizeof(char) * len + sizeof(char));
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE stmobjkeydict(OBJ num = %lu, gen = %lu): impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, sizeof(char) * len + sizeof(char));
-		//fwprintf(pParams->fpErrors, L"ERRORE stmobjkeydict(OBJ num = %lu, gen = %lu): impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, sizeof(char) * len + sizeof(char));
+		//
+		//
 		return 0;
 	}
 	strncpy(pParams->myDataDecodeParams.pszKey, pParams->myToken.vString, len + sizeof(char));
@@ -23710,8 +23704,8 @@ int stmobjkeydict(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "ERRORE stmobjkeydict(OBJ num = %u, gen = %u): impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, sizeof(char) * len + sizeof(char));
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE stmobjkeydict(OBJ num = %lu, gen = %lu): impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, sizeof(char) * len + sizeof(char));
-			//fwprintf(pParams->fpErrors, L"ERRORE stmobjkeydict(OBJ num = %lu, gen = %lu): impossibile allocare %lu bytes di memoria per pParams->myDataDecodeParams.pszKey\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, sizeof(char) * len + sizeof(char));
+			//
+			//
 			return 0;
 		}
 		strncpy(pParams->myDataDecodeParams.pszKey, pParams->myToken.vString, len + sizeof(char));
@@ -23837,8 +23831,8 @@ int stmobjkeyvalueinternal(Params *pParams)
 		default:
 			snprintf(pParams->szError, 8192, "ERRORE stmobjkeyvalue(OBJ num = %u, gen = %u): Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"ERRORE stmobjkeyvalue(OBJ num = %lu, gen = %lu): Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"ERRORE stmobjkeyvalue(OBJ num = %lu, gen = %lu): Atteso uno di questi token: T_INT_LITERAL, T_NAME, T_QOPAREN, TDICT_BEGIN; trovato invece TOKEN n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation, pParams->myToken.Type);
+			//wprintf(L"ERRORE stmobjkeyvalue(OBJ num = %lu, gen = %lu): One of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams-my
+			//fwprintf(pParams->fpErrors, L"ERRORE stmobjkeyvalue(OBJ num = %lu, gen = %lu): One of these tokens: T INT LITERAL, T NAME, T QOPAREN, TDICT BEGIN; found instead TOKEN n° %d\n", pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number, pParams-my
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
 			return 0;
 			break;
@@ -23847,7 +23841,7 @@ int stmobjkeyvalueinternal(Params *pParams)
 	return 1;
 }
 
-// stmobjkeyarrayinternal : T_QOPAREN T_STRING_HEXADECIMAL T_STRING_HEXADECIMAL T_QCPAREN
+// 
 int stmobjkeyarrayinternal(Params *pParams)
 {
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_STMOBJ)
@@ -23883,7 +23877,7 @@ int stmobjkeyarrayinternal(Params *pParams)
 
 // ******************************************************************************************************************************************
 
-// cot : T_INT_LITERAL T_INT_LITERAL T_KW_OBJ T_DICT_BEGIN cot_dictbody T_DICT_END
+// 
 int cot(Params *pParams)
 {
 	int retValue = 1;
@@ -23895,8 +23889,8 @@ int cot(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "ERRORE cot: atteso T_INT_LITERAL; trovato token n° %d.\n", pParams->myToken.Type);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE cot: atteso T_INT_LITERAL; trovato token n° %d.\n", pParams->myToken.Type);
-		//fwprintf(pParams->fpErrors, L"ERRORE cot: atteso T_INT_LITERAL; trovato token n° %d.\n", pParams->myToken.Type);
+		//wprintf(L"ERRORE cot: expected T INT LITERAL; found token n° %d. \n, pParams->myToken.Type);
+		//fwprintf(pParams->fpErrors, L"ERRORE cot: expected T INT LITERAL; found token n° %d. \n, pParams->myToken.Type);
 		PrintToken(&(pParams->myToken), '\t', ' ', 1);
 		retValue = 0;
 		goto uscita;
@@ -23909,8 +23903,8 @@ int cot(Params *pParams)
 
 	GetNextToken(pParams);
 
-	//if ( !match(pParams, T_INT_LITERAL, "cot") )
-	//	return 0;
+	//if (!match(pParams, T INT LITERAL, "cot")
+	// return 0;
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_COT)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -23928,8 +23922,8 @@ int cot(Params *pParams)
 	PrintToken(&(pParams->myToken), ' ', ' ', 1);
 	#endif
 
-	//if ( !match(pParams, T_DICT_BEGIN, "cot") )
-	//	return 1;   // OBJ_TYPE_IN_USE
+	//if (!match(pParams, T DICT BEGIN, "cot") )
+	// return 1 // OBJ TYPE IN USE
 
 	if ( T_DICT_BEGIN != pParams->myToken.Type )
 		return 1;   // OBJ_TYPE_IN_USE
@@ -23979,16 +23973,16 @@ int cot_dictbody(Params *pParams)
 	return retValue;
 }
 
-// cot_dictbodyitems : T_NAME
-//                   | T_STRING_LITERAL
-//                   | T_STRING_HEXADECIMAL
+// T NAME
+//                   
+//                   
 //                   | T_REAL_LITERAL
 //                   | T_INT_LITERAL [T_INT_LITERAL T_KW_R]
 //                   | T_STRING
 //                   | | T_KW_R
 //                   | T_KW_NULL
 //                   | T_KW_FALSE
-//                   | T_KW_TRUE
+//                   | T KW TRUE
 //                   | T_DICT_BEGIN cot_dictbodyitems T_DICT_END
 //                   | T_QOPAREN cot_dictbodyitems T_QCPAREN
 //                   ;
@@ -24215,39 +24209,39 @@ void setPredefFontsWidthsArray(Params *pParams)
 
 void set_Helvetica(Params *pParams)
 {
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.278; // space ; B 0 0 0 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.278; // exclam ; B 90 0 187 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.355; // quotedbl ; B 70 463 285 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.556; // numbersign ; B 28 0 529 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.556; // dollar ; B 32 -115 520 775 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 0.889; // percent ; B 39 -19 850 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.667; // ampersand ; B 44 -15 645 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.222; // quoteright ; B 53 463 157 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // parenleft ; B 68 -207 299 733 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // parenright ; B 34 -207 265 733 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.389; // asterisk ; B 39 431 349 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.584; // plus ; B 39 0 545 505 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.278; // comma ; B 87 -147 191 106 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.333; // hyphen ; B 44 232 289 322 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.278; // period ; B 87 0 191 106 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // slash ; B -17 -19 295 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.556; // zero ; B 37 -19 519 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.556; // one ; B 101 0 359 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.556; // two ; B 26 0 507 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.556; // three ; B 34 -19 522 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.556; // four ; B 25 0 523 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.556; // five ; B 32 -19 514 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.556; // six ; B 38 -19 518 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.556; // seven ; B 37 0 523 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.556; // eight ; B 38 -19 517 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.556; // nine ; B 42 -19 514 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.278; // colon ; B 87 0 191 516 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.278; // semicolon ; B 87 -147 191 516 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.584; // less ; B 48 11 536 495 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.584; // equal ; B 39 115 545 390 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.584; // greater ; B 48 11 536 495 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.556; // question ; B 56 0 492 727 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 1.015; // at ; B 147 -19 868 737 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.278; // space ; B 0 0 0 0
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.278; // exclam; B 90 0 187 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.355; // B 70 463 285 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.556; // numbersign; B 28 0 529 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.556; // dollar; B 32 -115 520 775;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 0.889; // percentage; B 39 -19 850 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.667; // B 44 -15 645 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.222; // B 53 463 157 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.389; // B 39 431 349 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.584; // plus, B 39 0 545 505;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.278; // subparagraph; B 87 -147 191 106;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.333; // hyphen; B 44 232 289 322;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.278; // period; B 87 0 191 106;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // Slash; B -17 -19 295 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.556; // B 37 -19 519 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.556; // one; B 101 0 359 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.556; // Two; B 26 0 507 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.556; // three; B 34 -19 522 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.556; // Four; B 25 0 523 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.556; // Five; B 32 -19 514 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.556; // 6 ; B 38 -19 518 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.556; // 7; B 37 0 523 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.556; // Eight; B 38 -19 517 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.556; // 9 ; B 42 -19 514 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.278; // B 87 0 191 516;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.278; // B 87 -147 191 516;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.584; // B 48 11 536 495;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.584; // B 39 115 545 390;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.584; // greater; B 48 11 536 495;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.556; // question: B 56 0 492 727;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 1.015; // at; B 147 -19 868 737;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[65] = 0.667; // A ; B 14 0 654 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[66] = 0.667; // B ; B 74 0 627 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[67] = 0.722; // C ; B 44 -19 681 737 ;
@@ -24274,18 +24268,18 @@ void set_Helvetica(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[88] = 0.667; // X ; B 19 0 648 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[89] = 0.667; // Y ; B 14 0 653 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[90] = 0.611; // Z ; B 23 0 588 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.278; // bracketleft ; B 63 -196 250 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.278; // backslash ; B -17 -19 295 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.278; // bracketright ; B 28 -196 215 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.469; // asciicircum ; B -14 264 483 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.556; // underscore ; B 0 -125 556 -75 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.222; // quoteleft ; B 65 470 169 725 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.278; // B 63 -196 250 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.278; // B -17 -19 295 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.278; // bracketright; B 28 -196 215 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.469; // B -14 264 483 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.556; // B 0 -125 556 -75;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.222; // quotaleft; B 65 470 169 725;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[97] = 0.556; // a ; B 36 -15 530 538 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[98] = 0.556; // b ; B 58 -15 517 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[99] = 0.500; // c ; B 30 -15 477 538 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[100] = 0.556; // d ; B 35 -15 499 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[101] = 0.556; // e ; B 40 -15 516 538 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.278; // f ; B 14 0 262 728 ; L i fi ; L l fl ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.278; // f; B 14 0 262 728; L fl; L fl;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[103] = 0.556; // g ; B 40 -220 499 538 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[104] = 0.556; // h ; B 65 0 491 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[105] = 0.222; // i ; B 67 0 155 718 ;
@@ -24306,101 +24300,101 @@ void set_Helvetica(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[120] = 0.500; // x ; B 11 0 490 523 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[121] = 0.500; // y ; B 11 -214 489 523 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[122] = 0.500; // z ; B 31 0 469 523 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.334; // braceleft ; B 42 -196 292 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.260; // bar ; B 94 -225 167 775 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.334; // braceright ; B 42 -196 292 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.584; // asciitilde ; B 61 180 523 326 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.333; // exclamdown ; B 118 -195 215 523 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.556; // cent ; B 51 -115 513 623 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.556; // sterling ; B 33 -16 539 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction ; B -166 -19 333 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.556; // yen ; B 3 0 553 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.556; // florin ; B -11 -207 501 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.556; // section ; B 43 -191 512 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.556; // currency ; B 28 99 528 603 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.191; // quotesingle ; B 59 463 132 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.333; // quotedblleft ; B 38 470 307 725 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 0.556; // guillemotleft ; B 97 108 459 446 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.333; // guilsinglleft ; B 88 108 245 446 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.333; // guilsinglright ; B 88 108 245 446 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.500; // fi ; B 14 0 434 728 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.500; // fl ; B 14 0 432 728 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.556; // endash ; B 0 240 556 313 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.556; // dagger ; B 43 -159 514 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.556; // daggerdbl ; B 43 -159 514 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.278; // periodcentered ; B 77 190 202 315 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.537; // paragraph ; B 18 -173 497 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.350; // bullet ; B 18 202 333 517 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.222; // quotesinglbase ; B 53 -149 157 106 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.333; // quotedblbase ; B 26 -149 295 106 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.333; // quotedblright ; B 26 463 295 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.556; // guillemotright ; B 97 108 459 446 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 1.000; // ellipsis ; B 115 0 885 106 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 1.000; // perthousand ; B 7 -19 994 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.611; // questiondown ; B 91 -201 527 525 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.333; // grave ; B 14 593 211 734 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.333; // acute ; B 122 593 319 734 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.333; // circumflex ; B 21 593 312 734 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.333; // tilde ; B -4 606 337 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.333; // macron ; B 10 627 323 684 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.333; // breve ; B 13 595 321 731 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.333; // dotaccent ; B 121 604 212 706 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.333; // dieresis ; B 40 604 293 706 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.333; // ring ; B 75 572 259 756 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.333; // cedilla ; B 45 -225 259 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.333; // hungarumlaut ; B 31 593 409 734 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.333; // ogonek ; B 73 -225 287 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.333; // caron ; B 21 593 312 734 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 1.000; // emdash ; B 0 240 1000 313 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 1.000; // AE ; B 8 0 951 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.370; // ordfeminine ; B 24 405 346 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.556; // Lslash ; B -20 0 537 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.778; // Oslash ; B 39 -19 740 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 1.000; // OE ; B 36 -19 965 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.365; // ordmasculine ; B 25 405 341 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.889; // ae ; B 36 -15 847 538 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.278; // dotlessi ; B 95 0 183 523 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.222; // lslash ; B -20 0 242 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.611; // oslash ; B 28 -22 537 545 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.944; // oe ; B 35 -15 902 538 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.611; // germandbls ; B 67 -15 571 728 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.334; // B 42 -196 292 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.260; // bar; B 94 -225 167 775;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.334; // B 42 -196 292 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.584; // B 61 180 523 326
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.333; // exclamdown; B 118 -195 215 523;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.556; // B 51 -115 513 623;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.556; // B 33-16 539 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction; B -166 -19 333 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.556; // B 3 0 553 688
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.556; // B -11 -207 501 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.556; // section; B 43 -191 512 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.556; // currency; B 28 99 528 603;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.191; // B 59 463 132 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.333; // B 38 470 307 725;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 0.556; // B 97 108 459 446;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.333; // B 88 108 245 446;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.333; // B 88 108 245 446;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.500; // B 14 0 434 728;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.500; // fl; B 14 0 432 728;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.556; // endash; B 0 240 556 313;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.556; // B 43 -159 514 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.556; // B 43 -159 514 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.278; // periodcentered; B 77 190 202 315;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.537; // Section B 18 -173 497 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.350; // B 18 202 333 517;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.222; // B 53 -149 157 106;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.333; // B 26 -149 295 106;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.333; // B 26 463 295 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.556; // B 97 108 459 446;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 1.000; // ellipsis; B 115 0 885 106;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 1.000; // B 7 -19 994 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.611; // questiondown; B 91 -201 527 525;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.333; // B 14 593 211 734;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.333; // B 122 593 319 734;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.333; // circumflex; B 21 593 312 734;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.333; // B -4 606 337 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.333; // macron; B 10 627 323 684;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.333; // B 13 595 321 731;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.333; // B 40 604 293 706;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.333; // ring; B 75 572 259 756;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.333; // B 45 -225 259 0;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.333; // B 31 593 409 734;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.333; // B 73 -225 287 0
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.333; // B 21 593 312 734;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 1.000; // B 0 240 1000 313;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 1.000; // AE; B 8 0 951 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.370; // B 24 405 346 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.556; // B -20 0 537 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.778; // Oslash, B 39 -19 740 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 1.000; // OE; B 36 -19 965 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.365; // B 25 405 341 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.889; // B 36 -15 847 538;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.278; // B 95 0 183 523;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.222; // B -20 0 242 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.611; // B 28 -22 537 545;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.944; // B 35 -15 902 538;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.611; // Germandbls; B 67 -15 571 728;
 }
 
 void set_Helvetica_Bold(Params *pParams)
 {
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.278; // N space ; B 0 0 0 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.333; // exclam ; B 90 0 244 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.474; // quotedbl ; B 98 447 376 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.556; // numbersign ; B 18 0 538 698 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.556; // dollar ; B 30 -115 523 775 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 0.889; // percent ; B 28 -19 861 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.722; // ampersand ; B 54 -19 701 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.278; // quoteright ; B 69 445 209 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // parenleft ; B 35 -208 314 734 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // parenright ; B 19 -208 298 734 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.389; // asterisk ; B 27 387 362 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.584; // plus ; B 40 0 544 506 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.278; // comma ; B 64 -168 214 146 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.333; // hyphen ; B 27 215 306 345 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.278; // period ; B 64 0 214 146 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // slash ; B -33 -19 311 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.556; // zero ; B 32 -19 524 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.556; // one ; B 69 0 378 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.556; // two ; B 26 0 511 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.556; // three ; B 27 -19 516 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.556; // four ; B 27 0 526 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.556; // five ; B 27 -19 516 698 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.556; // six ; B 31 -19 520 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.556; // seven ; B 25 0 528 698 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.556; // eight ; B 32 -19 524 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.556; // nine ; B 30 -19 522 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.333; // colon ; B 92 0 242 512 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.333; // semicolon ; B 92 -168 242 512 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.584; // less ; B 38 -8 546 514 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.584; // equal ; B 40 87 544 419 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.584; // greater ; B 38 -8 546 514 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.611; // question ; B 60 0 556 727 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 0.975; // at ; B 118 -19 856 737 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.278; // N space; B 0 0 0 0
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.333; // exclam; B 90 0 244 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.474; // B 98 447 376 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.556; // numbersign; B 18 0 538 698;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.556; // dollar; B 30 -115 523 775;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 0.889; // percentage; B 28 -19 861 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.722; // B 54 -19 701 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.278; // B 69 445 209 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.389; // asterisk; B 27 387 362 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.584; // plus B 40 0 544 506;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.278; // subparagraph; B 64 -168 214 146;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.333; // hyphen; B 27 215 306 345;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.278; // period; B 64 0 214 146;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // Slash; B -33 -19 311 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.556; // No, B 32 -19 524 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.556; // one; B 69 0 378 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.556; // Two; B 26 0 511 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.556; // three; B 27 -19 516 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.556; // Four; B 27 0 526 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.556; // Five; B 27 -19 516 698;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.556; // 6 ; B 31 -19 520 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.556; // 7; B 25 0 528 698;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.556; // eight; B 32 -19 524 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.556; // 9 ; B 30 -19 522 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.333; // B 92 0 242 512;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.333; // B 92 -168 242 512;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.584; // B 38 -8 546 514;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.584; // B 40 87 544 419;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.584; // greater; B 38 -8 546 514;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.611; // question: B 60 0 556 727;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 0.975; // at; B 118 -19 856 737;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[65] = 0.722; // A ; B 20 0 702 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[66] = 0.722; // B ; B 76 0 669 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[67] = 0.722; // C ; B 44 -19 684 737 ;
@@ -24427,18 +24421,18 @@ void set_Helvetica_Bold(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[88] = 0.667; // X ; B 14 0 653 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[89] = 0.667; // Y ; B 15 0 653 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[90] = 0.611; // Z ; B 25 0 586 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.333; // bracketleft ; B 63 -196 309 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.278; // backslash ; B -33 -19 311 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.333; // bracketright ; B 24 -196 270 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.584; // asciicircum ; B 62 323 522 698 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.556; // underscore ; B 0 -125 556 -75 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.278; // quoteleft ; B 69 454 209 727 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.333; // B 63 -196 309 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.278; // backslash; B -33 -19 311 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.333; // bracketright; B 24 -196 270 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.584; // B 62 323 522 698;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.556; // B 0 -125 556 -75;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.278; // quotaleft; B 69 454 209 727;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[97] = 0.556; // a ; B 29 -14 527 546 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[98] = 0.611; // b ; B 61 -14 578 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[99] = 0.556; // c ; B 34 -14 524 546 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[100] = 0.611; // d ; B 34 -14 551 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[101] = 0.556; // e ; B 23 -14 528 546 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.333; // f ; B 10 0 318 727 ; L i fi ; L l fl ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.333; // f; B 10 0 318 727; L fl; L fl;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[103] = 0.611; // g ; B 40 -217 553 546 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[104] = 0.611; // h ; B 65 0 546 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[105] = 0.278; // i ; B 69 0 209 725 ;
@@ -24459,101 +24453,101 @@ void set_Helvetica_Bold(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[120] = 0.556; // x ; B 15 0 541 532 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[121] = 0.556; // y ; B 10 -214 539 532 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[122] = 0.500; // z ; B 20 0 480 532 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.389; // braceleft ; B 48 -196 365 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.280; // bar ; B 84 -225 196 775 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.389; // braceright ; B 24 -196 341 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.584; // asciitilde ; B 61 163 523 343 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.333; // exclamdown ; B 90 -186 244 532 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.556; // cent ; B 34 -118 524 628 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.556; // sterling ; B 28 -16 541 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction ; B -170 -19 336 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.556; // yen ; B -9 0 565 698 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.556; // florin ; B -10 -210 516 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.556; // section ; B 34 -184 522 727 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.556; // currency ; B -3 76 559 636 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.238; // quotesingle ; B 70 447 168 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.500; // quotedblleft ; B 64 454 436 727 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 0.556; // guillemotleft ; B 88 76 468 484 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.333; // guilsinglleft ; B 83 76 250 484 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.333; // guilsinglright ; B 83 76 250 484 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.611; // fi ; B 10 0 542 727 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.611; // fl ; B 10 0 542 727 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.556; // endash ; B 0 227 556 333 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.556; // dagger ; B 36 -171 520 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.556; // daggerdbl ; B 36 -171 520 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.278; // periodcentered ; B 58 172 220 334 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.556; // paragraph ; B -8 -191 539 700 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.350; // bullet ; B 10 194 340 524 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.278; // quotesinglbase ; B 69 -146 209 127 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.500; // quotedblbase ; B 64 -146 436 127 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.500; // quotedblright ; B 64 445 436 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.556; // guillemotright ; B 88 76 468 484 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 1.000; // ellipsis ; B 92 0 908 146 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 1.000; // perthousand ; B -3 -19 1003 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.611; // questiondown ; B 55 -195 551 532 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.333; // grave ; B -23 604 225 750 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.333; // acute ; B 108 604 356 750 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.333; // circumflex ; B -10 604 343 750 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.333; // tilde ; B -17 610 350 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.333; // macron ; B -6 604 339 678 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.333; // breve ; B -2 604 335 750 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.333; // dotaccent ; B 104 614 230 729 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.333; // dieresis ; B 6 614 327 729 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.333; // ring ; B 59 568 275 776 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.333; // cedilla ; B 6 -228 245 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.333; // hungarumlaut ; B 9 604 486 750 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.333; // ogonek ; B 71 -228 304 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.333; // caron ; B -10 604 343 750 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 1.000; // emdash ; B 0 227 1000 333 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 1.000; // AE ; B 5 0 954 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.370; // ordfeminine ; B 22 401 347 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.611; // Lslash ; B -20 0 583 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.778; // Oslash ; B 33 -27 744 745 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 1.000; // OE ; B 37 -19 961 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.365; // ordmasculine ; B 6 401 360 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.889; // ae ; B 29 -14 858 546 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.278; // dotlessi ; B 69 0 209 532 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.278; // lslash ; B -18 0 296 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.611; // oslash ; B 22 -29 589 560 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.944; // oe ; B 34 -14 912 546 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.611; // germandbls ; B 69 -14 579 731 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.389; // B 48 -196 365 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.280; // bar; B 84 -225 196 775;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.389; // B 24 -196 341 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.584; // B 61 163 523 343;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.333; // exclamdown; B 90 -186 244 532;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.556; // B 34 -118 524 628;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.556; // B 28 -16 541 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction; B -170 -19 336 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.556; // Yen ; B -9 0 565 698;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.556; // B -10 -210 516 737 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.556; // section; B 34 -184 522 727;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.556; // currency; B -3 76 559 636;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.238; // B 70 447 168 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.500; // B 64 454 436 727;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 0.556; // B 88 76 468 484;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.333; // B 83 76 250 484
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.333; // B 83 76 250 484
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.611; // B 10 0 542 727;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.611; // B 10 0 542 727;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.556; // endash; B 0 227 556 333;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.556; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.556; // B 36 -171 520 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.278; // periodcentered; B 58 172 220 334;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.556; // Section B -8 -191 539 700;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.350; // bullet; B 10 194 340 524;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.278; // B 69 -146 209 127;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.500; // B 64 -146 436 127;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.500; // B 64 445 436 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.556; // B 88 76 468 484;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 1.000; // B 92 0 908 146
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 1.000; // B -3 -19 1003 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.611; // questiondown; B 55 -195 551 532;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.333; // B -23 604 225 750;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.333; // B 108 604 356 750;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.333; // circumflex ; B -10 604 343 750;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.333; // B -17 610 350 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.333; // macron; B -6 604 339 678;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.333; // B -2 604 335 750;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.333; // B 104 614 230 729;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.333; // dieresis; B 6 614 327 729;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.333; // B 59 568 275 776
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.333; // B 9 604 486 750;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.333; // B 71 -228 304 0;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.333; // B -10 604 343 750
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 1.000; // B 0 227 1000 333;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 1.000; // B 5 0 954 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.370; // B 22 401 347 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.611; // B -20 0 583 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.778; // Oslash; B 33 -27 744 745;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 1.000; // OE; B 37 -19 961 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.365; // B 6 401 360 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.889; // B 29 -14 858 546;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.278; // B 69 0 209 532
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.278; // B -18 0 296 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.611; // B 22 -29 589 560;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.944; // B 34 -14 912 546;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.611; // B 69 -14 579 731;
 }
 
 void set_Helvetica_BoldOblique(Params *pParams)
 {
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.278; // space ; B 0 0 0 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.333; // exclam ; B 94 0 397 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.474; // quotedbl ; B 193 447 529 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.556; // numbersign ; B 60 0 644 698 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.556; // dollar ; B 67 -115 622 775 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 0.889; // percent ; B 136 -19 901 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.722; // ampersand ; B 89 -19 732 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.278; // quoteright ; B 167 445 362 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // parenleft ; B 76 -208 470 734 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // parenright ; B -25 -208 369 734 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.389; // asterisk ; B 146 387 481 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.584; // plus ; B 82 0 610 506 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.278; // comma ; B 28 -168 245 146 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.333; // hyphen ; B 73 215 379 345 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.278; // period ; B 64 0 245 146 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // slash ; B -37 -19 468 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.556; // zero ; B 86 -19 617 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.556; // one ; B 173 0 529 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.556; // two ; B 26 0 619 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.556; // three ; B 65 -19 608 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.556; // four ; B 60 0 598 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.556; // five ; B 64 -19 636 698 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.556; // six ; B 85 -19 619 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.556; // seven ; B 125 0 676 698 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.556; // eight ; B 69 -19 616 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.556; // nine ; B 78 -19 615 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.333; // colon ; B 92 0 351 512 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.333; // semicolon ; B 56 -168 351 512 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.584; // less ; B 82 -8 655 514 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.584; // equal ; B 58 87 633 419 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.584; // greater ; B 36 -8 609 514 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.611; // question ; B 165 0 671 727 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 0.975; // at ; B 186 -19 954 737 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.278; // space ; B 0 0 0 0
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.333; // exclam; B 94 0 397 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.474; // Sharedbl; B 193 447 529 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.556; // numbersign; B 60 0 644 698;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.556; // dollar; B 67 -115 622 775;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 0.889; // percentage; B 136 -19 901 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.722; // B 89 -19 732 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.278; // B 167 445 362 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.389; // B 146 387 481 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.584; // plus; B 82 0 610 506;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.278; // subparagraph; B 28 -168 245 146;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.333; // hyphen; B 73 215 379 345;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.278; // period; B 64 0 245 146;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // Slash; B -37 -19 468 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.556; // No, B 86 -19 617 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.556; // one; B 173 0 529 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.556; // Two; B 26 0 619 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.556; // three; B 65 -19 608 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.556; // Four; B 60 0 598 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.556; // Five; B 64 -19 636 698;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.556; // Six; B 85 -19 619 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.556; // 7; B 125 0 676 698;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.556; // Eight; B 69 -19 616 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.556; // 9 ; B 78 -19 615 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.333; // B 92 0 351 512;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.333; // B 56-168 351 512;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.584; // B 82 -8 655 514 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.584; // B 58 87 633 419;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.584; // greater; B 36 -8 609 514;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.611; // question ; B 165 0 671 727;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 0.975; // at; B 186 -19 954 737;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[65] = 0.722; // A ; B 20 0 702 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[66] = 0.722; // B ; B 76 0 764 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[67] = 0.722; // 
@@ -24580,18 +24574,18 @@ void set_Helvetica_BoldOblique(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[88] = 0.667; // X ; B 14 0 791 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[89] = 0.667; // Y ; B 168 0 806 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[90] = 0.611; // Z ; B 25 0 737 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.333; // bracketleft ; B 21 -196 462 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.278; // backslash ; B 124 -19 307 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.333; // bracketright ; B -18 -196 423 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.584; // asciicircum ; B 131 323 591 698 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.556; // underscore ; B -27 -125 540 -75 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.278; // quoteleft ; B 165 454 361 727 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.333; // bracketleft; B 21 -196 462 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.278; // backslash; B 124 -19 307 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.333; // B -18 -196 423 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.584; // B 131 323 591 698;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.556; // B -27 -125 540 -75;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.278; // quotaleft; B 165 454 361 727;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[97] = 0.556; // a ; B 55 -14 583 546 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[98] = 0.611; // b ; B 61 -14 645 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[99] = 0.556; // c ; B 79 -14 599 546 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[100] = 0.611; // d ; B 82 -14 704 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[101] = 0.556; // e ; B 70 -14 593 546 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.333; // f ; B 87 0 469 727 ; L i fi ; L l fl ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.333; // (f) B 87 0 469 727; L fl;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[103] = 0.611; // g ; B 38 -217 666 546 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[104] = 0.611; // h ; B 65 0 629 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[105] = 0.278; // i ; B 69 0 363 725 ;
@@ -24612,101 +24606,101 @@ void set_Helvetica_BoldOblique(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[120] = 0.556; // x ; B 15 0 648 532 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[121] = 0.556; // y ; B 42 -214 652 532 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[122] = 0.500; // z ; B 20 0 583 532 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.389; // braceleft ; B 94 -196 518 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.280; // bar ; B 36 -225 361 775 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.389; // braceright ; B -18 -196 407 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.584; // asciitilde ; B 115 163 577 343 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.333; // exclamdown ; B 50 -186 353 532 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.556; // cent ; B 79 -118 599 628 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.556; // sterling ; B 50 -16 635 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction ; B -174 -19 487 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.556; // yen ; B 60 0 713 698 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.556; // florin ; B -50 -210 669 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.556; // section ; B 61 -184 598 727 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.556; // currency ; B 27 76 680 636 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.238; // quotesingle ; B 165 447 321 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.500; // quotedblleft ; B 160 454 588 727 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 0.556; // guillemotleft ; B 135 76 571 484 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.333; // guilsinglleft ; B 130 76 353 484 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.333; // guilsinglright ; B 99 76 322 484 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.611; // fi ; B 87 0 696 727 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.611; // fl ; B 87 0 695 727 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.556; // endash ; B 48 227 627 333 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.556; // dagger ; B 118 -171 626 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.556; // daggerdbl ; B 46 -171 628 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.278; // periodcentered ; B 110 172 276 334 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.556; // paragraph ; B 98 -191 688 700 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.350; // bullet ; B 83 194 420 524 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.278; // quotesinglbase ; B 41 -146 236 127 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.500; // quotedblbase ; B 36 -146 463 127 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.500; // quotedblright ; B 162 445 589 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.556; // guillemotright ; B 104 76 540 484 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 1.000; // ellipsis ; B 92 0 939 146 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 1.000; // perthousand ; B 76 -19 1038 710 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.611; // questiondown ; B 53 -195 559 532 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.333; // grave ; B 136 604 353 750 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.333; // acute ; B 236 604 515 750 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.333; // circumflex ; B 118 604 471 750 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.333; // tilde ; B 113 610 507 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.333; // macron ; B 122 604 483 678 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.333; // breve ; B 156 604 494 750 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.333; // dotaccent ; B 235 614 385 729 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.333; // dieresis ; B 137 614 482 729 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.333; // ring ; B 200 568 420 776 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.333; // cedilla ; B -37 -228 220 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.333; // hungarumlaut ; B 137 604 645 750 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.333; // ogonek ; B 41 -228 264 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.333; // caron ; B 149 604 502 750 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 1.000; // emdash ; B 48 227 1071 333 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 1.000; // AE ; B 5 0 1100 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.370; // ordfeminine ; B 125 401 465 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.611; // Lslash ; B 34 0 611 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.778; // Oslash ; B 35 -27 894 745 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 1.000; // OE ; B 99 -19 1114 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.365; // ordmasculine ; B 123 401 485 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.889; // ae ; B 56 -14 923 546 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.278; // dotlessi ; B 69 0 322 532 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.278; // lslash ; B 40 0 407 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.611; // oslash ; B 22 -29 701 560 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.944; // oe ; B 82 -14 977 546 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.611; // germandbls ; B 69 -14 657 731 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.389; // B 94 -196 518 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.280; // bar; B 36 -225 361 775;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.389; // B -18 -196 407 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.584; // B 115 163 577 343;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.333; // exclamdown; B 50 -186 353 532;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.556; // B 79 -118 599 628;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.556; // B 50 -16 635 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction; B -174 -19 487 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.556; // B 60 0 713 698
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.556; // B -50 -210 669 737 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.556; // section; B 61 -184 598 727;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.556; // currency; B 27 76 680 636;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.238; // B 165 447 321 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.500; // B 160 454 588 727;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 0.556; // B 135 76 571 484
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.333; // B 130 76 353 484
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.333; // B 99 76 322 484
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.611; // B 87 0 696 727;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.611; // B 87 0 695 727;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.556; // endash; B 48 227 627 333;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.556; // B 118 -171 626 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.556; // B 46 -171 628 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.278; // periodcentered; B 110 172 276 334;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.556; // Section B 98 -191 688 700;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.350; // bullet; B 83 194 420 524;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.278; // B 41 -146 236 127;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.500; // B 36 -146 463 127;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.500; // B 162 445 589 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.556; // B 104 76 540 484
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 1.000; // B 92 0 939 146
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 1.000; // B 76 -19 1038 710;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.611; // questiondown; B 53 -195 559 532;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.333; // B 136 604 353 750;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.333; // B 236 604 515 750;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.333; // circumflex; B 118 604 471 750;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.333; // B 113 610 507 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.333; // macron; B 122 604 483 678;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.333; // B 156 604 494 750;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.333; // B 235 614 385 729;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.333; // B 137 614 482 729;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.333; // B 200 568 420 776
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.333; // B 137 604 645 750;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.333; // B 41 -228 264 0 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.333; // B 149 604 502 750;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 1.000; // B 48 227 1071 333;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 1.000; // AE; B 5 0 1100 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.370; // B 125 401 465 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.611; // Lslash; B 34 0 611 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.778; // Oslash; B 35 -27 894 745;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 1.000; // OE; B 99 -19 1114 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.365; // B 123 401 485 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.889; // B 56 -14 923 546;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.278; // B 69 0 322 532
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.278; // B 40 0 407 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.611; // B 22 -29 701 560;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.944; // B 82 -14 977 546;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.611; // B 69 -14 657 731;
 }
 
 void set_Helvetica_Oblique(Params *pParams)
 {
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.278; // space ; B 0 0 0 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.278; // exclam ; B 90 0 340 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.355; // quotedbl ; B 168 463 438 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.556; // numbersign ; B 73 0 631 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.556; // dollar ; B 69 -115 617 775 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 0.889; // percent ; B 147 -19 889 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.667; // ampersand ; B 77 -15 647 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.222; // quoteright ; B 151 463 310 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // parenleft ; B 108 -207 454 733 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // parenright ; B -9 -207 337 733 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.389; // asterisk ; B 165 431 475 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.584; // plus ; B 85 0 606 505 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.278; // comma ; B 56 -147 214 106 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.333; // hyphen ; B 93 232 357 322 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.278; // period ; B 87 0 214 106 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // slash ; B -21 -19 452 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.556; // zero ; B 93 -19 608 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.556; // one ; B 207 0 508 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.556; // two ; B 26 0 617 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.556; // three ; B 75 -19 610 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.556; // four ; B 61 0 576 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.556; // five ; B 68 -19 621 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.556; // six ; B 91 -19 615 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.556; // seven ; B 137 0 669 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.556; // eight ; B 74 -19 607 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.556; // nine ; B 82 -19 609 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.278; // colon ; B 87 0 301 516 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.278; // semicolon ; B 56 -147 301 516 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.584; // less ; B 94 11 641 495 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.584; // equal ; B 63 115 628 390 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.584; // greater ; B 50 11 597 495 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.556; // question ; B 161 0 610 727 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 1.015; // at ; B 215 -19 965 737 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.278; // space ; B 0 0 0 0
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.278; // exclam; B 90 0 340 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.355; // B 168 463 438 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.556; // numbersign; B 73 0 631 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.556; // dollar; B 69 -115 617 775;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 0.889; // percentage; B 147 -19 889 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.667; // B 77 -15 647 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.222; // B 151 463 310 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.389; // B 165 431 475 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.584; // plus, B 85 0 606 505;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.278; // subparagraph; B 56 -147 214 106;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.333; // hyphen; B 93 232 357 322;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.278; // period B 87 0 214 106
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // Slash; B -21 -19 452 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.556; // B 93 -19 608 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.556; // one; B 207 0 508 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.556; // Two; B 26 0 617 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.556; // three; B 75 -19 610 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.556; // Four; B 61 0 576 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.556; // Five; B 68 -19 621 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.556; // B 91 -19 615 703 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.556; // 7; B 137 0 669 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.556; // Eight; B 74 -19 607 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.556; // 9 ; B 82 -19 609 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.278; // B 87 0 301 516;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.278; // B 56 -147 301 516;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.584; // B 94 11 641 495;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.584; // B 63 115 628 390;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.584; // greater; B 50 11 597 495;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.556; // question ; B 161 0 610 727;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 1.015; // at; B 215 -19 965 737;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[65] = 0.667; // A ; B 14 0 654 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[66] = 0.667; // B ; B 74 0 712 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[67] = 0.722; // C ; B 108 -19 782 737 ;
@@ -24733,18 +24727,18 @@ void set_Helvetica_Oblique(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[88] = 0.667; // X ; B 19 0 790 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[89] = 0.667; // Y ; B 167 0 806 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[90] = 0.611; // Z ; B 23 0 741 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.278; // bracketleft ; B 21 -196 403 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.278; // backslash ; B 140 -19 291 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.278; // bracketright ; B -14 -196 368 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.469; // asciicircum ; B 42 264 539 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.556; // underscore ; B -27 -125 540 -75 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.222; // quoteleft ; B 165 470 323 725 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.278; // bracketleft; B 21 -196 403 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.278; // backslash; B 140 -19 291 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.278; // B -14 -196 368 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.469; // B 42 264 539 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.556; // B -27 -125 540 -75;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.222; // quotaleft; B 165 470 323 725;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[97] = 0.556; // a ; B 61 -15 559 538 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[98] = 0.556; // b ; B 58 -15 584 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[99] = 0.500; // c ; B 74 -15 553 538 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[100] = 0.556; // d ; B 84 -15 652 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[101] = 0.556; // e ; B 84 -15 578 538 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.278; // f ; B 86 0 416 728 ; L i fi ; L l fl ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.278; // f; B 86 0 416 728; L fl; L fl;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[103] = 0.556; // g ; B 42 -220 610 538 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[104] = 0.556; // h ; B 65 0 573 718 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[105] = 0.222; // i ; B 67 0 308 718 ;
@@ -24765,294 +24759,294 @@ void set_Helvetica_Oblique(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[120] = 0.500; // x ; B 11 0 594 523 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[121] = 0.500; // y ; B 15 -214 600 523 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[122] = 0.500; // z ; B 31 0 571 523 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.334; // braceleft ; B 92 -196 445 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.260; // bar ; B 46 -225 332 775 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.334; // braceright ; B 0 -196 354 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.584; // asciitilde ; B 111 180 580 326 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.333; // exclamdown ; B 77 -195 326 523 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.556; // cent ; B 95 -115 584 623 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.556; // sterling ; B 49 -16 634 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction ; B -170 -19 482 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.556; // yen ; B 81 0 699 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.556; // florin ; B -52 -207 654 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.556; // section ; B 76 -191 584 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.556; // currency ; B 60 99 646 603 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.191; // quotesingle ; B 157 463 285 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.333; // quotedblleft ; B 138 470 461 725 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 0.556; // guillemotleft ; B 146 108 554 446 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.333; // guilsinglleft ; B 137 108 340 446 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.333; // guilsinglright ; B 111 108 314 446 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.500; // fi ; B 86 0 587 728 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.500; // fl ; B 86 0 585 728 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.556; // endash ; B 51 240 623 313 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.556; // dagger ; B 135 -159 622 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.556; // daggerdbl ; B 52 -159 623 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.278; // periodcentered ; B 129 190 257 315 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.537; // paragraph ; B 126 -173 650 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.350; // bullet ; B 91 202 413 517 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.222; // quotesinglbase ; B 21 -149 180 106 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.333; // quotedblbase ; B -6 -149 318 106 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.333; // quotedblright ; B 124 463 448 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.556; // guillemotright ; B 120 108 528 446 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 1.000; // ellipsis ; B 115 0 908 106 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 1.000; // perthousand ; B 88 -19 1029 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.611; // questiondown ; B 85 -201 534 525 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.333; // grave ; B 170 593 337 734 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.333; // acute ; B 248 593 475 734 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.333; // circumflex ; B 147 593 438 734 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.333; // tilde ; B 125 606 490 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.333; // macron ; B 143 627 468 684 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.333; // breve ; B 167 595 476 731 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.333; // dotaccent ; B 249 604 362 706 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.333; // dieresis ; B 168 604 443 706 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.333; // ring ; B 214 572 402 756 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.333; // cedilla ; B 2 -225 232 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.333; // hungarumlaut ; B 157 593 565 734 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.333; // ogonek ; B 43 -225 249 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.333; // caron ; B 177 593 468 734 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 1.000; // emdash ; B 51 240 1067 313 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 1.000; // AE ; B 8 0 1097 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.370; // ordfeminine ; B 127 405 449 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.556; // Lslash ; B 41 0 555 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.778; // Oslash ; B 43 -19 890 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 1.000; // OE ; B 98 -19 1116 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.365; // ordmasculine ; B 141 405 468 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.889; // ae ; B 61 -15 909 538 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.278; // dotlessi ; B 95 0 294 523 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.222; // lslash ; B 41 0 347 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.611; // oslash ; B 29 -22 647 545 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.944; // oe ; B 83 -15 964 538 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.611; // germandbls ; B 67 -15 658 728 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.334; // B 92 -196 445 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.260; // bar; B 46 -225 332 775;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.334; // B 0-196 354 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.584; // B 111 180 580 326
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.333; // exclamdown; B 77 -195 326 523;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.556; // B 95 -115 584 623;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.556; // B 49 -16 634 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction; B -170 -19 482 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.556; // B 81 0 699 688
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.556; // B -52 -207 654 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.556; // section; B 76 -191 584 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.556; // currency; B 60 99 646 603;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.191; // B 157 463 285 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.333; // B 138 470 461 725;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 0.556; // guillemotleft; B 146 108 554 446;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.333; // B 137 108 340 446;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.333; // B 111 108 314 446
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.500; // B 86 0 587 728
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.500; // B 86 0 585 728
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.556; // endash; B 51 240 623 313;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.556; // B 135 -159 622 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.556; // B 52 -159 623 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.278; // periodcentered; B 129 190 257 315;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.537; // Section B 126 -173 650 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.350; // B 91 202 413 517;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.222; // B 21 -149 180 106;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.333; // B -6 -149 318 106;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.333; // B 124 463 448 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.556; // B 120 108 528 446;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 1.000; // ellipsis; B 115 0 908 106;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 1.000; // B 88 -19 1029 703;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.611; // questiondown; B 85 -201 534 525;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.333; // B 170 593 337 734
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.333; // B 248 593 475 734;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.333; // circumflex; B 147 593 438 734;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.333; // B 125 606 490 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.333; // macron; B 143 627 468 684;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.333; // B 167 595 476 731;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.333; // B 249 604 362 706;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.333; // dieresis; B 168 604 443 706;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.333; // B 214 572 402 756 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.333; // B 157 593 565 734;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.333; // B 43 -225 249 0;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.333; // B 177 593 468 734
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 1.000; // B 51 240 1067 313;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 1.000; // AE; B 8 0 1097 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.370; // B 127 405 449 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.556; // Lslash; B 41 0 555 718;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.778; // Oslash; B 43 -19 890 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 1.000; // OE; B 98 -19 1116 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.365; // B 141 405 468 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.889; // B 61 -15 909 538;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.278; // B 95 0 294 523;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.222; // B 41 0 347 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.611; // B 29 -22 647 545;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.944; // B 83 -15 964 538;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.611; // Germandbls; B 67 -15 658 728;
 }
 
 void set_Symbol(Params *pParams)
 {
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.250; // space ; B 0 0 0 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.333; // exclam ; B 128 -17 240 672 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.713; // universal ; B 31 0 681 705 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.500; // numbersign ; B 20 -16 481 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.549; // existential ; B 25 0 478 707 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 0.833; // percent ; B 63 -36 771 655 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.778; // ampersand ; B 41 -18 750 661 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.439; // suchthat ; B 48 -17 414 500 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // parenleft ; B 53 -191 300 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // parenright ; B 30 -191 277 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.500; // asteriskmath ; B 65 134 427 551 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.549; // plus ; B 10 0 539 533 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.250; // comma ; B 56 -152 194 104 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.549; // minus ; B 11 233 535 288 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.250; // period ; B 69 -17 181 95 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // slash ; B 0 -18 254 646 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.500; // zero ; B 24 -14 476 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.500; // one ; B 117 0 390 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.500; // two ; B 25 0 475 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.500; // three ; B 43 -14 435 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.500; // four ; B 15 0 469 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.500; // five ; B 32 -14 445 690 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.500; // six ; B 34 -14 468 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.500; // seven ; B 24 -16 448 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.500; // eight ; B 56 -14 445 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.500; // nine ; B 30 -18 459 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.278; // colon ; B 81 -17 193 460 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.278; // semicolon ; B 83 -152 221 460 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.549; // less ; B 26 0 523 522 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.549; // equal ; B 11 141 537 390 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.549; // greater ; B 26 0 523 522 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.444; // question ; B 70 -17 412 686 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 0.549; // congruent ; B 11 0 537 475 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[65] = 0.722; // Alpha ; B 4 0 684 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[66] = 0.667; // Beta ; B 29 0 592 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[67] = 0.722; // Chi ; B -9 0 704 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[68] = 0.612; // Delta ; B 6 0 608 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[69] = 0.611; // Epsilon ; B 32 0 617 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[70] = 0.763; // Phi ; B 26 0 741 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[71] = 0.603; // Gamma ; B 24 0 609 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[72] = 0.722; // Eta ; B 39 0 729 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[73] = 0.333; // Iota ; B 32 0 316 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[74] = 0.631; // theta1 ; B 18 -18 623 689 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[75] = 0.722; // Kappa ; B 35 0 722 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[76] = 0.686; // Lambda ; B 6 0 680 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[77] = 0.889; // Mu ; B 28 0 887 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[78] = 0.722; // Nu ; B 29 -8 720 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[79] = 0.722; // Omicron ; B 41 -17 715 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[80] = 0.768; // Pi ; B 25 0 745 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[81] = 0.741; // Theta ; B 41 -17 715 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[82] = 0.556; // Rho ; B 28 0 563 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[83] = 0.592; // Sigma ; B 5 0 589 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[84] = 0.611; // Tau ; B 33 0 607 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[85] = 0.690; // Upsilon ; B -8 0 694 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[86] = 0.439; // sigma1 ; B 40 -233 436 500 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[87] = 0.768; // Omega ; B 34 0 736 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[88] = 0.645; // Xi ; B 40 0 599 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[89] = 0.795; // Psi ; B 15 0 781 684 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[90] = 0.611; // Zeta ; B 44 0 636 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.333; // bracketleft ; B 86 -155 299 674 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.863; // therefore ; B 163 0 701 487 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.333; // bracketright ; B 33 -155 246 674 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.658; // perpendicular ; B 15 0 652 674 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.500; // underscore ; B -2 -125 502 -75 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.500; // radicalex ; B 480 881 1090 917 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[97] = 0.631; // alpha ; B 41 -18 622 500 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[98] = 0.549; // beta ; B 61 -223 515 741 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[99] = 0.549; // chi ; B 12 -231 522 499 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[100] = 0.494; // delta ; B 40 -19 481 740 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[101] = 0.439; // epsilon ; B 22 -19 427 502 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.521; // phi ; B 28 -224 492 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[103] = 0.411; // gamma ; B 5 -225 484 499 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[104] = 0.603; // eta ; B 0 -202 527 514 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[105] = 0.329; // iota ; B 0 -17 301 503 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[106] = 0.603; // phi1 ; B 36 -224 587 499 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[107] = 0.549; // kappa ; B 33 0 558 501 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[108] = 0.549; // lambda ; B 24 -17 548 739 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[109] = 0.576; // mu ; B 33 -223 567 500 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[110] = 0.521; // nu ; B -9 -16 475 507 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[111] = 0.549; // omicron ; B 35 -19 501 499 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[112] = 0.549; // pi ; B 10 -19 530 487 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[113] = 0.521; // theta ; B 43 -17 485 690 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[114] = 0.549; // rho ; B 50 -230 490 499 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[115] = 0.603; // sigma ; B 30 -21 588 500 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[116] = 0.439; // tau ; B 10 -19 418 500 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[117] = 0.576; // upsilon ; B 7 -18 535 507 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[118] = 0.713; // omega1 ; B 12 -18 671 583 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[119] = 0.686; // omega ; B 42 -17 684 500 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[120] = 0.493; // xi ; B 27 -224 469 766 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[121] = 0.686; // psi ; B 12 -228 701 500 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[122] = 0.494; // zeta ; B 60 -225 467 756 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.480; // braceleft ; B 58 -183 397 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.200; // bar ; B 65 -293 135 707 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.480; // braceright ; B 79 -183 418 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.549; // similar ; B 17 203 529 307 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[160] = 0.750; // Euro ; B 20 -12 714 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.620; // Upsilon1 ; B -2 0 610 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.247; // minute ; B 27 459 228 735 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.549; // lessequal ; B 29 0 526 639 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction ; B -180 -12 340 677 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.713; // infinity ; B 26 124 688 404 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.500; // florin ; B 2 -193 494 686 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.753; // club ; B 86 -26 660 533 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.753; // diamond ; B 142 -36 600 550 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.753; // heart ; B 117 -33 631 532 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.753; // spade ; B 113 -36 629 548 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 1.042; // arrowboth ; B 24 -15 1024 511 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.987; // arrowleft ; B 32 -15 942 511 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.603; // arrowup ; B 45 0 571 910 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.987; // arrowright ; B 49 -15 959 511 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.603; // arrowdown ; B 45 -22 571 888 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[176] = 0.400; // degree ; B 50 385 350 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.549; // plusminus ; B 10 0 539 645 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.411; // second ; B 20 459 413 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.549; // greaterequal ; B 29 0 526 639 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.549; // multiply ; B 17 8 533 524 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[181] = 0.713; // proportional ; B 27 123 639 404 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.494; // partialdiff ; B 26 -20 462 746 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.460; // bullet ; B 50 113 410 473 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.549; // divide ; B 10 71 536 456 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.549; // notequal ; B 15 -25 540 549 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.549; // equivalence ; B 14 82 538 443 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.549; // approxequal ; B 14 135 527 394 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 1.000; // ellipsis ; B 111 -17 889 95 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 0.603; // arrowvertex ; B 280 -120 336 1010 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[190] = 1.000; // arrowhorizex ; B -60 220 1050 276 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.658; // carriagereturn ; B 15 -16 602 629 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[192] = 0.823; // aleph ; B 175 -18 661 658 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.686; // Ifraktur ; B 10 -53 578 740 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.795; // Rfraktur ; B 26 -15 759 734 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.987; // weierstrass ; B 159 -211 870 573 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.768; // circlemultiply ; B 43 -17 733 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.768; // circleplus ; B 43 -15 733 675 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.823; // emptyset ; B 39 -24 781 719 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.768; // intersection ; B 40 0 732 509 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.768; // union ; B 40 -17 732 492 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[201] = 0.713; // propersuperset ; B 20 0 673 470 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.713; // reflexsuperset ; B 20 -125 673 470 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.713; // notsubset ; B 36 -70 690 540 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[204] = 0.713; // propersubset ; B 37 0 690 470 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.713; // reflexsubset ; B 37 -125 690 470 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.713; // element ; B 45 0 505 468 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.713; // notelement ; B 45 -58 505 555 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 0.768; // angle ; B 26 0 738 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[209] = 0.713; // gradient ; B 36 -19 681 718 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[210] = 0.790; // registerserif ; B 50 -17 740 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[211] = 0.790; // copyrightserif ; B 51 -15 741 675 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[212] = 0.890; // trademarkserif ; B 18 293 855 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[213] = 0.823; // product ; B 25 -101 803 751 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[214] = 0.549; // radical ; B 10 -38 515 917 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[215] = 0.250; // dotmath ; B 69 210 169 310 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[216] = 0.713; // logicalnot ; B 15 0 680 288 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[217] = 0.603; // logicaland ; B 23 0 583 454 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[218] = 0.603; // logicalor ; B 30 0 578 477 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[219] = 1.042; // arrowdblboth ; B 27 -20 1023 510 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[220] = 0.987; // arrowdblleft ; B 30 -15 939 513 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[221] = 0.603; // arrowdblup ; B 39 2 567 911 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[222] = 0.987; // arrowdblright ; B 45 -20 954 508 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[223] = 0.603; // arrowdbldown ; B 44 -19 572 890 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[224] = 0.494; // lozenge ; B 18 0 466 745 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 0.329; // angleleft ; B 25 -198 306 746 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[226] = 0.790; // registersans ; B 50 -20 740 670 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.790; // copyrightsans ; B 49 -15 739 675 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[228] = 0.786; // trademarksans ; B 5 293 725 673 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[229] = 0.713; // summation ; B 14 -108 695 752 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[230] = 0.384; // parenlefttp ; B 24 -293 436 926 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[231] = 0.384; // parenleftex ; B 24 -85 108 925 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.384; // parenleftbt ; B 24 -293 436 926 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.384; // bracketlefttp ; B 0 -80 349 926 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 0.384; // bracketleftex ; B 0 -79 77 925 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.384; // bracketleftbt ; B 0 -80 349 926 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[236] = 0.494; // bracelefttp ; B 209 -85 445 925 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[237] = 0.494; // braceleftmid ; B 20 -85 284 935 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[238] = 0.494; // braceleftbt ; B 209 -75 445 935 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[239] = 0.494; // braceex ; B 209 -85 284 935 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.329; // angleright ; B 21 -198 302 746 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[242] = 0.274; // integral ; B 2 -107 291 916 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[243] = 0.686; // integraltp ; B 308 -88 675 920 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[244] = 0.686; // integralex ; B 308 -88 378 975 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.686; // integralbt ; B 11 -87 378 921 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[246] = 0.384; // parenrighttp ; B 54 -293 466 926 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[247] = 0.384; // parenrightex ; B 382 -85 466 925 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.384; // parenrightbt ; B 54 -293 466 926 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.384; // bracketrighttp ; B 22 -80 371 926 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.384; // bracketrightex ; B 294 -79 371 925 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.384; // bracketrightbt ; B 22 -80 371 926 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[252] = 0.494; // bracerighttp ; B 48 -85 284 925 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[253] = 0.494; // bracerightmid ; B 209 -85 473 935 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[254] = 0.494; // bracerightbt ; B 48 -75 284 935 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.250; // space ; B 0 0 0 0
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.333; // exclam; B 128 -17 240 672;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.713; // universal; B 31 0 681 705;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.500; // numbersign; B 20 -16 481 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.549; // existential; B 25 0 478 707;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 0.833; // percentage; B 63 -36 771 655;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.778; // B 41 -18 750 661;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.439; // B 48 -17 414 500
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.500; // asteriskmath; B 65 134 427 551;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.549; // plus, B 10 0 539 533;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.250; // subparagraph; B 56 -152 194 104;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.549; // B 11 233 535 288;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.250; // period; B 69 -17 181 95;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // slash; B 0 -18 254 646;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.500; // B 24 -14 476 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.500; // one; B 117 0 390 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.500; // Two; B 25 0 475 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.500; // B 43 -14 435 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.500; // Four; B 15 0 469 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.500; // Five; B 32 -14 445 690;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.500; // 6 ; B 34 -14 468 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.500; // 7; B 24 -16 448 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.500; // eight; B 56 -14 445 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.500; // 9 ; B 30 -18 459 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.278; // B 81 -17 193 460;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.278; // B 83 -152 221 460;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.549; // B 26 0 523 522;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.549; // B 11 141 537 390;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.549; // greater; B 26 0 523 522;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.444; // question ; B 70 -17 412 686;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 0.549; // B 11 0 537 475;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[65] = 0.722; // Alpha; B 4 0 684 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[66] = 0.667; // Beta; B 29 0 592 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[67] = 0.722; // B -9 0 704 673
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[68] = 0.612; // Delta; B 6 0 608 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[69] = 0.611; // Epsilon; B 32 0 617 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[70] = 0.763; // Phi; B 26 0 741 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[71] = 0.603; // Range; B 24 0 609 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[72] = 0.722; // Eta; B 39 0 729 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[73] = 0.333; // Iota; B 32 0 316 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[74] = 0.631; // theta1; B 18 -18 623 689;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[75] = 0.722; // Kappa; B 35 0 722 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[76] = 0.686; // Lambda; B 6 0 680 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[77] = 0.889; // Mu; B 28 0 887 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[78] = 0.722; // Nu; B 29 -8 720 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[79] = 0.722; // Omicron; B 41 -17 715 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[80] = 0.768; // Pi; B 25 0 745 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[81] = 0.741; // Theta; B 41 -17 715 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[82] = 0.556; // Rho; B 28 0 563 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[83] = 0.592; // Sigma; B 5 0 589 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[84] = 0.611; // Tau; B 33 0 607 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[85] = 0.690; // Upsilon; B -8 0 694 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[86] = 0.439; // B 40 -233 436 500;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[87] = 0.768; // Omega; B 34 0 736 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[88] = 0.645; // Xi; B 40 0 599 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[89] = 0.795; // Psi; B 15 0 781 684;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[90] = 0.611; // Zeta; B 44 0 636 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.333; // B 86 -155 299 674;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.863; // B 163 0 701 487
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.333; // bracketright; B 33 -155 246 674;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.658; // perpendicular; B 15 0 652 674;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.500; // B -2 -125 502 -75;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.500; // B 480 881 1090 917;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[97] = 0.631; // alpha; B 41 -18 622 500;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[98] = 0.549; // B 61 -223 515 741;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[99] = 0.549; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[100] = 0.494; // delta; B 40 -19 481 740;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[101] = 0.439; // epsilon; B 22 -19 427 502;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.521; // phi; B 28 -224 492 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[103] = 0.411; // range; B 5 -225 484 499;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[104] = 0.603; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[105] = 0.329; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[106] = 0.603; // phi1; B 36 -224 587 499;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[107] = 0.549; // Kappa; B 33 0 558 501;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[108] = 0.549; // B 24 -17 548 739;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[109] = 0.576; // B 33 -223 567 500;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[110] = 0.521; // B -9 -16 475 507;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[111] = 0.549; // omicron; B 35 -19 501 499;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[112] = 0.549; // B 10 -19 530 487;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[113] = 0.521; // theta; B 43 -17 485 690;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[114] = 0.549; // B 50 -230 490 499;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[115] = 0.603; // B 30 -21 588 500
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[116] = 0.439; // B 10-19 418 500;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[117] = 0.576; // B 7 -18 535 507;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[118] = 0.713; // omega1; B 12 -18 671 583;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[119] = 0.686; // B 42 -17 684 500;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[120] = 0.493; // B 27 -224 469 766;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[121] = 0.686; // B 12 -228 701 500;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[122] = 0.494; // B 60 -225 467 756;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.480; // B 58 -183 397 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.200; // bar; B 65 -293 135 707;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.480; // B 79 -183 418 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.549; // B 17 203 529 307;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[160] = 0.750; // Euro; B 20 -12 714 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.620; // Upsilon1; B -2 0 610 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.247; // B 27 459 228 735;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.549; // B 29 0 526 639
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction; B -180 -12 340 677;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.713; // infinity; B 26 124 688 404;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.500; // florin; B 2 -193 494 686;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.753; // club; B 86 -26 660 533;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.753; // diamond; B 142 -36 600 550;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.753; // B 117 -33 631 532;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.753; // B 113 -36 629 548;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 1.042; // B 24 - 15 1024 511 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.987; // B 32 -15 942 511 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.603; // B 45 0 571 910 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.987; // B 49 -15 959 511 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.603; // B 45 -22 571 888
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[176] = 0.400; // degree; B 50 385 350 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.549; // plusminus; B 10 0 539 645;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.411; // B 20 459 413 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.549; // B 29 0 526 639
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.549; // multiply; B 17 8 533 524;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[181] = 0.713; // B 27 123 639 404;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.494; // partialdiff; B 26 -20 462 746;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.460; // B 50 113 410 473;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.549; // B 10 71 536 456;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.549; // B 15 -25 540 549;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.549; // B 14 82 538 443;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.549; // B 14 135 527 394;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 1.000; // B 111 -17 889 95;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 0.603; // B 280 - 120 336 1010 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[190] = 1.000; // B -60 220 1050 276
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.658; // B 15-16 602 629;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[192] = 0.823; // B 175 -18 661 658;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.686; // Ifraktur, B 10 -53 578 740;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.795; // Rfraktur; B 26 -15 759 734;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.987; // Weierstrass; B 159 -211 870 573;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.768; // circlemultiply; B 43 -17 733 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.768; // circleplus; B 43 -15 733 675;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.823; // B 39 -24 781 719
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.768; // intersection; B 40 0 732 509;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.768; // Union; B 40 -17 732 492;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[201] = 0.713; // propersuperset; B 20 0 673 470;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.713; // reflexsuperset; B 20 -125 673 470;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.713; // B 36 -70 690 540;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[204] = 0.713; // propersubset; B 37 0 690 470;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.713; // reflexsubset; B 37 -125 690 470;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.713; // element; B 45 0 505 468;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.713; // notelement; B 45 -58 505 555;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 0.768; // angle; B 26 0 738 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[209] = 0.713; // B 36 -19 681 718
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[210] = 0.790; // registerserif; B 50 -17 740 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[211] = 0.790; // copyrightserif; B 51 -15 741 675;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[212] = 0.890; // trademarkserif; B 18 293 855 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[213] = 0.823; // product ; B 25 -101 803 751;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[214] = 0.549; // B 10 -38 515 917;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[215] = 0.250; // dotmath; B 69 210 169 310;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[216] = 0.713; // logicalnot; B 15 0 680 288;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[217] = 0.603; // logicland; B 23 0 583 454;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[218] = 0.603; // B 30 0 578 477;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[219] = 1.042; // arrowdblboth; B 27 -20 1023 510;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[220] = 0.987; // B 30 -15 939 513;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[221] = 0.603; // B 39 2 567 911;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[222] = 0.987; // B 45 -20 954 508;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[223] = 0.603; // B 44 -19 572 890;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[224] = 0.494; // B 18 0 466 745;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 0.329; // angleleft; B 25 -198 306 746;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[226] = 0.790; // registersans; B 50 -20 740 670;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.790; // copyrightsans; B 49 -15 739 675;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[228] = 0.786; // B 5 293 725 673;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[229] = 0.713; // summation; B 14-108 695 752;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[230] = 0.384; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[231] = 0.384; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.384; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.384; // bracketlefttp; B 0 -80 349 926;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 0.384; // bracketleftex; B 0 -79 77 925;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.384; // bracketleftbt; B 0 -80 349 926;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[236] = 0.494; // B 209 -85 445 925;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[237] = 0.494; // B 20 -85 284 935;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[238] = 0.494; // B 209 -75 445 935;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[239] = 0.494; // B 209 -85 284 935;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.329; // angleright; B 21 -198 302 746;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[242] = 0.274; // Β 2­107 291 916;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[243] = 0.686; // B 308 -88 675 920
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[244] = 0.686; // integralx; B 308 -88 378 975;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.686; // B 11 -87 378 921;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[246] = 0.384; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[247] = 0.384; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.384; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.384; // bracketrighttp; B 22 -80 371 926;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.384; // B 294 -79 371 925;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.384; // bracketrightbt; B 22 -80 371 926;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[252] = 0.494; // B 48 -85 284 925;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[253] = 0.494; // B 209 -85 473 935;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[254] = 0.494; // B 48 -75 284 935;
 }
 
 void set_Times_Bold(Params *pParams)
 {
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.250; // space ; B 0 0 0 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.333; // exclam ; B 81 -13 251 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.555; // quotedbl ; B 83 404 472 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.500; // numbersign ; B 4 0 496 700 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.500; // dollar ; B 29 -99 472 750 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 1.000; // percent ; B 124 -14 877 692 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.833; // ampersand ; B 62 -16 787 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.333; // quoteright ; B 79 356 263 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // parenleft ; B 46 -168 306 694 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // parenright ; B 27 -168 287 694 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.500; // asterisk ; B 56 255 447 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.570; // plus ; B 33 0 537 506 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.250; // comma ; B 39 -180 223 155 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.333; // hyphen ; B 44 171 287 287 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.250; // period ; B 41 -13 210 156 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // slash ; B -24 -19 302 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.500; // zero ; B 24 -13 476 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.500; // one ; B 65 0 442 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.500; // two ; B 17 0 478 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.500; // three ; B 16 -14 468 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.500; // four ; B 19 0 475 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.500; // five ; B 22 -8 470 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.500; // six ; B 28 -13 475 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.500; // seven ; B 17 0 477 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.500; // eight ; B 28 -13 472 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.500; // nine ; B 26 -13 473 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.333; // colon ; B 82 -13 251 472 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.333; // semicolon ; B 82 -180 266 472 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.570; // less ; B 31 -8 539 514 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.570; // equal ; B 33 107 537 399 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.570; // greater ; B 31 -8 539 514 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.500; // question ; B 57 -13 445 689 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 0.930; // at ; B 108 -19 822 691 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.250; // space ; B 0 0 0 0
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.333; // B 81 -13 251 691;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.555; // B 83 404 472 691
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.500; // numbersign; B 4 0 496 700;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.500; // dollar; B 29 -99 472 750;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 1.000; // percentage; B 124 -14 877 692;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.833; // B 62-16 787 691;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.333; // B 79 356 263 691;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // B 27 -168 287 694;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.500; // B 56 255 447 691;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.570; // B 33 0 537 506
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.250; // subparagraph; B 39 -180 223 155;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.333; // hyphen; B 44 171 287 287;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.250; // period; B 41 -13 210 156;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // Slash; B -24 -19 302 691;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.500; // B 24 -13 476 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.500; // one; B 65 0 442 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.500; // Two; B 17 0 478 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.500; // three ; B 16 -14 468 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.500; // Four; B 19 0 475 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.500; // Five; B 22 -8 470 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.500; // B 28 -13 475 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.500; // 7; B 17 0 477 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.500; // Eight; B 28 -13 472 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.500; // 9 ; B 26 -13 473 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.333; // B 82 -13 251 472 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.333; // B 82 -180 266 472;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.570; // B 31 -8 539 514 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.570; // B 33 107 537 399;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.570; // greater; B 31 -8 539 514;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.500; // question ; B 57 -13 445 689;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 0.930; // B 108 -19 822 691;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[65] = 0.722; // A ; B 9 0 689 690 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[66] = 0.667; // B ; B 16 0 619 676 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[67] = 0.722; // C ; B 49 -19 687 691 ;
@@ -25079,18 +25073,18 @@ void set_Times_Bold(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[88] = 0.722; // X ; B 16 0 699 676 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[89] = 0.722; // Y ; B 15 0 699 676 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[90] = 0.667; // Z ; B 28 0 634 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.333; // bracketleft ; B 67 -149 301 678 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.278; // backslash ; B -25 -19 303 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.333; // bracketright ; B 32 -149 266 678 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.581; // asciicircum ; B 73 311 509 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.500; // underscore ; B 0 -125 500 -75 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.333; // quoteleft ; B 70 356 254 691 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.333; // B 67 -149 301 678;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.278; // B -25 -19 303 691;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.333; // B 32 -149 266 678;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.581; // B 73 311 509 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.500; // B 0 -125 500 -75;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.333; // quotaleft; B 70 356 254 691;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[97] = 0.500; // a ; B 25 -14 488 473 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[98] = 0.556; // b ; B 17 -14 521 676 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[99] = 0.444; // c ; B 25 -14 430 473 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[100] = 0.556; // d ; B 25 -14 534 676 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[101] = 0.444; // e ; B 25 -14 426 473 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.333; // f ; B 14 0 389 691 ; L i fi ; L l fl ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.333; // (f) B 14 0 389 691; L fl;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[103] = 0.500; // g ; B 28 -206 483 473 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[104] = 0.556; // h ; B 16 0 534 676 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[105] = 0.278; // i ; B 16 0 255 691 ;
@@ -25111,101 +25105,101 @@ void set_Times_Bold(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[120] = 0.500; // x ; B 12 0 484 461 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[121] = 0.500; // y ; B 16 -205 480 461 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[122] = 0.444; // z ; B 21 0 420 461 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.394; // braceleft ; B 22 -175 340 698 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.220; // bar ; B 66 -218 154 782 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.394; // braceright ; B 54 -175 372 698 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.520; // asciitilde ; B 29 173 491 333 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.333; // exclamdown ; B 82 -203 252 501 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.500; // cent ; B 53 -140 458 588 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.500; // sterling ; B 21 -14 477 684 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction ; B -168 -12 329 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.500; // yen ; B -64 0 547 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.500; // florin ; B 0 -155 498 706 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.500; // section ; B 57 -132 443 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.500; // currency ; B -26 61 526 613 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.278; // quotesingle ; B 75 404 204 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.500; // quotedblleft ; B 32 356 486 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 0.500; // guillemotleft ; B 23 36 473 415 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.333; // guilsinglleft ; B 51 36 305 415 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.333; // guilsinglright ; B 28 36 282 415 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.556; // fi ; B 14 0 536 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.556; // fl ; B 14 0 536 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.500; // endash ; B 0 181 500 271 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.500; // dagger ; B 47 -134 453 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.500; // daggerdbl ; B 45 -132 456 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.250; // periodcentered ; B 41 248 210 417 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.540; // paragraph ; B 0 -186 519 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.350; // bullet ; B 35 198 315 478 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.333; // quotesinglbase ; B 79 -180 263 155 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.500; // quotedblbase ; B 14 -180 468 155 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.500; // quotedblright ; B 14 356 468 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.500; // guillemotright ; B 27 36 477 415 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 1.000; // ellipsis ; B 82 -13 917 156 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 1.000; // perthousand ; B 7 -29 995 706 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.500; // questiondown ; B 55 -201 443 501 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.333; // grave ; B 8 528 246 713 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.333; // acute ; B 86 528 324 713 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.333; // circumflex ; B -2 528 335 704 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.333; // tilde ; B -16 547 349 674 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.333; // macron ; B 1 565 331 637 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.333; // breve ; B 15 528 318 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.333; // dotaccent ; B 103 536 258 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.333; // dieresis ; B -2 537 335 667 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.333; // ring ; B 60 527 273 740 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.333; // cedilla ; B 68 -218 294 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.333; // hungarumlaut ; B -13 528 425 713 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.333; // ogonek ; B 90 -193 319 24 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.333; // caron ; B -2 528 335 704 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 1.000; // emdash ; B 0 181 1000 271 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 1.000; // AE ; B 4 0 951 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.300; // ordfeminine ; B -1 397 301 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.667; // Lslash ; B 19 0 638 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.778; // Oslash ; B 35 -74 743 737 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 1.000; // OE ; B 22 -5 981 684 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.330; // ordmasculine ; B 18 397 312 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.722; // ae ; B 33 -14 693 473 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.278; // dotlessi ; B 16 0 255 461 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.278; // lslash ; B -22 0 303 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.500; // oslash ; B 25 -92 476 549 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.722; // oe ; B 22 -14 696 473 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.556; // germandbls ; B 19 -12 517 691 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.394; // B 22 -175 340 698;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.220; // bar; B 66 -218 154 782;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.394; // B 54 -175 372 698;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.520; // B 29 173 491 333;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.333; // exclamdown; B 82 -203 252 501;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.500; // B 53 -140 458 588;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.500; // B 21 -14 477 684
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction; B -168 -12 329 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.500; // B -64 0 547 676
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.500; // B 0 -155 498 706;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.500; // section; B 57 -132 443 691;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.500; // currency; B -26 61 526 613;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.278; // B 75 404 204 691;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.500; // B 32 356 486 691;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 0.500; // guillemotleft; B 23 36 473 415;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.333; // B 51 36 305 415;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.333; // B 28 36 282 415;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.556; // B 14 0 536 691;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.556; // B 14 0 536 691;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.500; // endash; B 0 181 500 271;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.500; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.500; // B 45 -132 456 691;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.250; // periodcentered; B 41 248 210 417;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.540; // Section B 0 -186 519 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.350; // B 35 198 315 478
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.333; // B 79 -180 263 155;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.500; // B 14 -180 468 155;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.500; // B 14 356 468 691;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.500; // B 27 36 477 415;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 1.000; // B 82 -13 917 156;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 1.000; // B 7 -29 995 706;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.500; // questiondown; B 55 -201 443 501;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.333; // B 8 528 246 713;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.333; // B 86 528 324 713;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.333; // circumflex ; B -2 528 335 704;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.333; // B -16 547 349 674;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.333; // macron; B 1 565 331 637;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.333; // B 15 528 318 691;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.333; // B -2 537 335 667;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.333; // B 60 527 273 740;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.333; // B 68 -218 294 0;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.333; // B -13 528 425 713;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.333; // B 90 -193 319 24;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.333; // B -2 528 335 704;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 1.000; // B 0 181 1000 271;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 1.000; // AE; B 4 0 951 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.300; // B -1 397 301 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.667; // B 19 0 638 676
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.778; // Oslash, B 35 -74 743 737;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 1.000; // OE; B 22 -5 981 684;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.330; // B 18 397 312 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.722; // B 33 -14 693 473;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.278; // B 16 0 255 461;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.278; // B -22 0 303 676
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.500; // B 25 -92 476 549;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.722; // B 22 -14 696 473;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.556; // Germandbls; B 19-12 517 691;
 }
 
 void set_Times_BoldItalic(Params *pParams)
 {
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.250; // space ; B 0 0 0 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.389; // exclam ; B 67 -13 370 684 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.555; // quotedbl ; B 136 398 536 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.500; // numbersign ; B -33 0 533 700 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.500; // dollar ; B -20 -100 497 733 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 0.833; // percent ; B 39 -10 793 692 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.778; // ampersand ; B 5 -19 699 682 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.333; // quoteright ; B 98 369 302 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // parenleft ; B 28 -179 344 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // parenright ; B -44 -179 271 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.500; // asterisk ; B 65 249 456 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.570; // plus ; B 33 0 537 506 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.250; // comma ; B -60 -182 144 134 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.333; // hyphen ; B 2 166 271 282 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.250; // period ; B -9 -13 139 135 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // slash ; B -64 -18 342 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.500; // zero ; B 17 -14 477 683 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.500; // one ; B 5 0 419 683 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.500; // two ; B -27 0 446 683 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.500; // three ; B -15 -13 450 683 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.500; // four ; B -15 0 503 683 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.500; // five ; B -11 -13 487 669 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.500; // six ; B 23 -15 509 679 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.500; // seven ; B 52 0 525 669 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.500; // eight ; B 3 -13 476 683 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.500; // nine ; B -12 -10 475 683 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.333; // colon ; B 23 -13 264 459 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.333; // semicolon ; B -25 -183 264 459 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.570; // less ; B 31 -8 539 514 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.570; // equal ; B 33 107 537 399 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.570; // greater ; B 31 -8 539 514 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.500; // question ; B 79 -13 470 684 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 0.832; // at ; B 63 -18 770 685 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.250; // space ; B 0 0 0 0
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.389; // B 67 -13 370 684;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.555; // B 136 398 536 685
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.500; // numbersign; B -33 0 533 700;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.500; // dollar; B -20 -100 497 733;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 0.833; // percentage; B 39-10 793 692;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.778; // B 5 -19 699 682;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.333; // B 98 369 302 685
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.500; // B 65 249 456 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.570; // B 33 0 537 506
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.250; // subparagraph; B -60 -182 144 134;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.333; // hyphen; B 2 166 271 282;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.250; // period; B -9 -13 139 135;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // B -64 -18 342 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.500; // 0, B 17 -14 477 683;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.500; // one; B 5 0 419 683;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.500; // B -27 0 446 683;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.500; // B -15 -13 450 683;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.500; // Four; B -15 0 503 683;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.500; // Five; B -11 -13 487 669;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.500; // 6 ; B 23 -15 509 679;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.500; // 7; B 52 0 525 669;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.500; // Eight; B 3 -13 476 683;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.500; // B -12 -10 475 683;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.333; // B -25 -183 264 459 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.570; // B 31 -8 539 514 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.570; // B 33 107 537 399;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.570; // greater; B 31 -8 539 514;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.500; // question: B 79 -13 470 684;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 0.832; // at; B 63 -18 770 685;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[65] = 0.667; // A ; B -67 0 593 683 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[66] = 0.667; // B ; B -24 0 624 669 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[67] = 0.667; // C ; B 32 -18 677 685 ;
@@ -25232,18 +25226,18 @@ void set_Times_BoldItalic(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[88] = 0.667; // X ; B -24 0 694 669 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[89] = 0.611; // Y ; B 73 0 659 669 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[90] = 0.611; // Z ; B -11 0 590 669 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.333; // bracketleft ; B -37 -159 362 674 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.278; // backslash ; B -1 -18 279 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.333; // bracketright ; B -56 -157 343 674 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.570; // asciicircum ; B 67 304 503 669 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.500; // underscore ; B 0 -125 500 -75 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.333; // quoteleft ; B 128 369 332 685 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.333; // B -37 -159 362 674 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.278; // backslash; B -1 -18 279 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.333; // B -56 -157 343 674;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.570; // B 67 304 503 669;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.500; // B 0 -125 500 -75;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.333; // quotaleft; B 128 369 332 685;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[97] = 0.500; // a ; B -21 -14 455 462 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[98] = 0.500; // b ; B -14 -13 444 699 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[99] = 0.444; // c ; B -5 -13 392 462 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[100] = 0.500; // d ; B -21 -13 517 699 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[101] = 0.444; // e ; B 5 -13 398 462 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.333; // f ; B -169 -205 446 698 ; L i fi ; L l fl ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.333; // f; B -169 -205 446 698; L fl; L fl;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[103] = 0.500; // g ; B -52 -203 478 462 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[104] = 0.556; // h ; B -13 -9 498 699 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[105] = 0.278; // i ; B 2 -9 263 684 ;
@@ -25264,101 +25258,101 @@ void set_Times_BoldItalic(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[120] = 0.500; // x ; B -46 -13 469 462 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[121] = 0.444; // y ; B -94 -205 392 462 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[122] = 0.389; // z ; B -43 -78 368 449 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.348; // braceleft ; B 5 -187 436 686 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.220; // bar ; B 66 -218 154 782 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.348; // braceright ; B -129 -187 302 686 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.570; // asciitilde ; B 54 173 516 333 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.389; // exclamdown ; B 19 -205 322 492 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.500; // cent ; B 42 -143 439 576 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.500; // sterling ; B -32 -12 510 683 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction ; B -169 -14 324 683 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.500; // yen ; B 33 0 628 669 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.500; // florin ; B -87 -156 537 707 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.500; // section ; B 36 -143 459 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.500; // currency ; B -26 34 526 586 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.278; // quotesingle ; B 128 398 268 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.500; // quotedblleft ; B 53 369 513 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 0.500; // guillemotleft ; B 12 32 468 415 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.333; // guilsinglleft ; B 32 32 303 415 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.333; // guilsinglright ; B 10 32 281 415 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.556; // fi ; B -188 -205 514 703 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.556; // fl ; B -186 -205 553 704 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.500; // endash ; B -40 178 477 269 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.500; // dagger ; B 91 -145 494 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.500; // daggerdbl ; B 10 -139 493 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.250; // periodcentered ; B 51 257 199 405 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.500; // paragraph ; B -57 -193 562 669 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.350; // bullet ; B 0 175 350 525 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.333; // quotesinglbase ; B -5 -182 199 134 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.500; // quotedblbase ; B -57 -182 403 134 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.500; // quotedblright ; B 53 369 513 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.500; // guillemotright ; B 12 32 468 415 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 1.000; // ellipsis ; B 40 -13 852 135 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 1.000; // perthousand ; B 7 -29 996 706 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.500; // questiondown ; B 30 -205 421 492 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.333; // grave ; B 85 516 297 697 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.333; // acute ; B 139 516 379 697 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.333; // circumflex ; B 40 516 367 690 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.333; // tilde ; B 48 536 407 655 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.333; // macron ; B 51 553 393 623 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.333; // breve ; B 71 516 387 678 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.333; // dotaccent ; B 163 550 298 684 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.333; // dieresis ; B 55 550 402 684 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.333; // ring ; B 127 516 340 729 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.333; // cedilla ; B -80 -218 156 5 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.333; // hungarumlaut ; B 69 516 498 697 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.333; // ogonek ; B 15 -183 244 34 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.333; // caron ; B 79 516 411 690 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 1.000; // emdash ; B -40 178 977 269 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 0.944; // AE ; B -64 0 918 669 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.266; // ordfeminine ; B 16 399 330 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.611; // Lslash ; B -22 0 590 669 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.722; // Oslash ; B 27 -125 691 764 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 0.944; // OE ; B 23 -8 946 677 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.300; // ordmasculine ; B 56 400 347 685 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.722; // ae ; B -5 -13 673 462 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.278; // dotlessi ; B 2 -9 238 462 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.278; // lslash ; B -7 -9 307 699 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.500; // oslash ; B -3 -119 441 560 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.722; // oe ; B 6 -13 674 462 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.500; // germandbls ; B -200 -200 473 705 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.348; // B 5 -187 436 686;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.220; // bar; B 66 -218 154 782;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.348; // B -129 -187 302 686;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.570; // B 54 173 516 333;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.389; // exclamdown; B 19 -205 322 492;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.500; // B 42 -143 439 576
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.500; // B -32 -12 510 683;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction; B -169 -14 324 683;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.500; // B 33 0 628 669 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.500; // B -87 -156 537 707;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.500; // section; B 36 -143 459 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.500; // currency; B -26 34 526 586;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.278; // B 128 398 268 685
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.500; // B 53 369 513 685
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 0.500; // guillemotleft; B 12 32 468 415;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.333; // B 32 32 303 415;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.333; // B 10 32 281 415
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.556; // B -188 -205 514 703 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.556; // B -186 -205 553 704;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.500; // B -40 178 477 269 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.500; // B 91 -145 494 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.500; // B 10 -139 493 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.250; // periodcentered; B 51 257 199 405;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.500; // Section B -57 -193 562 669;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.350; // B 0 175 350 525
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.333; // B -5 -182 199 134;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.500; // B -57 -182 403 134;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.500; // B 53 369 513 685
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.500; // B 12 32 468 415;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 1.000; // ellipsis; B 40 -13 852 135;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 1.000; // B 7 -29 996 706;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.500; // questiondown; B 30 -205 421 492;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.333; // B 85 516 297 697
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.333; // B 139 516 379 697;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.333; // circumflex ; B 40 516 367 690;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.333; // B 48 536 407 655;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.333; // macron; B 51 553 393 623;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.333; // B 71 516 387 678;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.333; // dotaccent; B 163 550 298 684;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.333; // dieresis; B 55 550 402 684;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.333; // ring; B 127 516 340 729;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.333; // B -80 -218 156 5;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.333; // B 69 516 498 697;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.333; // B 15 -183 244 34;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.333; // B 79 516 411 690;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 1.000; // B -40 178 977 269;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 0.944; // B -64 0 918 669;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.266; // B 16 399 330 685
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.611; // Lslash; B -22 0 590 669;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.722; // Oslash, B 27 -125 691 764;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 0.944; // OE; B 23 -8 946 677;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.300; // B 56 400 347 685;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.722; // B -5 -13 673 462;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.278; // B 2 -9 238 462;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.278; // B -7 -9 307 699;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.500; // B -3 -119 441 560;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.722; // B 6 -13 674 462;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.500; // Germandbls; B -200 -200 473 705;
 }
 
 void set_Times_Italic(Params *pParams)
 {
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.250; // space ; B 0 0 0 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.333; // exclam ; B 39 -11 302 667 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.420; // quotedbl ; B 144 421 432 666 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.500; // numbersign ; B 2 0 540 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.500; // dollar ; B 31 -89 497 731 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 0.833; // percent ; B 79 -13 790 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.778; // ampersand ; B 76 -18 723 666 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.333; // quoteright ; B 151 436 290 666 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // parenleft ; B 42 -181 315 669 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // parenright ; B 16 -180 289 669 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.500; // asterisk ; B 128 255 492 666 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.675; // plus ; B 86 0 590 506 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.250; // comma ; B -4 -129 135 101 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.333; // hyphen ; B 49 192 282 255 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.250; // period ; B 27 -11 138 100 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // slash ; B -65 -18 386 666 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.500; // zero ; B 32 -7 497 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.500; // one ; B 49 0 409 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.500; // two ; B 12 0 452 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.500; // three ; B 15 -7 465 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.500; // four ; B 1 0 479 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.500; // five ; B 15 -7 491 666 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.500; // six ; B 30 -7 521 686 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.500; // seven ; B 75 -8 537 666 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.500; // eight ; B 30 -7 493 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.500; // nine ; B 23 -17 492 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.333; // colon ; B 50 -11 261 441 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.333; // semicolon ; B 27 -129 261 441 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.675; // less ; B 84 -8 592 514 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.675; // equal ; B 86 120 590 386 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.675; // greater ; B 84 -8 592 514 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.500; // question ; B 132 -12 472 664 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 0.920; // at ; B 118 -18 806 666 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.250; // space ; B 0 0 0 0
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.333; // exclam; B 39 -11 302 667;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.420; // B 144 421 432 666;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.500; // numbersign; B 2 0 540 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.500; // dollar; B 31 -89 497 731;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 0.833; // B 79 -13 790 676
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.778; // B 76 -18 723 666;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.333; // B 151 436 290 666;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.500; // asterisk; B 128 255 492 666;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.675; // B 86 0 590 506
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.250; // subparagraph; B -4 -129 135 101;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.333; // hyphen; B 49 192 282 255;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.250; // period; B 27 -11 138 100;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // Slash; B -65 -18 386 666;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.500; // B 32 -7 497 676
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.500; // one; B 49 0 409 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.500; // Two; B 12 0 452 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.500; // three; B 15 -7 465 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.500; // Four; B 1 0 479 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.500; // five; B 15 -7 491 666;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.500; // Six; B 30 -7 521 686;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.500; // 7; B 75 -8 537 666;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.500; // eight; B 30 -7 493 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.500; // 9 ; B 23 -17 492 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.333; // B 50 -11 261 441 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.333; // semicolon, B 27 -129 261 441;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.675; // B 84 -8 592 514;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.675; // B 86 120 590 386;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.675; // greater; B 84 -8 592 514;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.500; // question ; B 132 -12 472 664;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 0.920; // B 118 -18 806 666;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[65] = 0.611; // A ; B -51 0 564 668 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[66] = 0.611; // B ; B -8 0 588 653 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[67] = 0.667; // C ; B 66 -18 689 666 ;
@@ -25385,18 +25379,18 @@ void set_Times_Italic(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[88] = 0.611; // X ; B -29 0 655 653 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[89] = 0.556; // Y ; B 78 0 633 653 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[90] = 0.556; // Z ; B -6 0 606 653 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.389; // bracketleft ; B 21 -153 391 663 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.278; // backslash ; B -41 -18 319 666 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.389; // bracketright ; B 12 -153 382 663 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.422; // asciicircum ; B 0 301 422 666 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.500; // underscore ; B 0 -125 500 -75 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.333; // quoteleft ; B 171 436 310 666 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.389; // bracketleft; B 21 -153 391 663;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.278; // B -41 -18 319 666;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.389; // bracketright; B 12 -153 382 663;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.422; // B 0 301 422 666;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.500; // B 0 -125 500 -75;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.333; // quotaleft; B 171 436 310 666;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[97] = 0.500; // a ; B 17 -11 476 441 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[98] = 0.500; // b ; B 23 -11 473 683 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[99] = 0.444; // c ; B 30 -11 425 441 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[100] = 0.500; // d ; B 15 -13 527 683 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[101] = 0.444; // e ; B 31 -11 412 441 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.278; // f ; B -147 -207 424 678 ; L i fi ; L l fl ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.278; // f; B -147 -207 424 678; L fl; L fl;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[103] = 0.500; // g ; B 8 -206 472 441 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[104] = 0.500; // h ; B 19 -9 478 683 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[105] = 0.278; // i ; B 49 -11 264 654 ;
@@ -25417,101 +25411,101 @@ void set_Times_Italic(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[120] = 0.444; // x ; B -27 -11 447 441 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[121] = 0.444; // y ; B -24 -206 426 441 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[122] = 0.389; // z ; B -2 -81 380 428 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.400; // braceleft ; B 51 -177 407 687 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.275; // bar ; B 105 -217 171 783 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.400; // braceright ; B -7 -177 349 687 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.541; // asciitilde ; B 40 183 502 323 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.389; // exclamdown ; B 59 -205 322 473 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.500; // cent ; B 77 -143 472 560 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.500; // sterling ; B 10 -6 517 670 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction ; B -169 -10 337 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.500; // yen ; B 27 0 603 653 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.500; // florin ; B 25 -182 507 682 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.500; // section ; B 53 -162 461 666 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.500; // currency ; B -22 53 522 597 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.214; // quotesingle ; B 132 421 241 666 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.556; // quotedblleft ; B 166 436 514 666 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 0.500; // guillemotleft ; B 53 37 445 403 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.333; // guilsinglleft ; B 51 37 281 403 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.333; // guilsinglright ; B 52 37 282 403 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.500; // fi ; B -141 -207 481 681 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.500; // fl ; B -141 -204 518 682 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.500; // endash ; B -6 197 505 243 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.500; // dagger ; B 101 -159 488 666 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.500; // daggerdbl ; B 22 -143 491 666 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.250; // periodcentered ; B 70 199 181 310 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.523; // paragraph ; B 55 -123 616 653 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.350; // bullet ; B 40 191 310 461 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.333; // quotesinglbase ; B 44 -129 183 101 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.556; // quotedblbase ; B 57 -129 405 101 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.556; // quotedblright ; B 151 436 499 666 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.500; // guillemotright ; B 55 37 447 403 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 0.889; // ellipsis ; B 57 -11 762 100 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 1.000; // perthousand ; B 25 -19 1010 706 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.500; // questiondown ; B 28 -205 368 471 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.333; // grave ; B 121 492 311 664 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.333; // acute ; B 180 494 403 664 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.333; // circumflex ; B 91 492 385 661 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.333; // tilde ; B 100 517 427 624 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.333; // macron ; B 99 532 411 583 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.333; // breve ; B 117 492 418 650 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.333; // dotaccent ; B 207 548 305 646 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.333; // dieresis ; B 107 548 405 646 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.333; // ring ; B 155 492 355 691 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.333; // cedilla ; B -30 -217 182 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.333; // hungarumlaut ; B 93 494 486 664 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.333; // ogonek ; B 20 -169 203 40 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.333; // caron ; B 121 492 426 661 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 0.889; // emdash ; B -6 197 894 243 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 0.889; // AE ; B -27 0 911 653 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.276; // ordfeminine ; B 42 406 352 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.556; // Lslash ; B -8 0 559 653 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.722; // Oslash ; B 60 -105 699 722 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 0.944; // OE ; B 49 -8 964 666 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.310; // ordmasculine ; B 67 406 362 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.667; // ae ; B 23 -11 640 441 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.278; // dotlessi ; B 49 -11 235 441 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.278; // lslash ; B 41 -11 312 683 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.500; // oslash ; B 28 -135 469 554 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.667; // oe ; B 20 -12 646 441 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.500; // germandbls ; B -168 -207 493 679 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.400; // B 51 -177 407 687;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.275; // bar; B 105 -217 171 783;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.400; // B -7 -177 349 687;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.541; // B 40 183 502 323;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.389; // exclamdown; B 59 -205 322 473;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.500; // B 77 -143 472 560;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.500; // B 10 -6 517 670;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction; B -169 -10 337 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.500; // Yen; B 27 0 603 653;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.500; // florin; B 25 -182 507 682;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.500; // section; B 53 -162 461 666;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.500; // currency; B -22 53 522 597;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.214; // B 132 421 241 666;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.556; // B 166 436 514 666;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 0.500; // guillemotleft; B 53 37 445 403;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.333; // B 51 37 281 403;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.333; // B 52 37 282 403;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.500; // B -141 -207 481 681;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.500; // B -141 -204 518 682;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.500; // B -6 197 505 243;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.500; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.500; // B 22 -143 491 666;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.250; // periodcentered; B 70 199 181 310;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.523; // Section B 55 -123 616 653;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.350; // B 40 191 310 461;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.333; // B 44 -129 183 101;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.556; // B 57 -129 405 101;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.556; // B 151 436 499 666;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.500; // B 55 37 447 403;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 0.889; // ellipsis; B 57 -11 762 100;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 1.000; // B 25 -19 1010 706;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.500; // questiondown; B 28 -205 368 471;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.333; // B 121 492 311 664
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.333; // B 180 494 403 664;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.333; // circumflex; B 91 492 385 661;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.333; // B 100 517 427 624;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.333; // macron; B 99 532 411 583;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.333; // B 117 492 418 650;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.333; // B 107 548 405 646;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.333; // ring; B 155 492 355 691;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.333; // B 93 494 486 664;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.333; // B 20 -169 203 40;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.333; // B 121 492 426 661 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 0.889; // B -6 197 894 243;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 0.889; // B-27 0 911 653;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.276; // B 42 406 352 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.556; // B -8 0 559 653;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.722; // Oslash; B 60-105 699 722;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 0.944; // OE; B 49 -8 964 666;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.310; // B 67 406 362 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.667; // B 23 -11 640 441;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.278; // B 49 -11 235 441;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.278; // B 41 -11 312 683;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.500; // B 28 -135 469 554;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.667; // B 20-12 646 441;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.500; // Germandbls; B -168 -207 493 679;
 }
 
 void set_Times_Roman(Params *pParams)
 {
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.250; // space ; B 0 0 0 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.333; // exclam ; B 130 -9 238 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.408; // quotedbl ; B 77 431 331 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.500; // numbersign ; B 5 0 496 662 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.500; // dollar ; B 44 -87 457 727 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 0.833; // percent ; B 61 -13 772 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.778; // ampersand ; B 42 -13 750 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.333; // quoteright ; B 79 433 218 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // parenleft ; B 48 -177 304 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // parenright ; B 29 -177 285 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.500; // asterisk ; B 69 265 432 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.564; // plus ; B 30 0 534 506 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.250; // comma ; B 56 -141 195 102 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.333; // hyphen ; B 39 194 285 257 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.250; // period ; B 70 -11 181 100 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // slash ; B -9 -14 287 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.500; // zero ; B 24 -14 476 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.500; // one ; B 111 0 394 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.500; // two ; B 30 0 475 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.500; // three ; B 43 -14 431 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.500; // four ; B 12 0 472 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.500; // five ; B 32 -14 438 688 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.500; // six ; B 34 -14 468 684 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.500; // seven ; B 20 -8 449 662 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.500; // eight ; B 56 -14 445 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.500; // nine ; B 30 -22 459 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.278; // colon ; B 81 -11 192 459 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.278; // semicolon ; B 80 -141 219 459 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.564; // less ; B 28 -8 536 514 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.564; // equal ; B 30 120 534 386 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.564; // greater ; B 28 -8 536 514 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.444; // question ; B 68 -8 414 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 0.921; // at ; B 116 -14 809 676 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.250; // space ; B 0 0 0 0
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.333; // exclam; B 130 -9 238 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.408; // B 77 431 331 676
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.500; // numbersign; B 5 0 496 662;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[36] = 0.500; // dollar; B 44 -87 457 727;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[37] = 0.833; // B 61 -13 772 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[38] = 0.778; // B 42 -13 750 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[39] = 0.333; // B 79 433 218 676
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[40] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[41] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[42] = 0.500; // B 69 265 432 676
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[43] = 0.564; // plus, B 30 0 534 506;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[44] = 0.250; // subparagraph; B 56 -141 195 102;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[45] = 0.333; // hyphen; B 39 194 285 257;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[46] = 0.250; // period; B 70 -11 181 100;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[47] = 0.278; // B -9 -14 287 676 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[48] = 0.500; // No, B 24 -14 476 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[49] = 0.500; // one; B 111 0 394 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[50] = 0.500; // Two; B 30 0 475 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[51] = 0.500; // three; B 43 -14 431 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[52] = 0.500; // Four; B 12 0 472 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[53] = 0.500; // 5; B 32 -14 438 688;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[54] = 0.500; // B 34 -14 468 684;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[55] = 0.500; // 7; B 20 -8 449 662;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[56] = 0.500; // eight; B 56 -14 445 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[57] = 0.500; // 9 ; B 30 -22 459 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[58] = 0.278; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[59] = 0.278; // semicolon, B 80 -141 219 459;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[60] = 0.564; // B 28 -8 536 514 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[61] = 0.564; // B 30 120 534 386;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[62] = 0.564; // greater; B 28 -8 536 514;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[63] = 0.444; // question ; B 68 -8 414 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[64] = 0.921; // at; B 116 -14 809 676;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[65] = 0.722; // A ; B 15 0 706 674 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[66] = 0.667; // B ; B 17 0 593 662 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[67] = 0.667; // C ; B 28 -14 633 676 ;
@@ -25538,18 +25532,18 @@ void set_Times_Roman(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[88] = 0.722; // X ; B 10 0 704 662 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[89] = 0.722; // Y ; B 22 0 703 662 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[90] = 0.611; // Z ; B 9 0 597 662 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.333; // bracketleft ; B 88 -156 299 662 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.278; // backslash ; B -9 -14 287 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.333; // bracketright ; B 34 -156 245 662 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.469; // asciicircum ; B 24 297 446 662 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.500; // underscore ; B 0 -125 500 -75 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.333; // quoteleft ; B 115 433 254 676 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[91] = 0.333; // bracketleft; B 88 -156 299 662;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[92] = 0.278; // B -9 -14 287 676
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[93] = 0.333; // bracketright; B 34 -156 245 662;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[94] = 0.469; // B 24 297 446 662;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[95] = 0.500; // B 0 -125 500 -75;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[96] = 0.333; // quotaleft; B 115 433 254 676;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[97] = 0.444; // a ; B 37 -10 442 460 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[98] = 0.500; // b ; B 3 -10 468 683 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[99] = 0.444; // c ; B 25 -10 412 460 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[100] = 0.500; // d ; B 27 -10 491 683 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[101] = 0.444; // e ; B 25 -10 424 460 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.333; // f ; B 20 0 383 683 ; L i fi ; L l fl ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[102] = 0.333; // (f) B 20 0 383 683;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[103] = 0.500; // g ; B 28 -218 470 460 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[104] = 0.500; // h ; B 9 0 487 683 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[105] = 0.278; // i ; B 16 0 253 683 ;
@@ -25570,69 +25564,69 @@ void set_Times_Roman(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[120] = 0.500; // x ; B 17 0 479 450 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[121] = 0.500; // y ; B 14 -218 475 450 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[122] = 0.444; // z ; B 27 0 418 450 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.480; // braceleft ; B 100 -181 350 680 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.200; // bar ; B 67 -218 133 782 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.480; // braceright ; B 130 -181 380 680 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.541; // asciitilde ; B 40 183 502 323 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.333; // exclamdown ; B 97 -218 205 467 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.500; // cent ; B 53 -138 448 579 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.500; // sterling ; B 12 -8 490 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction ; B -168 -14 331 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.500; // yen ; B -53 0 512 662 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.500; // florin ; B 7 -189 490 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.500; // section ; B 70 -148 426 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.500; // currency ; B -22 58 522 602 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.180; // quotesingle ; B 48 431 133 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.444; // quotedblleft ; B 43 433 414 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 0.500; // guillemotleft ; B 42 33 456 416 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.333; // guilsinglleft ; B 63 33 285 416 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.333; // guilsinglright ; B 48 33 270 416 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.556; // fi ; B 31 0 521 683 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.556; // fl ; B 32 0 521 683 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.500; // endash ; B 0 201 500 250 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.500; // dagger ; B 59 -149 442 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.500; // daggerdbl ; B 58 -153 442 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.250; // periodcentered ; B 70 199 181 310 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.453; // paragraph ; B -22 -154 450 662 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.350; // bullet ; B 40 196 310 466 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.333; // quotesinglbase ; B 79 -141 218 102 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.444; // quotedblbase ; B 45 -141 416 102 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.444; // quotedblright ; B 30 433 401 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.500; // guillemotright ; B 44 33 458 416 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 1.000; // ellipsis ; B 111 -11 888 100 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 1.000; // perthousand ; B 7 -19 994 706 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.444; // questiondown ; B 30 -218 376 466 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.333; // grave ; B 19 507 242 678 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.333; // acute ; B 93 507 317 678 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.333; // circumflex ; B 11 507 322 674 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.333; // tilde ; B 1 532 331 638 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.333; // macron ; B 11 547 322 601 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.333; // breve ; B 26 507 307 664 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.333; // dotaccent ; B 118 581 216 681 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.333; // dieresis ; B 18 581 315 681 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.333; // ring ; B 67 512 266 711 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.333; // cedilla ; B 52 -215 261 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.333; // hungarumlaut ; B -3 507 377 678 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.333; // ogonek ; B 62 -165 243 0 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.333; // caron ; B 11 507 322 674 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 1.000; // emdash ; B 0 201 1000 250 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 0.889; // AE ; B 0 0 863 662 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.276; // ordfeminine ; B 4 394 270 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.611; // Lslash ; B 12 0 598 662 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.722; // Oslash ; B 34 -80 688 734 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 0.889; // OE ; B 30 -6 885 668 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.310; // ordmasculine ; B 6 394 304 676 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.667; // ae ; B 38 -10 632 460 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.278; // dotlessi ; B 16 0 253 460 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.278; // lslash ; B 19 0 259 683 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.500; // oslash ; B 29 -112 470 551 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.722; // oe ; B 30 -10 690 460 ;
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.500; // germandbls ; B 12 -9 468 683 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[123] = 0.480; // B 100 -181 350 680;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[124] = 0.200; // bar; B 67 -218 133 782;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[125] = 0.480; // B 130 -181 380 680;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[126] = 0.541; // B 40 183 502 323;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[161] = 0.333; // B 97 -218 205 467;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[162] = 0.500; // B 53 -138 448 579;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[163] = 0.500; // B 12 -8 490 676
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[164] = 0.167; // fraction; B -168 -14 331 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[165] = 0.500; // B -53 0 512 662 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[166] = 0.500; // florin; B 7 -189 490 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[167] = 0.500; // section; B 70 -148 426 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[168] = 0.500; // currency; B -22 58 522 602;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[169] = 0.180; // B 48 431 133 676
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[170] = 0.444; // B 43 433 414 676
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[171] = 0.500; // guillemotleft; B 42 33 456 416;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[172] = 0.333; // B 63 33 285 416;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[173] = 0.333; // B 48 33 270 416;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[174] = 0.556; // B 31 0 521 683;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[175] = 0.556; // B 32 0 521 683
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[177] = 0.500; // endash; B 0 201 500 250;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[178] = 0.500; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[179] = 0.500; // B 58 -153 442 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[180] = 0.250; // periodcentered; B 70 199 181 310;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[182] = 0.453; // Section B -22 -154 450 662;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[183] = 0.350; // bullet; B 40 196 310 466;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[184] = 0.333; // B 79 -141 218 102;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[185] = 0.444; // B 45 -141 416 102;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[186] = 0.444; // B 30 433 401 676
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[187] = 0.500; // B 44 33 458 416;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[188] = 1.000; // B 111 -11 888 100
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[189] = 1.000; // B 7 -19 994 706;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[191] = 0.444; // questiondown; B 30 -218 376 466;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[193] = 0.333; // B 19 507 242 678;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[194] = 0.333; // B 93 507 317 678;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[195] = 0.333; // circumflex ; B 11 507 322 674;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[196] = 0.333; // B 1 532 331 638;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[197] = 0.333; // macron; B 11 547 322 601;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[198] = 0.333; // B 26 507 307 664;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[199] = 0.333; // ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[200] = 0.333; // dieresis; B 18 581 315 681;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[202] = 0.333; // B 67 512 266 711;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[203] = 0.333; // B 52 -215 261 0;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[205] = 0.333; // B -3 507 377 678;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[206] = 0.333; // B 62 -165 243 0;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[207] = 0.333; // B 11 507 322 674;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[208] = 1.000; // B 0 201 1000 250
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[225] = 0.889; // AE; B 0 0 863 662;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[227] = 0.276; // B 4 394 270 676
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[232] = 0.611; // Lslash; B 12 0 598 662;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[233] = 0.722; // Oslash; B 34 -80 688 734;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[234] = 0.889; // OE; B 30 -6 885 668;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[235] = 0.310; // B 6 394 304 676;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[241] = 0.667; // B 38 -10 632 460;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[245] = 0.278; // B 16 0 253 460;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[248] = 0.278; // B 19 0 259 683
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[249] = 0.500; // B 29 -112 470 551;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[250] = 0.722; // B 30-10 690 460;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[251] = 0.500; // Germandbls; B 12 -9 468 683;
 }
 
 void set_ZapfDingbats(Params *pParams)
 {
-	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.278; // space ; B 0 0 0 0 ;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[32] = 0.278; // space ; B 0 0 0 0
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[33] = 0.974; // a1 ; B 35 72 939 621 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[34] = 0.961; // a2 ; B 35 81 927 611 ;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->pWidths[35] = 0.974; // a202 ; B 35 72 939 621 ;

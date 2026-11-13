@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -199,9 +197,9 @@ unsigned char * asciiHexDecode(unsigned char * pInputStream, size_t len, size_t 
 	{
 		//bZeroFollowLastDigit = 1;
 		lenNew++;
-		//wprintf(L"\n\nEHI!!! sostituisco '%c' con '0'\n", pInputStream[lenNew]);
+		//wprintf(L"\n\nEHI!!! I replace '%c' with '0'\n", pInputStream[lenNew]);
 		pInputStream[lenNew - 1] = '0';
-		//wprintf(L"\tECCO: pInputStream[%d] = '%c'\n\n", lenNew - 1, pInputStream[lenNew - 1]);
+		//wprintf(L"\tECCO: pInputStream[%d] = '%c'\n\n', lenNew - 1, pInputStream[lenNew - 1]);
 	}
 
 	*pLenOut = lenNew / 2;
@@ -216,7 +214,7 @@ unsigned char * asciiHexDecode(unsigned char * pInputStream, size_t len, size_t 
 	for ( k = 0 ; k < lenNew * 4 * sizeof(unsigned char); k++ )
 		pOutputStream[k] = '\0';
 
-	//wprintf(L"\n\nasciiHexDecode: len = %d; lenNew = %d; *pLenOut = %d\n\n", len, lenNew, *pLenOut);
+	//wprintf(L"\n\nasciiHexDecode: len = %d; lenNew = %d; *pLenOut = %d\n\n, lenNew, *pLenOut);
 
 	y = 0;
 	z = 0;
@@ -279,7 +277,7 @@ unsigned char * asciiHexDecode(unsigned char * pInputStream, size_t len, size_t 
 				cHexadecimal = 240; // 15 * 16;
 				break;
 			default:
-				//wprintf(L"ERRORE asciiHexDecode 1: carattere non valido: pInputStream[%d] = '%c'; z = %d\n", y, pInputStream[y], z);
+				//wprintf(L"ERRORE asciiHexDecode 1: invalid character: pInputStream[%d] = '%c'; z = %d\n, y, pInputStream[y], z);
 				*pErrorCode = ASCIIHEX_ERROR_UNEXPECTED_CHAR;
 				free(pOutputStream);
 				pOutputStream = NULL;
@@ -345,7 +343,7 @@ unsigned char * asciiHexDecode(unsigned char * pInputStream, size_t len, size_t 
 				cHexadecimal += 15;
 				break;
 			default:
-				//wprintf(L"ERRORE asciiHexDecode 2: carattere non valido: pInputStream[%d] = '%c'; z = %d\n", y + 1, pInputStream[y + 1], z);
+				//wprintf(L"ERRORE asciiHexDecode 2: invalid character: pInputStream[%d] = '%c'; z = %d\n, y + 1, pInputStream[y + 1], z);
 				*pErrorCode = ASCIIHEX_ERROR_UNEXPECTED_CHAR;
 				free(pOutputStream);
 				pOutputStream = NULL;
@@ -421,7 +419,7 @@ unsigned char * ascii85Encode(unsigned char * pInputStream, size_t len, size_t *
 
 	//wprintf(L"\nlen = %d; numPaddingInput = %d; lenNew = %d\n", len, numPaddingInput, lenNew);
 
-	//wprintf(L"LEN INPUT = %d; lenNew = %d; %d/5 = %d; BLOCCHI NECESSARI = %d; numPadding = %d\n", len, lenNew, lenNew, lenNew/5, howmanyBlocks, numPadding);
+	//wprintf(L"LEN INPUT = %d; lenNew = %d; %d/5 = %d; BLOCCHI NECESSARI = %d; numPadding = %d\n", lenNew, lenNew, lenNew, lenNew/5, howmanyBlocks, numPadding);
 
 	*pLenOut = howmanyBlocks * 5 * sizeof(unsigned char);
 	pOutputStream = (unsigned char *)malloc(*pLenOut * 2);
@@ -436,7 +434,7 @@ unsigned char * ascii85Encode(unsigned char * pInputStream, size_t len, size_t *
 	for ( k = 0; k < *pLenOut; k++ )
 		pOutputStream[k] = '\0';
 
-	//wprintf(L"ALLOCATI %d BYTES PER pOutputStream\n", *pLenOut * 2);
+	//wprintf(L"ALLOCATI %d BYTES FOR POutputStream\n", *pLenOut * 2);
 
 	num = 0;
 	y = 0;
@@ -460,7 +458,7 @@ unsigned char * ascii85Encode(unsigned char * pInputStream, size_t len, size_t *
 		num |= numTemp;
 
 		numTemp = b4;
-		//numTemp <<= 0;
+		//numTemp <= 0;
 		num |= numTemp;
 
 		//wprintf(L"\nnum = %d\n", num);
@@ -480,13 +478,13 @@ unsigned char * ascii85Encode(unsigned char * pInputStream, size_t len, size_t *
 		c0 = pOutputStream[y] = (num % 85) + 33;
 		num /= 85;
 
-		//if ( c0 != 0 || c1 != 0 || c2 != 0 || c3 != 0 || c4 != 0 )
+		//I'm sorry.
 		if ( (c0 != 33 || c1 != 33 || c2 != 33 || c3 != 33 || c4 != 33) || ( numPaddingInput > 0 && k > (lenNew - 5)) )
 		{
 			y += 5;
 			countBlocks++;
 
-			//wprintf(L"\tBLOCCO[%u] = <%c%c%c%c%c> y = %d\n", countBlocks, c0, c1, c2, c3, c4, y);
+			//wprintf(L"\tBLOCCO[%u] = <%c%c%c%c%c> y = %d\n", countBlocks, c0, c2, c3, c4, y);
 		}
 		else
 		{
@@ -505,10 +503,10 @@ unsigned char * ascii85Encode(unsigned char * pInputStream, size_t len, size_t *
 
 	//*pLenOut = y - (lenNew - len);
 	*pLenOut = y - numPaddingInput;
-	//if ( countZ )
+	//if ( countZ)
 	//{
-	//	*pLenOut -= (countZ * 3);
-	//	*pLenOut += (countZ) + 1;
+	// *pLenOut -= (countZ * 3);
+	// *pLenOut += (countZ) + 1;
 	//}
 
 	pOutputStream[*pLenOut] = '~';
@@ -516,7 +514,7 @@ unsigned char * ascii85Encode(unsigned char * pInputStream, size_t len, size_t *
 	pOutputStream[*pLenOut] = '>';
 	(*pLenOut)++;
 
-	//uscita:
+	//output:
 
 	free(pStreamNew);
 	pStreamNew = NULL;
@@ -538,10 +536,10 @@ unsigned char * ascii85Decode(unsigned char * pInputStream, size_t len, size_t *
 	unsigned char * pOutputStream = NULL;
 
 	uint32_t num;
-	//uint32_t numTemp;
+	//uint32 t numTemp;
 
-	//uint32_t howmanyBlocks;
-	//uint32_t numPadding;
+	//uint32 t howmanyBlocks;
+	//uint32 t numPadding;
 
 	unsigned char cBlock[5];
 
@@ -569,7 +567,7 @@ unsigned char * ascii85Decode(unsigned char * pInputStream, size_t len, size_t *
 	}
 	else
 	{
-		//wprintf(L"ERRORE ascii85Decode: ATTESI '~>' TROVATI '%c%c'\n\n",  pInputStream[len - 2],  pInputStream[len - 1]);
+		//wprintf(L"ERRORE ascii85Decode: ATTESI '~>' TROVATI '%c%c'\n\n", pInputStream[len - 2], pInputStream[len - 1]);
 		*pErrorCode = ASCII85_ERROR_EOD_NOT_FOUND;
 		return NULL;
 	}
@@ -601,7 +599,7 @@ unsigned char * ascii85Decode(unsigned char * pInputStream, size_t len, size_t *
 			case 'z':
 				if ( w % 5 != 0 )
 				{
-					//wprintf(L"ERRORE 0 ascii85Decode: k = %d; w = %d; carattere non valido -> 'z'", k, w);
+					//wprintf(L"ERRORE 0 ascii85Decode: k = %d; w = %d; invalid character -> 'z'", k, w);
 					*pErrorCode = ASCII85_ERROR_UNEXPECTED_CHAR;
 					free(pOutputStream);
 					pOutputStream = NULL;
@@ -652,14 +650,14 @@ unsigned char * ascii85Decode(unsigned char * pInputStream, size_t len, size_t *
 
 
 	//wprintf(L"\n\nascii85Decode pStreamNew -> ENCODED STREAM(len = %d)\n", lenNew);
-	//for ( k = 0; k < lenNew; k++ )
+	//for (k = 0; k < lenNew; k++ )
 	//{
-	//	if ( '\0' != pStreamNew[k] )
-	//		wprintf(L"%c", pStreamNew[k]);
+	// if (\0)
+	//  wprintf(L"%c", pStreamNew[k]);
 	//	else
-	//		wprintf(L"\nEHI!!! ->\\0\n");
+	//  wprintf(L"\nEHI!!! ->\\0\n");
 	//}
-	//wprintf(L"\nFINE ascii85Decode pStreamNew ENCODED STREAM.\n\n");
+	//wprintf(L"\nFINE ascii85Decode pStreamNew ENCODED STREAM. \n\n);
 
 	//wprintf(L"\n\nlen = %d; numPaddingInput = %d; lenNew = %d\n\n", len, numPaddingInput, lenNew);
 	//wprintf(L"\n\nlenNew * 4 * sizeof(unsigned char) = %d\n\n", lenNew * 4 * sizeof(unsigned char));
@@ -681,10 +679,10 @@ unsigned char * ascii85Decode(unsigned char * pInputStream, size_t len, size_t *
 	{
 		if ( pStreamNew[k] < 33 || pStreamNew[k] > 117 )
 		{
-			//if ( pStreamNew[k] != '\0' )
-			//	wprintf(L"ERRORE 1 ascii85Decode: k = %d; carattere non valido -> %d -> '%c'", k, pStreamNew[k], pStreamNew[k]);
+			//if (pStreamNew[k]!= '\0')
+			// wprintf(L"ERRORE 1 ascii85Decode: k = %d; invalid character -> %d -> '%c'", k, pStreamNew[k], pStreamNew[k]);
 			//else
-			//	wprintf(L"ERRORE 1 ascii85Decode: k = %d; carattere non valido -> 0 -> '\\0'", k);
+			// wprintf(L"ERRORE 1 ascii85Decode: k = %d; invalid character -> 0 -> '\\0'", k);
 
 			*pErrorCode = ASCII85_ERROR_UNEXPECTED_CHAR;
 			free(pOutputStream);
@@ -697,10 +695,10 @@ unsigned char * ascii85Decode(unsigned char * pInputStream, size_t len, size_t *
 
 		if ( pStreamNew[k] < 33 || pStreamNew[k] > 117 )
 		{
-			//if ( pStreamNew[k] != '\0' )
-			//	wprintf(L"ERRORE 2 ascii85Decode: k = %d; carattere non valido -> %d -> '%c'", k, pStreamNew[k], pStreamNew[k]);
+			//if (pStreamNew[k]!= '\0')
+			// wprintf(L"ERRORE 2 ascii85Decode: k = %d; invalid character -> %d -> '%c'", k, pStreamNew[k], pStreamNew[k]);
 			//else
-			//	wprintf(L"ERRORE 2 ascii85Decode: k = %d; carattere non valido -> 0 -> '\\0'", k);
+			// wprintf(L"ERRORE 2 ascii85Decode: k = %d; invalid character -> 0 -> '\\0'", k);
 
 			*pErrorCode = ASCII85_ERROR_UNEXPECTED_CHAR;
 			free(pOutputStream);
@@ -713,10 +711,10 @@ unsigned char * ascii85Decode(unsigned char * pInputStream, size_t len, size_t *
 
 		if ( pStreamNew[k] < 33 || pStreamNew[k] > 117 )
 		{
-			//if ( pStreamNew[k] != '\0' )
-			//	wprintf(L"ERRORE 3 ascii85Decode: k = %d; carattere non valido -> %d -> '%c'", k, pStreamNew[k], pStreamNew[k]);
+			//if (pStreamNew[k]!= '\0')
+			// wprintf(L"ERRORE 3 ascii85Decode: k = %d; invalid character -> %d -> '%c'", k, pStreamNew[k], pStreamNew[k]);
 			//else
-			//	wprintf(L"ERRORE 3 ascii85Decode: k = %d; carattere non valido -> 0 -> '\\0'", k);
+			// wprintf(L"ERRORE 3 ascii85Decode: k = %d; invalid character -> 0 -> '\\0'", k);
 
 			*pErrorCode = ASCII85_ERROR_UNEXPECTED_CHAR;
 			free(pOutputStream);
@@ -729,10 +727,10 @@ unsigned char * ascii85Decode(unsigned char * pInputStream, size_t len, size_t *
 
 		if ( pStreamNew[k] < 33 || pStreamNew[k] > 117 )
 		{
-			//if ( pStreamNew[k] != '\0' )
-			//	wprintf(L"ERRORE 4 ascii85Decode: k = %d; carattere non valido -> %d -> '%c'", k, pStreamNew[k], pStreamNew[k]);
+			//if (pStreamNew[k]!= '\0')
+			// wprintf(L"ERRORE 4 ascii85Decode: k = %d; invalid character -> %d -> '%c'", k, pStreamNew[k], pStreamNew[k]);
 			//else
-			//	wprintf(L"ERRORE 4 ascii85Decode: k = %d; carattere non valido -> 0 -> '\\0'", k);
+			// wprintf(L"ERRORE 4 ascii85Decode: k = %d; invalid character -> 0 -> '\\0'", k);
 
 			*pErrorCode = ASCII85_ERROR_UNEXPECTED_CHAR;
 			free(pOutputStream);
@@ -745,10 +743,10 @@ unsigned char * ascii85Decode(unsigned char * pInputStream, size_t len, size_t *
 
 		if ( pStreamNew[k] < 33 || pStreamNew[k] > 117 )
 		{
-			//if ( pStreamNew[k] != '\0' )
-			//	wprintf(L"ERRORE 5 ascii85Decode: k = %d; carattere non valido -> %d -> '%c'", k, pStreamNew[k], pStreamNew[k]);
+			//if (pStreamNew[k]!= '\0')
+			// wprintf(L"ERRORE 5 ascii85Decode: k = %d; invalid character -> %d -> '%c'", k, pStreamNew[k], pStreamNew[k]);
 			//else
-			//	wprintf(L"ERRORE 5 ascii85Decode: k = %d; carattere non valido -> 0 -> '\\0'", k);
+			// wprintf(L"ERRORE 5 ascii85Decode: k = %d; invalid character -> 0 -> '\\0'", k);
 
 			*pErrorCode = ASCII85_ERROR_UNEXPECTED_CHAR;
 			free(pOutputStream);
@@ -761,7 +759,7 @@ unsigned char * ascii85Decode(unsigned char * pInputStream, size_t len, size_t *
 
 		num = cBlock[0] * 52200625 + cBlock[1] * 614125 + cBlock[2] * 7225 + cBlock[3] * 85 + cBlock[4];
 
-		//wprintf(L"num = %u -> (%c)%u * 85^4 + (%c)%u * 85^3 + (%c)%u * 85^2 + (%c)%u * 85 + (%c)%u\n", num, cBlock[0] + 33, cBlock[0], cBlock[1] + 33, cBlock[1], cBlock[2] + 33, cBlock[2], cBlock[3] + 33, cBlock[3], cBlock[4] + 33, cBlock[4]);
+		//cprintf(L"num = %u -> (%c)%u *85^4 + (%c)%u *85^3 + (%c)%u *85^2 + (%c)%u*85 + (%c)%uX11X", num[2] cBlock[0]
 
 		c1 = (unsigned char)((num & c1Mask) >> 24);
 		c2 = (unsigned char)((num & c2Mask) >> 16);
@@ -777,7 +775,7 @@ unsigned char * ascii85Decode(unsigned char * pInputStream, size_t len, size_t *
 		pOutputStream[x] = c4;
 		x++;
 
-		//wprintf(L"\tc1(%c) = %u; c2(%c) = %u; c3(%c) = %u; c4(%c) = %u; x = %d; k = %d\n", c1, c1, c2, c2, c3, c3, c4, c4, x, k);
+		//wprintf(L"\tc1(%c) = %u; c2(%c) = %u; c3(%c) = %u; c4(%c) = %u; x = %d; k = %d\n", c1, c2, c4, c4, c4, c4, c4, c4
 
 		y = 0;
 

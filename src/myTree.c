@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #include "myTree.h"
 #include <wchar.h>
@@ -31,7 +29,7 @@ Tree * treeNewNode(int32_t numObjNumber, int32_t numObjParent)
 
 	if( !r )
 	{
-		//printf("Memoria insufficiente.\n");
+		//printf("Insufficient memory. \n);
 		return NULL;
 	}
 
@@ -72,7 +70,7 @@ void treeFree(Tree *head)
 
 	if ( NULL != head )
 	{
-		//wprintf(L"treeFree: LIBERO IL NODO -> numObjNumber = %d <> numObjParent = %d;\n", head->numObjNumber, head->numObjParent);
+		//wprintf(L"treeFree: FREE NODO -> numObjNumber = %d <> numObjParent = %d;\n", head->numObjNumber, head->numObjParent);
 		free(head);
 		head = NULL;
 	}
@@ -101,8 +99,8 @@ void treeTraversePreOrderLeafOnly(Tree *head)
 {
 	Tree *pCurrNode = head;
 
-	//if ( NULL != head )
-	if ( NULL != head  && NULL == head->firstchild ) // Stampiamo solo i nodi foglia
+	//if ( NULL! = head)
+	if ( NULL != head  && NULL == head->firstchild ) // We only print the leaf knots
 		wprintf(L"numObjNumber = %d <> numObjParent = %d; ", head->numObjNumber, head->numObjParent);
 
 	if ( NULL != head->firstchild )
@@ -121,7 +119,7 @@ void treeTraversePostOrder(Tree *head)
 	Tree *pCurrNode = head;
 
 	//if ( NULL == head )
-	//	return;
+	// return;
 
 	if ( NULL != head->firstchild )
 	{
@@ -142,7 +140,7 @@ void treeTraversePostOrderLeafOnly(Tree *head)
 	Tree *pCurrNode = head;
 
 	//if ( NULL == head )
-	//	return;
+	// return;
 
 	if ( NULL != head->firstchild )
 	{
@@ -193,7 +191,7 @@ void treeTraverseInOrderLeafOnly(Tree *head)
 	{
 		pCurrNode = head->firstchild;
 		treeTraverseInOrderLeafOnly(pCurrNode);
-		//wprintf(L"numObjNumber = %d <> numObjParent = %d; ", head->numObjNumber, head->numObjParent);
+		//wprintf(L"numObjNumber = %d < numObjParent = %d; ", head->numObjNumber, head->numObjParent);
 		pCurrNode = pCurrNode->sibling;
 		while ( NULL != pCurrNode )
 		{

@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #ifndef	MY_SCOPEHASHTABLE_INCLUDED
 #define	MY_SCOPEHASHTABLE_INCLUDED
@@ -26,13 +24,13 @@
 #ifdef __cplusplus
 #  define BEGIN_C_DECLS extern "C" {
 #  define END_C_DECLS   }
-#else // !__cplusplus 
+#else // ! 
 #  define BEGIN_C_DECLS
 #  define END_C_DECLS
-#endif // __cplusplus 
+#endif //  
 
 #ifdef _MSC_VER
-#define INLINE __forceinline // use __forceinline (VC++ specific) 
+#define INLINE __forceinline // use   forceinline (VC++ specific) 
 #else
 #define INLINE inline        // use standard inline 
 #endif
@@ -40,16 +38,16 @@
 
 
 #define HT_SIZE 251
-// #define HT_SIZE 509
-// #define HT_SIZE 1021
-// #define HT_SIZE 2039
-// #define HT_SIZE 4093
-// #define HT_SIZE 8191
-// #define HT_SIZE 16381
-// #define HT_SIZE 32749
+// #define HT SIZE 509
+// #define HT SIZE 1021
+// #define HT SIZE 2039
+// #define HT SIZE 4093
+// #define HT SIZE 8191
+// #define HT SIZE 16381
+// #define HT SIZE 32749
 
-//#define SCOPE_SIZE 4096
-//#define SCOPE_SIZE 1024
+//#define SCOPE SIZE 4096
+//#define SCOPE SIZE 1024
 #define SCOPE_SIZE 128
 
 #include <stdint.h>
@@ -91,7 +89,7 @@ typedef struct tagScope
 
 BEGIN_C_DECLS
 
-// ----------------------------------------------- HashTable Functions -------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 int htInit(HashTable_t* p, uint32_t htSize,
            pfnHashFunc HashFunc, pfnCompareFunc CompareFunc);
@@ -130,7 +128,7 @@ int StringHashFunc(HashTable_t* p, const void* pKey, uint32_t keysize);
 int StringCompareFunc(const void* pKey1, uint32_t keysize1,
                       const void* pKey2, uint32_t keysize2);
 
-// ----------------------------------------------- Scope Functions -------------------------------------------------
+// ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 int scopeInit(Scope* pScope);
 

@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #include "mycrypt_rc4.h"
 
@@ -36,13 +34,13 @@ int my_rc4_init(my_rc4_ctx_t *ctx,
     if (ctx == NULL)
         return 0;
 
-    // Elimina un eventuale stato precedente, anche in caso di errore.
+    // Eliminate any previous status, even in case of error.
     my_rc4_reset(ctx);
 
     if (key == NULL || key_len == 0)
         return 0;
 
-    // 1. Inizializzazione S-Box.
+    // 1. Initialization S-Box.
     for (size_t idx = 0; idx < 256; idx++)
     {
         ctx->s[idx] = (uint8_t)idx;
@@ -57,7 +55,7 @@ int my_rc4_init(my_rc4_ctx_t *ctx,
         rc4_swap(&ctx->s[idx], &ctx->s[j]);
     }
 
-    // 3. Inizializzazione degli indici PRGA.
+    // 3. Initialization of PRGA indices.
     ctx->i = 0;
     ctx->j = 0;
 
@@ -72,7 +70,7 @@ int my_rc4_crypt(my_rc4_ctx_t *ctx,
     if (ctx == NULL)
         return 0;
 
-    // Elaborare zero byte è un'operazione valida e senza effetti.
+    // Processing zero bytes is a valid and no-effect operation.
     if (len == 0)
         return 1;
 
@@ -106,8 +104,8 @@ void my_rc4_reset(my_rc4_ctx_t *ctx)
     if (ctx == NULL)
         return;
 
-    // Usa un loop volatile per evitare che il compilatore
-    // elimini l'azzeramento durante l'ottimizzazione.
+    // Use a volatile loop to prevent the compiler
+    // eliminate zeroing during optimization.
     volatile uint8_t *p = (volatile uint8_t *)ctx;
     size_t sz = sizeof(*ctx);
 
@@ -125,7 +123,7 @@ int my_rc4_process(const uint8_t *key,
 {
     my_rc4_ctx_t ctx = {0};
 
-    // Se l'inizializzazione fallisce, non tentare la cifratura.
+    // If initialization fails, do not attempt encryption.
     int result = my_rc4_init(&ctx, key, key_len);
 
     if (result)
@@ -133,7 +131,7 @@ int my_rc4_process(const uint8_t *key,
         result = my_rc4_crypt(&ctx, in, out, len);
     }
 
-    // Eseguito sia in caso di successo sia in caso di errore.
+    // Performed both in case of success and in case of error.
     my_rc4_reset(&ctx);
 
     return result;

@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #ifndef MYSCANNER_INCLUDED
 #define MYSCANNER_INCLUDED
@@ -37,7 +35,7 @@
 #include "mydecode.h"
 #include "myGenHashTable.h"
 #include "vlRedBlackTrees.h"
-//#include "myInitPredefCMapHT.h"
+//#includes "myInitPredefCMapHT.h"
 
 #ifndef MAX_STRLEN
 #define MAX_STRLEN 4096
@@ -171,8 +169,8 @@ typedef enum tagTokenType
 	/* 44 */ T_CONTENT_OP_endnotdefchar,
 	/* 45 */ T_CONTENT_OP_usecmap,
 
-	/* 46 */ T_CONTENT_OP_BT,   // 'BT'   -> Begin Text
-	/* 47 */ T_CONTENT_OP_ET,   // 'ET'   -> End Text
+	/* 46 */ T_CONTENT_OP_BT,   // 'BT' -> Begin Text
+	/* 47 */ T_CONTENT_OP_ET,   // End Text
 	/* 48 */ T_CONTENT_OP_TD,
 	/* 49 */ T_CONTENT_OP_Td,
 	/* 50 */ T_CONTENT_OP_Tm,
@@ -279,7 +277,7 @@ typedef struct tagToken
 	int vInt;
 	double vDouble;
 	char *vString;
-	//} Value;
+	//Value
 
 	//int line;
 	//int column;
@@ -295,8 +293,8 @@ typedef struct tagPdfIndirectObject
 	uint32_t StreamOffset;
 	uint32_t StreamLength;
 	unsigned char *pszDecodedStream;
-	int32_t  numObjParent;    // Usato per gli oggetti di tipo 'Pages'(nodi interni del page tree) o 'Page'
-	uint32_t genObjParent;    // Usato per gli oggetti di tipo 'Pages'(nodi interni del page tree) o 'Page'
+	int32_t  numObjParent;    // Used for 'Pages' type objects (internal page tree names) or 'Page'
+	uint32_t genObjParent;    // Used for 'Pages' type objects (internal page tree names) or 'Page'
 	Tree *pTreeNode;
 } PdfIndirectObject;
 
@@ -316,11 +314,11 @@ typedef struct tagPdfTrailer
 	TrailerIndex **pIndexArray;
 	int indexArraySize;
 
-    // File identifier ID[0], dati binari.
+    // File identifier ID[0], binary data.
     unsigned char *pID0Bytes;
     size_t lenID0;
 
-    // File identifier ID[1], dati binari.
+    // File identifier ID[1], binary data.
     unsigned char *pID1Bytes;
     size_t lenID1;
 } PdfTrailer;
@@ -350,7 +348,7 @@ typedef struct tagPdfCryptData
 	char szSubFilter[MAX_LEN_STR + 1];
 	int Length;
 
-	// CF // dictionary
+	// CF/ Dictionary
 	//PdfIndirectObject CF; // dictionary
 
 	char szStmF[MAX_LEN_STR + 1];
@@ -372,9 +370,9 @@ typedef struct tagTransMatrix
 
 //typedef struct tagVerticalDataWriting
 //{
-//	double v;
-//	double w1;
-//} VerticalDataWriting;
+// double v;
+// double w1;
+//VerticalDataWriting;
 
 typedef struct tagGlyphsWidths
 {
@@ -390,10 +388,10 @@ typedef struct tagGlyphsWidths
 	double dFontUmWidth; // M
 	int WritingMode;
 	double DW;  // Type0 Font only; Default Width.
-	//VerticalDataWriting    DW2; // Type0 Font only; Default Width; Vertical writing.
+	//VerticalDataWriting DW2; // Type0 Font only; Default Width; Vertical writing.
 } GlyphsWidths;
 
-// Struttura per la mappatura CID -> Unicode
+// Structure for CID mapping -> Unicode
 typedef struct {
     int cid;
     wchar_t unicode;
@@ -426,9 +424,9 @@ typedef struct tagPdfObjsTableItem
 	MyObjRefList_t myXObjRefList;
 	MyObjRefList_t myFontsRefList;
 	MyObjRefList_t myGsRefList;
-	MyIntQueueList_t queueContentsObjRefs; // Coda di riferimenti agli obj
-	                                       // che contengono i contents(stream) della pagina.
-	// Solo per oggetti font:
+	MyIntQueueList_t queueContentsObjRefs; // Code of references to obj
+	                                       // which contain content(stream) of the page.
+	// Only for font objects:
 	GlyphsWidths *pGlyphsWidths;
 	unsigned char *pszDirectFontResourceString;
 	uint32_t lenDirectFontResourceString;
@@ -445,8 +443,8 @@ typedef struct tagPage
 	Scope myScopeHT_GsRef;
 	int numObjContent;
 	int bContentIsPresent;
-	MyIntQueueList_t queueContentsObjRefs; // Coda di riferimenti agli obj che contengono i contents(stream) della pagina
-	MyContentQueueList_t queueContens;     // Coda di content della pagina. Ogni elemento della coda contiene l'offset dello stream e la sua lunghezza, non lo stream vero e proprio.
+	MyIntQueueList_t queueContentsObjRefs; // References to objs containing content(stream) of the page
+	MyContentQueueList_t queueContens;     // Happy page. Each element of the tail contains the offset of the stream and its length, not the real stream.
 } Page;
 
 typedef struct tagStreamsStack
@@ -530,14 +528,14 @@ typedef struct tag_vlrbtData
 
 	vlrbtTreeNode *pCurrentNode;
 
-	//wchar_t *pText;
-	//uint32_t TextLength;
+	//wchar t *pText;
+	//uint32 t TextLength;
 
 	//FILE *fpOutput;
 
 	//double prevXCoordNext;
 	//double prevYCoordNext;
-	//wchar_t prevChar;
+	//wchar t prevChar;
 	//double prevRow;
 	//double prevCol;
 	//double prevWidth;
@@ -564,7 +562,7 @@ typedef struct tagParams
 
 	char szError[8192];
 
-	// Puntatore alla funzione callback per la password
+	// Pointer to callback function for password
     OnUserPasswordCallback pOnUserPassword;
 
 	GenHashTable_t myHT_ImageObjs;
@@ -750,11 +748,11 @@ typedef struct tagParams
 	int bHasCodeSpaceOneByte;
 	int bHasCodeSpaceTwoByte;
 
-	// ------------------- ENCODING INIZIO ----------------------------
+	// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 	GenHashTable_t myCMapHT;
 
-	//GenHashTable_t myHT;
+	//GenHashTable t myHT;
 	TernarySearchTree_t myTST;
 
 	int idxCurrentWordChar;
@@ -784,19 +782,19 @@ typedef struct tagParams
 
 	wchar_t *pArrayUnicode;
 
-	// sequenze multi-codepoint per CID (per Hindi, Thai composto, ecc.)
-	wchar_t **sequences;   // array di 0x10000 puntatori; sequences[cid] = NULL oppure stringa di 1+ wchar_t + '\0'
+	// multi-codepoint sequences for CID (for Hindi, Thai compound, etc.)
+	wchar_t **sequences;   // array of 0x10000 pointers; sequences[cid] = NULL or string of 1+ wchar t + '\0'
 
 	wchar_t *pCurrentEncodingArray;
 
-	// Ultima stringa grezza letta dal content stream (per Tj/'/")
+	// Last raw string read by content stream (for Tj/'/)
 	unsigned char *pLastRawStringBytes;
 	size_t         nLastRawStringBytesLen;
 
-	// Indica che il prossimo token stringa contiene il valore di /ActualText.
+	// Indicates that the next string token contains the value of /ActualText.
 	int bReadingActualTextValue;
 
-	// Testo Unicode attualmente attivo tra BDC ed EMC.
+	// Unicode text currently active between BDC and EMC.
 	wchar_t *pActualTextUnicode;
 	size_t nActualTextUnicodeLen;
 	size_t nActualTextUnicodePos;
@@ -805,12 +803,12 @@ typedef struct tagParams
 	vlrbtKey_t actualTextLastKey;
 	vlrbtData_t actualTextLastData;
 
-	// ------------------- ENCODING FINE -------------------------------
+	// ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 	int bOnParseEncryptObject;
 	int isEncrypted;
 	int bSkipCurrentPdf;
-	int bInfoObjectParsed;   // 0 = metadati non ancora stampati, 1 = stampati
+	int bInfoObjectParsed;   // 0 = unprinted metadata, 1 = printed
 	int bOnParseInfoObject;
 
 	int dimFile;
@@ -826,7 +824,7 @@ typedef struct tagParams
 
 	PdfCryptoParams *pCryptoParams;
 
-	// Buffer posseduti dal parser per le stringhe binarie del dizionario Encrypt.
+	// Buffer possessed by the parser for the binary strings of the Encrypt dictionary.
 	unsigned char *pCryptoOwnedO;
 	unsigned char *pCryptoOwnedU;
 	unsigned char *pCryptoOwnedOE;
@@ -844,10 +842,10 @@ typedef struct tagParams
 	uint32_t nObjsTableSizeFromPrescanFile;
 
 	int nStackStringOpenParen;
-	int nFileErrorCount;    // errori scritti nel file di log durante l'elaborazione del file corrente
-	int nFileWarningCount;  // warning (messaggi che iniziano con "WARNING") scritti nel file di log per il file corrente
-	int bShowErrors;        // opzione --show_errors: mostra a video (stderr) il numero di errori per file
-	int bShowWarnings;      // opzione --show_warnings: mostra a video (stderr) il numero di warning per file
+	int nFileErrorCount;    // errors written in the log file while processing the current file
+	int nFileWarningCount;  // warning (messages starting with "WARNING") written in the log file for current file
+	int bShowErrors;        // option --show errors: show to video (stderr) the number of errors per file
+	int bShowWarnings;      // option --show warnings: show to video (stderr) the number of warnings for file
 	MyNumStackList_t myNumStack;
 	char szCurrKeyName[MAX_STRLEN];
 	char szCurrResourcesKeyName[MAX_STRLEN];
@@ -869,12 +867,12 @@ typedef struct tagParams
 
 	MyIntQueueList_t myPageLeafQueue;
 
-	int nCurrentPageParent;      // 0 se nodo radice; altrimenti intero > 0 indica il nodo genitore della pagina corrente
+	int nCurrentPageParent;      // 0 if root node; otherwise whole > 0 indicates the parent node of the current page
 
-	int nCurrentPageResources;   // 0 se la pagina non ha riferimenti a Resources;
-	                             // -1 se la pagina eredita Resources da uno dei suoi genitori;
-	                             // altrimenti un intero maggiore di zero
-	                             // che indica il riferimento al numero dell'oggetto Resources.
+	int nCurrentPageResources;   // 0 if the page has no references to Resources;
+	                             // -1 if the page inherits Resources from one of its parents;
+	                             // otherwise a whole greater than zero
+	                             // which indicates the reference to the number of the Resources object.
 
 	int bXObjectKeys;
 	int bFontsKeys;
@@ -945,7 +943,7 @@ typedef enum tagStates
 } States;
 
 
-// Dichiara la funzione Set da qualche parte nell'header
+// It states the Set function somewhere in the header
 void SetOnUserPasswordCallback(Params *pParams, OnUserPasswordCallback callback);
 
 int MakeAndOpenErrorsFile(Params *pParams, int bBom);

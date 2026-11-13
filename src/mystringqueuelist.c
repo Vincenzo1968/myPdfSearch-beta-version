@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #include <stdio.h>
 #include <string.h>
@@ -153,7 +151,7 @@ int mystringqueuelist_Dequeue(MyStringQueueList_t* p, char *s)
 	if ( NULL != p && NULL == p->head )
 		return 0;
 
-	//wprintf(L"mystringqueuelist_Dequeue -> p->head->szItem -> '%s'\n", p->head->szItem);
+	//wprintf(L'mystringqueuelist Dequeue -> p->szItem -> '%s'\n, p->head->szItem);
 
 	if ( NULL != p->head->szItem )
 	{
@@ -166,7 +164,7 @@ int mystringqueuelist_Dequeue(MyStringQueueList_t* p, char *s)
 			s[0] = '\0';
 	}
 
-	//wprintf(L"mystringqueuelist_Dequeue -> s -> '%s'\n", s);
+	//wprintf(L"mystringqueuelist Dequeue -> s -> '%s'\n", s);
 
 	n = p->head;
 

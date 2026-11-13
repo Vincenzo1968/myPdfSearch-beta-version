@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #include <stdio.h>
 #include <malloc.h>
@@ -64,7 +62,7 @@ vlrbtTreeNode *vlrbtNewNode(const void* pKey, uint32_t keySize, void* pData, uin
 
 	if( !r )
 	{
-		//printf("Memoria insufficiente.\n");
+		//printf("Insufficient memory. \n);
 		return NULL;
 	}
 
@@ -123,7 +121,7 @@ vlrbtTreeNode *vlrbtInsertNode(vlRedBlackTree *pTree, const void* pKey, uint32_t
 	while ( pRadice != NULL )
 	{
 		y = pRadice;
-		//if ( z->data < pRadice->data )
+		//if
 		if ( pTree->pCompareFunc(z->pKey, z->keysize, pRadice->pKey, pRadice->keysize) < 0 )
 			pRadice = pRadice->left;
 		else
@@ -133,25 +131,25 @@ vlrbtTreeNode *vlrbtInsertNode(vlRedBlackTree *pTree, const void* pKey, uint32_t
 	z->father = y;
 	if ( y == NULL )
 	{
-		//printf("Inserisco la radice -> %d\n", key);
-		//wprintf(L"Inserisco la radice -> '%lc'\n", ((vlrbtData_t*)(pData))->c);
+		//printf("I insert the root -> %dX1X", key);
+		//wprintf(L"I insert the root -> '%lc'\n", ((vlrbtData t*)(pData))->c);
 
 		node = z;
 	}
 	else
 	{
-		//if ( z->data < y->data )
+		//if
 		if ( pTree->pCompareFunc(z->pKey, z->keysize, y->pKey, y->keysize) < 0 )
 		{
-			//printf("Inserisco %d a sinistra di %d\n", z->data, y->data);
-			//wprintf(L"Inserisco '%lc' a sinistra di '%lc'\n", ((vlrbtData_t*)(pData))->c, ((vlrbtData_t*)(y->pData))->c);
+			//printf("I insert %d to the left of %d\n", z->data, y->data);
+			//wprintf(L"I insert '%lc' to the left of '%lc'\n", ((vlrbtData t*)(pData)))->c, (vlrbtData t*)(y->pData))->c);
 
 			y->left = z;
 		}
 		else
 		{
-			//printf("Inserisco %d a destra di %d\n", z->data, y->data);
-			//wprintf(L"Inserisco '%lc' a destra di '%lc'\n", ((vlrbtData_t*)(pData))->c, ((vlrbtData_t*)(y->pData))->c);
+			//printf("I insert %d to the right of %d\n", z->data, y->data);
+			//wprintf(L"I insert '%lc' to the right of '%lc'\n", ((vlrbtData t*)(pData)))->c, (vlrbtData t*)(y->pData))->c);
 
 			y->right = z;
 		}
@@ -425,7 +423,7 @@ void vlrbtFree(vlRedBlackTree *pTree)
 				temp2->pData = NULL;
 			}
 			free(temp2);
-			//temp2 = NULL;   // NON DECOMMENTARE ALTRIMENTI ENTRA IN UN LOOP INFINITO.
+			//temp2 = NULL; // DO NOT DECOMMEND TO OTHER ENTER IN A FINITE LOOP.
 
 			if ( top == 0 )
 				return;
@@ -739,12 +737,10 @@ int VlRbtOnTraverseFunc(const void* pKey, uint32_t keysize, void* pData, uint32_
 }
 */
 
-/*
-gcc -Wall -Wextra -pedantic -O0 -g vlRedBlackTrees.c -o rbtdebug
+/* gcc -Wall -Wextra -pedantic -O0 -g vlRedBlackTrees.c -o rbtdebug
 valgrind --leak-check=full --show-reachable=yes --track-origins=yes --log-file=outValgrind.txt ./rbtdebug
 
-gcc -Wall -W -pedantic -O3 vlRedBlackTrees.c -o rbt
-*/
+-Wall -Wall -pedantic -O3 vlRedBlackTrees.c -o rbt */
 
 /*
 int main()

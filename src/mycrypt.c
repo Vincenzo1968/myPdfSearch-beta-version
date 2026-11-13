@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #include "scanner.h"
 #include "mycrypt_rc4.h"
@@ -78,10 +76,10 @@ void PdfCryptoParams_FreeOutput(PdfCryptoParams *cp)
 }
 
 
-// Inizializzazione del provider default nel contesto globale.
-// Il riferimento viene conservato per la vita del processo:
-// non deve essere liberato dal cleanup delle singole operazioni,
-// perché altri thread potrebbero utilizzare ancora OpenSSL.
+// Starting the default provider in the global context.
+// The reference is kept for the life of the process:
+// must not be freed from the cleanup of individual operations,
+// because other threads may still use OpenSSL.
 
 static CRYPTO_ONCE crypto_global_once = CRYPTO_ONCE_STATIC_INIT;
 static OSSL_PROVIDER *crypto_global_default_provider = NULL;
@@ -135,7 +133,7 @@ static int crypto_env_init(CryptoEnv *env)
 
     memset(env, 0, sizeof(*env));
 
-    // Completa l'inizializzazione globale prima di creare il contesto locale.
+    // Complete global initialization before creating the local context.
     if (!crypto_global_init())
         goto errore;
 
@@ -149,13 +147,13 @@ static int crypto_env_init(CryptoEnv *env)
     if (env->default_provider == NULL)
         goto errore;
 
-    // RC4 viene cercato esclusivamente nel provider legacy.
-    // AES e gli hash utilizzano il provider default.
-    // Se legacy non è disponibile, gli algoritmi del provider
-    // default possono comunque essere utilizzati.
+    // RC4 is sought exclusively in the legacy provider.
+    // AES and hash use the default provider.
+    // If legacy is not available, provider algorithms
+    // default can still be used.
 
-    // NON PIÙ NECESSARIO: USIAMO mycrypt_rc4.c e mycrypt_rc4.h
-    //env->legacy_provider = OSSL_PROVIDER_load(env->libctx, "legacy");
+    //  We use mycrypt rc4.c and mycrypt rc4. h
+    //env->legacy provider = OSSL PROVIDER load(env->libctx, "legacy");
 
     return 1;
 
@@ -169,8 +167,8 @@ static void crypto_env_destroy(CryptoEnv *env)
     if (env == NULL)
 		return;
 
-    // NON PIÙ NECESSARIO: USIAMO mycrypt_rc4.c e mycrypt_rc4.h
-    //if (env->legacy_provider != NULL) OSSL_PROVIDER_unload(env->legacy_provider);
+    //  We use mycrypt rc4.c and mycrypt rc4. h
+    //if (env->legacy provider!= NULL) OSSL PROVIDER unload(env->legacy provider);
 
     if (env->default_provider != NULL)
 		OSSL_PROVIDER_unload(env->default_provider);
@@ -232,7 +230,7 @@ static int digest_one(CryptoEnv *env, const char *name, const unsigned char *dat
 
 static int rc4_crypt(CryptoEnv *env, const unsigned char *key, size_t key_len, const unsigned char *input, size_t input_len, unsigned char *output)
 {
-    (void)env; // Non serve più il contesto OpenSSL per RC4
+    (void)env; // No longer need the OpenSSL context for RC4
 
     if (key == NULL || key_len == 0)
         return 0;
@@ -243,7 +241,7 @@ static int rc4_crypt(CryptoEnv *env, const unsigned char *key, size_t key_len, c
     if (input == NULL || output == NULL)
         return 0;
 
-    // Invoca l'algoritmo nativo: senza allocazioni heap.
+    // Call native algorithm: without heap allocations.
 	if (!my_rc4_process(key, key_len, input, output, input_len))
 	{
 		return 0;
@@ -821,7 +819,7 @@ static int get_file_key(CryptoEnv *env, PdfCryptoParams *cp, unsigned char key[3
 {
     int status = 0;
 
-    //wprintf(L"[DEBUG get_file_key] bUseProvidedFileKey=%d, bPasswordSet=%d, bUserPasswordSet=%d, bOwnerPasswordSet=%d, R=%d, lenFileKey=%zu\n",
+    //wprintf(L"[DEBUG get file key] bUseProvidedFileKey=%d, bPasswordSet=%d, bUserPasswordSet=%d, bOwnerPasswordSet=%d, R=%d, lenFileKey=%zu\n",
     //        cp->bUseProvidedFileKey, cp->bPasswordSet, cp->bUserPasswordSet, cp->bOwnerPasswordSet,
     //        cp->R, cp->lenFileKey);
 
@@ -877,8 +875,8 @@ static int get_file_key(CryptoEnv *env, PdfCryptoParams *cp, unsigned char key[3
     return 1;
 }
 
-// Verifica la password candidata e memorizza la file key se valida.
-// Non decifra alcuno stream PDF.
+// Check the candidate password and store the key file if valid.
+// No PDF stream.
 int PdfCryptoParams_Authenticate(PdfCryptoParams *cp)
 {
     CryptoEnv env;
@@ -900,7 +898,7 @@ int PdfCryptoParams_Authenticate(PdfCryptoParams *cp)
         goto uscita;
     }
 
-    // Verifica la password e conserva la file key in PdfCryptoParams.
+    // Check the password and store the key file in PdfCryptoParams.
     if (!get_file_key(&env, cp, key, &key_len))
         goto uscita;
 
@@ -926,9 +924,9 @@ static PdfCryptMethod choose_method(const PdfCryptoParams *cp)
     {
         case PDF_CRYPT_TARGET_STRING:
             method = cp->strMethod;
-            // Fallback: se /StrF non e' stato parsato ma /StmF si',
-            // usa lo stesso crypt filter degli stream. Caso comune
-            // (pdfTeX, Distiller, ecc.): /StrF == /StmF.
+            // Fallback: if /StrF wasn't parsoned but /StmF did,
+            // use the same crypt filter of the streams. Common case
+            // (pdfTeX, Distiller, etc.): /StrF == /StmF.
             if (method == PDF_CRYPT_AUTO &&
                 cp->streamMethod != PDF_CRYPT_AUTO &&
                 cp->streamMethod != PDF_CRYPT_NONE)
@@ -964,7 +962,7 @@ static int derive_object_key(CryptoEnv *env, const PdfCryptoParams *cp,
     int ok = 0;
 
     if (cp->V >= 5)
-		return 0; // AESV3 uses the file key directly in transform().
+		return 0; // AESV3 uses the file key directly become().
 
     if (file_key_len == 0 || file_key_len > 16)
 		return 0;

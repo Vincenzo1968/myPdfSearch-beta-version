@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #include "myUnicodeNFC.h"
 #include "cmap/cmap_UnicodeNfcData.h"
@@ -257,8 +255,8 @@ static MyUnicodeNFCStatus myNfcDecompose(uint32_t cp,
     if (depth > MY_NFC_MAX_DECOMPOSITION_DEPTH)
         return MY_UNICODE_NFC_INVALID_TABLE;
         
-    // NFKC-lite: mappa i presentation forms arabi alle forme base
-    // prima della decomposizione canonica.
+    // NFKC-lite: map Arabic presentations to basic forms
+    // before the canonical decomposition.
     arabic_rc = myNfkcArabicDecompose(cp, buffer);
     if (arabic_rc > 0)
         return MY_UNICODE_NFC_OK;
@@ -301,8 +299,8 @@ static MyUnicodeNFCStatus myNfcDecompose(uint32_t cp,
     return MY_UNICODE_NFC_OK;
 }
 
-// Canonical ordering: stable counting sort of each consecutive run of
-// non-starters. Canonical Combining Class is an 8-bit value, so this is
+// Canonical ordering: stable counting lot of each consecutive run of
+// Not-starters. Canonical Combining Class is an 8-bit value, so this is
 // linear in the input length and avoids quadratic behavior on long mark runs.
 
 static int myNfcCanonicalOrder(MyNfcBuffer *buffer)
@@ -421,7 +419,7 @@ static void myNfcCanonicalCompose(MyNfcBuffer *buffer)
             myNfcComposePair(starter, current, &composite)) {
             buffer->data[starter_pos] = composite;
             starter = composite;
-            // A successful composition does not change last_ccc. 
+            // A successful composition does not change last ccc. 
             continue;
         }
 

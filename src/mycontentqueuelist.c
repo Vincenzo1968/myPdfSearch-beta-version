@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #include <stdio.h>
 #include <string.h>
@@ -103,7 +101,7 @@ MyContentQueueItem_t* mycontentqueuelist_NewNode(MyContent_t* pContent)
 	//n->myContent.Length = pContent->Length;
 	n->myContent.Offset = pContent->Offset;
 
-	// Conserva l'identificativo dell'oggetto PDF.
+	// Keep the PDF object identifier.
 	n->myContent.ObjectNumber = pContent->ObjectNumber;
 	n->myContent.GenerationNumber = pContent->GenerationNumber;
 
@@ -185,7 +183,7 @@ int mycontentqueuelist_Dequeue(MyContentQueueList_t* p, MyContent_t* pContent)
 	//pContent->Length = p->head->myContent.Length;
 	pContent->Offset = p->head->myContent.Offset;
 
-	// Recupera l'identificativo dell'oggetto PDF.
+	// Recovers the PDF object identifier.
 	pContent->ObjectNumber = p->head->myContent.ObjectNumber;
 	pContent->GenerationNumber = p->head->myContent.GenerationNumber;
 

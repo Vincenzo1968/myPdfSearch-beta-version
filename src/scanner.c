@@ -1,24 +1,22 @@
-/*
-   Copyright (C) 2026 Vincenzo Lo Cicero
+/*    Copyright (C) 2026 Vincenzo Lo Cicero
 
-   Author: Vincenzo Lo Cicero.
-   e-mail: vincenzolocicero68@gmail.com
+Author: Vincenzo Lo Cicero.
+e-mail: vincenzolocicero68@gmail.com
 
-   This file is part of mypdfsearch.
+This file is part of mypdfsearch.
 
-   mypdfsearch is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+mypdfsearch is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any side version.
 
-   mypdfsearch is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
+mypdfsearch is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty
+MERCHANTABILITY or FITNESS FOR PARTICULAR PURPOSE. See the
+GNU General Public License for details.
 
-   You should have received a copy of the GNU General Public License
-   along with mypdfsearch.  If not, see <http://www.gnu.org/licenses/>.
-*/
+You should have received a copy of the GNU General Public License
+along with mypdfsearch. If not, see <http://www.gnu.org/licenses/>. */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,16 +46,16 @@
 #define MY_LOBYTE(w) ((MY_BYTE)((MY_DWORD)(w) & 0xFF))
 #define MY_HIBYTE(w) ((MY_BYTE)((MY_DWORD)(w) >> 8))
 
-// typedef uint32_t* MY_DWORD_PTR;
+// typedef uint32 t* MY DWORD PTR;
 
-// #define MY_MAKEWORD(a, b) ((MY_WORD)(((MY_BYTE)((MY_DWORD_PTR)(a) & 0xff)) | ((MY_WORD)((MY_BYTE)((MY_DWORD_PTR)(b) & 0xff))) << 8))
+// (b) (MY WORD) (MY WORD) (MY BYTE)(MY DWORD PTR)(a) & 0xff))) | (MY WORD)(MY BYTE)(MY DWORD PTR)(b) & 0xff))) < 8)
 
-// #define MY_MAKELONG(a, b) ((MY_LONG)(((MY_WORD)((MY_DWORD_PTR)(a) & 0xffff)) | ((MY_DWORD)((MY_WORD)((MY_DWORD_PTR)(b) & 0xffff))) << 16))
+// (a) & 0xffff) | (MY DWORD)((MY DWORD PTR)(a) & 0xffffff)) | (MY DWORD)(MY DWORD)(MY DWORD PTR)(b) & 0xffffffff))) < 16
 
-// #define MY_LOWORD(l) ((MY_WORD)((MY_DWORD_PTR)(l) & 0xFFFF))
-// #define MY_HIWORD(l) ((MY_WORD)((MY_DWORD_PTR)(l) >> 16))
-// #define MY_LOBYTE(w) ((MY_BYTE)((MY_DWORD_PTR)(w) & 0xFF))
-// #define MY_HIBYTE(w) ((MY_BYTE)((MY_DWORD_PTR)(w) >> 8))
+// #define MY LOWORD(l) (MY WORD)(MY DWORD PTR)(l) & 0xFFFF)
+// (l) (MY WORD) (MY DWORD PTR)(l) > 16)
+// (MY BYTE)(MY BYTE)(MY DWORD PTR)(w) & 0xFF))
+// (MY BYTE)
 
 static int read_pdf_literal_string(const unsigned char *input, int *pIndex, unsigned char **outBytes, size_t *outLen)
 {
@@ -111,7 +109,7 @@ static int read_pdf_literal_string(const unsigned char *input, int *pIndex, unsi
                 case '\\': out = '\\'; break;
 
                 case '\r':
-                    // continuazione di riga: \r[\n] rimosso 
+                    // line continuation: \r[\n] removed 
                     cursor++;
                     if (input[cursor] == '\n')
                         cursor++;
@@ -119,7 +117,7 @@ static int read_pdf_literal_string(const unsigned char *input, int *pIndex, unsi
                     break;
 
                 case '\n':
-                    // continuazione di riga: \n rimosso 
+                    // line continuation: \n removed 
                     cursor++;
                     bEmit = 0;
                     break;
@@ -151,8 +149,8 @@ static int read_pdf_literal_string(const unsigned char *input, int *pIndex, unsi
                     }
                     else
                     {
-                        // backslash davanti a carattere sconosciuto:
-                        // il backslash si ignora, si tiene il carattere 
+                        // backslash in front of unknown character:
+                        // the backslash is ignored, you hold the character 
                         out = ch;
                     }
                     break;
@@ -242,14 +240,14 @@ int MakeAndOpenErrorsFile(Params *pParams, int bBom)
 		goto uscita;
 
 	#if !defined(_WIN64) && !defined(_WIN32)
-	// UTF-8 BOM -> EF BB BF
+	// EF BB BF
 	szBOM[0] = 0xEF;
 	szBOM[1] = 0xBB;
 	szBOM[2] = 0xBF;
 	szBOM[3] = '\0';
 	#endif
 
-	//pParams->fpErrors = fopen("AAA_mypdfsearch_parsing_errors.txt", "wb");
+	//pParams->fpErrors = fopen("AAA mypdfsearch parsing errors.txt", "wb");
 	pParams->fpErrors = fopen("AAA_mypdfsearch_parsing_errors.txt", "a");
 	if ( pParams->fpErrors == NULL )
 	{
@@ -266,7 +264,7 @@ int MakeAndOpenErrorsFile(Params *pParams, int bBom)
 	#endif
 
 	#if !defined(_WIN64) && !defined(_WIN32)
-	// UTF-8 BOM -> EF BB BF
+	// EF BB BF
 	fwprintf(pParams->fpErrors, L"%s", szBOM);
 	#endif
 
@@ -279,8 +277,8 @@ int myShowErrorMessage(Params *pParams, const char *szMsg, int bPrintToErrorFile
 {
 	if ( bPrintToErrorFile )
 	{
-		// Convenzione del log: i messaggi che iniziano con "WARNING" (eventualmente
-		// preceduti da spazi o a-capo) sono warning; tutti gli altri sono errori.
+		// Log Convention: Messages starting with "WARNING" (possibly
+		// preceded by spaces or a-capo) are warnings; all others are errors.
 		const char *pMsg = szMsg;
 		while ( *pMsg == '\n' || *pMsg == '\r' || *pMsg == ' ' || *pMsg == '\t' )
 			pMsg++;
@@ -526,15 +524,15 @@ int matchTrailer(Params *pParams, TokenTypeEnum ExpectedToken, char *pszFunction
 		{
 			snprintf(pParams->szError, 1024, "\nFUNZIONE match(richiamata dalla funzione '%s' -> errore di sintassi: Atteso token n° %d, trovato token n° %d\n", pszFunctionName, ExpectedToken, pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//fwprintf(pParams->fpErrors, L"\nFUNZIONE match(richiamata dalla funzione '%s' -> errore di sintassi: Atteso token n° %d, trovato token n° %d\n", pszFunctionName, ExpectedToken, pParams->myToken.Type);
-			//wprintf(L"\nFUNZIONE match(richiamata dalla funzione '%s' -> errore di sintassi: Atteso token n° %d, trovato token n° %d\n", pszFunctionName, ExpectedToken, pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"\nFUNZIONE match(registered by the function '%s' -> syntax error: Expected token n° %d, found token n° %d\n", pszFunctionName, ExpectedToken, pParams->myToken.Type);
+			//wprintf(L"\nFUNZIONE match(registered by the '%s' function -> syntax error: Expected token n° %d, found token n° %d\n", pszFunctionName, ExpectedToken, pParams->myToken.Type);
 		}
 		else
 		{
 			snprintf(pParams->szError, 1024, "\nFUNZIONE match -> errore di sintassi: Atteso token n° %d, trovato token n° %d\n", ExpectedToken, pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//fwprintf(pParams->fpErrors, L"\nFUNZIONE match -> errore di sintassi: Atteso token n° %d, trovato token n° %d\n", ExpectedToken, pParams->myToken.Type);
-			//wprintf(L"\nFUNZIONE match -> errore di sintassi: Atteso token n° %d, trovato token n° %d\n", ExpectedToken, pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"\nFUNTION match -> syntax error: Expected token no. %d, found token no. %d\n", ExpectedToken, pParams->myToken.Type);
+			//wprintf(L"\nFUNTION match -> syntax error: Expected token no. %d, found token no. %d\n", ExpectedToken, pParams->myToken.Type);
 		}
 	}
 
@@ -629,7 +627,7 @@ int matchTrailer(Params *pParams, TokenTypeEnum ExpectedToken, char *pszFunction
 	return retValue;
 }
 
-// trailerbody      : T_DICT_BEGIN traileritems T_DICT_END;
+// trailerbody: T DICT BEGIN traileritems T DICT END;
 int trailerbody(Params *pParams)
 {
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ReadTrailer_FN) || defined(MYDEBUG_PRINT_ON_ReadTrailer_OBJ)
@@ -678,7 +676,7 @@ int trailerbody(Params *pParams)
 	{
 		snprintf(pParams->szError, 1024, "Error parsing trailerbody: trailer Size value must be > 0 %d\n", pParams->myToken.Type);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore parsing trailerbody: atteso T_KW_R, trovato %d\n", pParams->myToken.Type);
+		//wprintf(L"Errore parsing trailerbody: expected T KW R, found %d\n", pParams->myToken.Type);
 		//fwprintf(pParams->fpErrors, L"Error parsing trailerbody: trailer Size value must be > 0 %d\n", pParams->myToken.Type);
 		return 0;
 	}
@@ -689,7 +687,7 @@ int trailerbody(Params *pParams)
 
 		snprintf(pParams->szError, 1024, "Error parsing trailerbody: trailer Root value must be > 0 %d\n", pParams->myToken.Type);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore parsing trailerbody: atteso T_KW_R, trovato %d\n", pParams->myToken.Type);
+		//wprintf(L"Errore parsing trailerbody: expected T KW R, found %d\n", pParams->myToken.Type);
 		//fwprintf(pParams->fpErrors, L"Error parsing trailerbody: trailer Root value must be > 0 %d\n", pParams->myToken.Type);
 		return 0;
 	}
@@ -700,7 +698,7 @@ int trailerbody(Params *pParams)
 
 		snprintf(pParams->szError, 1024, "Error parsing trailerbody: trailer Encrypt value must be > 0 %d\n", pParams->myToken.Type);
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"Errore parsing trailerbody: atteso T_KW_R, trovato %d\n", pParams->myToken.Type);
+		//wprintf(L"Errore parsing trailerbody: expected T KW R, found %d\n", pParams->myToken.Type);
 		//fwprintf(pParams->fpErrors, L"Error parsing trailerbody: trailer Encrypt value must be > 0 %d\n", pParams->myToken.Type);
 		return 0;
 	}
@@ -708,7 +706,7 @@ int trailerbody(Params *pParams)
 	return 1;
 }
 
-// traileritems     : {T_NAME trailerobj};
+// traileritems: {T NAME trailerobj};
 int traileritems(Params *pParams)
 {
 	while ( pParams->myToken.Type == T_NAME )
@@ -787,8 +785,8 @@ int trailerobj(Params *pParams)
 				{
 					snprintf(pParams->szError, 1024, "Errore parsing trailerobj: atteso T_KW_R, trovato %d\n", pParams->myToken.Type);
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"Errore parsing trailerobj: atteso T_KW_R, trovato %d\n", pParams->myToken.Type);
-					//fwprintf(pParams->fpErrors, L"Errore parsing trailerobj: atteso T_KW_R, trovato %d\n", pParams->myToken.Type);
+					//wprintf(L"Errore parsing trailerobj: expected T KW R, found %d\n", pParams->myToken.Type);
+					//fwprintf(pParams->fpErrors, L"Errore parsing trailerobj: expected T KW R, found %d\n", pParams->myToken.Type);
 					return 0;
 				}
 
@@ -827,10 +825,10 @@ int trailerobj(Params *pParams)
 					pParams->myPdfTrailer.Encrypt.Number = iNum;
 					pParams->myPdfTrailer.Encrypt.Generation = iGen;
 
-					//#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ReadTrailer_FN) || defined(MYDEBUG_PRINT_ON_ReadTrailer_OBJ) || defined(MYDEBUG_PRINT_ON_ReadEncrypt_R)
+					//#if defined(MYDEBUG PRINT ALL) || defined(MYDEBUG PRINT ON ReadTrailer FN) || defined(MYDEBUG PRINT ON ReadTrailer OBJ) |defined(MYDEBUG PRINT ON ReadEncrypt R)
 					//wprintf(L"Encrypt obj:\n");
-					//wprintf(L"\tpParams->myPdfTrailer.Encrypt.Number = %u\n", pParams->myPdfTrailer.Encrypt.Number);
-					//wprintf(L"\tpParams->myPdfTrailer.Encrypt.Generation = %u\n", pParams->myPdfTrailer.Encrypt.Generation);
+					//wprintf(L"\tpParams->myPdfTrailer. Encrypt.Number = %u\n", pParams->myPdfTrailer. Encrypt.Number);
+					//wprintf(L"\tpParams->myPdfTrailer. Encrypt.Generation = %u\n", pParams->myPdfTrailer. Encrypt.Generation);
 					//#endif
 				}
 				else if ( strncmp(pParams->szCurrKeyName, "Size", 4096) == 0  )
@@ -839,7 +837,7 @@ int trailerobj(Params *pParams)
 					{
 						snprintf(pParams->szError, 1024, "Errore parsing trailerobj: Size value shall be an indirect reference\n");
 						myShowErrorMessage(pParams, pParams->szError, 1);
-						//wprintf(L"Errore parsing trailerobj: Size value shall not be an indirect reference");
+						//wprintf(L)Errore parsing trailerobj: Size value shall not be an indirect reference");
 						//fwprintf(pParams->fpErrors, L"Errore parsing trailerobj: Size value shall be an indirect reference\n");
 						return 0;
 					}
@@ -860,7 +858,7 @@ int trailerobj(Params *pParams)
 					{
 						snprintf(pParams->szError, 1024, "Errore parsing trailerobj: Prev value shall be an indirect reference\n");
 						myShowErrorMessage(pParams, pParams->szError, 1);
-						//wprintf(L"Errore parsing trailerobj: Prev value shall not be an indirect reference");
+						//wprintf(L)Errore parsing trailerobj: Prev value shall not be an indirect reference);
 						//fwprintf(pParams->fpErrors, L"Errore parsing trailerobj: Prev value shall be an indirect reference\n");
 						return 0;
 					}
@@ -930,8 +928,8 @@ int trailerobj(Params *pParams)
 		default:
 			snprintf(pParams->szError, 1024, "Errore parsing trailerobj: token non valido: %d\n", pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"Errore parsing trailerobj: token non valido: %d\n", pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"Errore parsing trailerobj: token non valido: %d\n", pParams->myToken.Type);
+			//wprintf(L"Errore parsing trailerobj: not valid token: %d\n, pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"Errore parsing trailerobj: not valid token: %d\n, pParams->myToken.Type);
 			PrintTokenTrailer(&(pParams->myToken), '\0', ' ', 1);
 			return 0;
 			break;
@@ -940,7 +938,7 @@ int trailerobj(Params *pParams)
 	return 1;
 }
 
-// trailerarrayobjs : {T_INT_LITERAL T_INT_LITERAL T_KW_R};
+// trailerarrayobjs:
 int trailerarrayobjs(Params *pParams)
 {
 	do
@@ -954,8 +952,8 @@ int trailerarrayobjs(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "Errore parsing trailerarrayobjs: token non valido: %d\n", pParams->myToken.Type);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"Errore parsing trailerarrayobjs: token non valido: %d\n", pParams->myToken.Type);
-			//fwprintf(pParams->fpErrors, L"Errore parsing trailerarrayobjs: token non valido: %d\n", pParams->myToken.Type);
+			//wprintf(L"Errore parsing trailerarrayobjs: not valid token: %d\n, pParams->myToken.Type);
+			//fwprintf(pParams->fpErrors, L"Errore parsing trailerarrayobjs: not valid token: %d\n, pParams->myToken.Type);
 			PrintTokenTrailer(&(pParams->myToken), '\0', ' ', 1);
 			return 0;
 		}
@@ -971,7 +969,7 @@ int trailerarrayobjs(Params *pParams)
 	return 1;
 }
 
-// trailerdictobjs  : {T_NAME trailerobj};
+// trailerdictobjs: {T NAME trailerobj};
 int trailerdictobjs(Params *pParams)
 {
 	while ( T_NAME == pParams->myToken.Type )
@@ -989,8 +987,8 @@ int trailerdictobjs(Params *pParams)
 	return 1;
 }
 
-// Restituisce il valore numerico di una cifra esadecimale.
-// Restituisce -1 se il carattere non e' valido.
+// Returns the numerical value of a hexadecimal number.
+// Returns -1 if the character is invalid.
 static int hex_digit_value(unsigned char c)
 {
     if (c >= '0' && c <= '9')
@@ -1005,7 +1003,7 @@ static int hex_digit_value(unsigned char c)
     return -1;
 }
 
-// Riconosce i caratteri di spaziatura PDF più comuni.
+// It recognizes the most common PDF spacing characters.
 static int is_pdf_whitespace(unsigned char c)
 {
     return c == ' '  ||
@@ -1015,15 +1013,15 @@ static int is_pdf_whitespace(unsigned char c)
            c == '\f';
 }
 
-// Decodifica una stringa esadecimale PDF.
-// All'ingresso, *pIndex punta al primo carattere
-// successivo al delimitatore '<'.
-// All'uscita:
-//   - *outBytes contiene i byte decodificati;
-//   - *outLen contiene la lunghezza in byte;
-//   - *pIndex punta al carattere successivo a '>'.
-// Restituisce 1 in caso di successo, 0 in caso di errore.
-// Non aggiunge un terminatore NUL ai dati binari.
+// Decode a hexadecimal string PDF.
+// At the entrance, *pIndex points to the first character
+// next to the '<' delimiter.
+// At the exit:
+//   - *outBytes contains decoded bytes;
+//   - *outLen contains the byte length;
+//   - *pIndex points to the character following '>'.
+// Returns 1 in case of success, 0 in case of error.
+// It does not add a NUL terminator to binary data.
 
 static int read_pdf_hex_string(
     const unsigned char *input,
@@ -1051,8 +1049,8 @@ static int read_pdf_hex_string(
     *outBytes = NULL;
     *outLen = 0;
 
-    // Prima passata: verifica il contenuto e conta
-    // le cifre esadecimali fino al delimitatore '>'.
+    // First pass: check the content and counts
+    // the hexadecimal figures up to the '>' delimiter.
     cursor = *pIndex;
 
     while (input[cursor] != '\0' && input[cursor] != '>')
@@ -1068,27 +1066,27 @@ static int read_pdf_hex_string(
         hexDigits++;
     }
 
-    // La stringa deve terminare con '>'.
+    // The string must end with '>'.
     if (input[cursor] != '>')
         return 0;
 
     
-    // Due cifre formano un byte.
-    // Se le cifre sono dispari, l'ultima cifra viene
-    // completata a destra con uno zero, come previsto
-    // dalla sintassi delle stringhe esadecimali PDF.
+    // Two digits form a byte.
+    // If the figures are odd, the last digit comes
+    // completed to the right with a zero, as expected
+    // from the syntax of hexadecimal strings PDF.
     
     byteLen = hexDigits / 2 + hexDigits % 2;
 
-    // Allochiamo almeno un byte anche per una stringa
-    // vuota, così NULL continua a indicare un errore
-    // oppure un buffer non ancora inizializzato.
+    // At least one byte for a string
+    // empty, so NULL continues to indicate an error
+    // or a buffer not yet initialized.
     buffer = (unsigned char *)malloc(byteLen > 0 ? byteLen : 1);
 
     if (buffer == NULL)
         return 0;
 
-    // Seconda passata: converte le cifre in byte reali.
+    // Second pass: converts the figures into real bytes.
     for (i = *pIndex; i < cursor; i++)
     {
         unsigned char ch = input[i];
@@ -1118,15 +1116,15 @@ static int read_pdf_hex_string(
         }
     }
 
-    // Se rimane una sola cifra, completa il byte
-    // con uno zero come nibble meno significativo.
+    // If only one digit remains, complete byte
+    // with a zero as less significant nibble.
     if (highNibble >= 0)
         buffer[outPos++] = (unsigned char)(highNibble << 4);
 
     *outBytes = buffer;
     *outLen = outPos;
 
-    // Salta anche il delimitatore finale '>'.
+    // It also skips the final delimiter '>'.
     *pIndex = cursor + 1;
 
     return 1;
@@ -1928,13 +1926,13 @@ ciclo2:
             int bID0IsHex = 0;
             int bID1IsHex = 0;
 
-            // Salta whitespace iniziali.
+            // Skip initial whitespace.
             while (is_pdf_whitespace(c))
                 c = szInput[index++];
 
             if (c == '[')
             {
-                // /ID [ ... ]: consuma '[' e passa al primo carattere di ID0. 
+                // /ID [ ... ]: consumes '[' and passes to the first character of ID0. 
                 while (szInput[index] != '\0' && is_pdf_whitespace(szInput[index]))
                     index++;
 
@@ -1957,14 +1955,14 @@ ciclo2:
             }
             else if (c == '<')
             {
-                // /ID<...: c e' gia' il '<' di ID0. 
+                // /ID<...: c' già' il '<' di ID0. 
                 if (szInput[index] == '<')
                     goto id_error;
                 bID0IsHex = 1;
             }
             else if (c == '(')
             {
-                // /ID(...: c e' gia' il '(' di ID0. 
+                // /ID(...: there is already the '(' of ID0. 
                 bID0IsHex = 0;
             }
             else
@@ -1972,7 +1970,7 @@ ciclo2:
                 goto id_error;
             }
 
-            // Legge ID0. 
+            // Law ID0. 
             if (bID0IsHex)
             {
                 if (!read_pdf_hex_string(szInput, &index, &id0, &lenID0))
@@ -1984,7 +1982,7 @@ ciclo2:
                     goto id_error;
             }
 
-            // Whitespace tra ID[0] e ID[1]. 
+            // Whitespace between ID[0] and ID[1]. 
             while (szInput[index] != '\0' &&
                    is_pdf_whitespace(szInput[index]))
                 index++;
@@ -2006,7 +2004,7 @@ ciclo2:
                 goto id_error;
             }
 
-            // Legge ID1. 
+            // Law ID1. 
             if (bID1IsHex)
             {
                 if (!read_pdf_hex_string(szInput, &index, &id1, &lenID1))
@@ -2018,7 +2016,7 @@ ciclo2:
                     goto id_error;
             }
 
-            // Whitespace e ']' di chiusura. 
+            // Whitespace is closing. 
             while (szInput[index] != '\0' &&
                    is_pdf_whitespace(szInput[index]))
                 index++;
@@ -2026,9 +2024,9 @@ ciclo2:
             if (szInput[index] != ']')
                 goto id_error;
 
-            index++;    // consuma ']' 
+            index++;    // consumes ' 
 
-            // Conserva la prima coppia incontrata. 
+            // Keep the first couple met. 
             if (pParams->myPdfTrailer.pID0Bytes == NULL &&
                 pParams->myPdfTrailer.pID1Bytes == NULL)
             {
@@ -2085,10 +2083,10 @@ ciclo2:
             free(id0);
             free(id1);
 
-            // /ID e' indispensabile solo se (a) il file e' cifrato e
-            // (b) non abbiamo ancora gli ID dal trailer principale.
-            // Un /ID malformato in un trailer di revisione precedente
-            // non deve far fallire il parsing.
+            // /ID is indispensable only if (a) the file is encrypted and
+            // (b) we still don't have IDs from the main trailer.
+            // Un /ID malformed in a trailer for previous revision
+            // You don't have to make the parsing fail.
             if (pParams->isEncrypted &&
                 pParams->myPdfTrailer.pID0Bytes == NULL &&
                 pParams->myPdfTrailer.pID1Bytes == NULL)
@@ -2098,8 +2096,8 @@ ciclo2:
                 return 0;
             }
 
-            // Se arriviamo qui, o non e' cifrato, o abbiamo gia' gli ID:
-            //   salta l'array /ID malformato e prosegui. 
+            // If we get here, or it's not encrypted, or we already have IDs:
+            //   skip the unformed /ID array and continue. 
             while (szInput[index] != '\0' &&
                    szInput[index] != ']' &&
                    !(szInput[index] == '>' && szInput[index + 1] == '>'))
@@ -2114,8 +2112,8 @@ ciclo2:
             }
             else if (szInput[index] == '>' && szInput[index + 1] == '>')
             {
-                // c = '>' e index punta al secondo '>': il flusso
-                //   esterno proseguira' in ciclo3. 
+                // c = '>' and index points to the second '>': the flow
+                //   outside will continue in cycle3. 
                 index++;
                 c = '>';
             }
@@ -2218,8 +2216,8 @@ int GetLenNextInput(Params *pParams, int startxref, int *len)
 		snprintf(pParams->szError, 8192, "Errore GetLenNextInput: memoria insufficiente.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
 		myShowErrorMessage(pParams, pParams->szError, 0);
-		//wprintf(L"Errore GetLenNextInput: memoria insufficiente.\n");
-		//fwprintf(pParams->fpErrors, L"Errore GetLenNextInput: memoria insufficiente.\n");
+		//wprintf(L"Errore GetLenNextInput: insufficient memory. \n);
+		//fwprintf(pParams->fpErrors, L"Errore GetLenNextInput: insufficient memory. \n);
 		retValue = 0;
 		goto uscita;
 	}
@@ -2330,8 +2328,8 @@ int ReadLastTrailer(Params *pParams, unsigned char *szInput)
 				#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ReadLastTrailer_FN)
 				myShowErrorMessage(pParams, pParams->szError, 0);
 				#endif
-				//wprintf(L"Errore ReadLastTrailer XRefStream: T_INT_LITERAL troppo lungo.\n");
-				//fwprintf(pParams->fpErrors, L"Errore ReadLastTrailer XRefStream: T_INT_LITERAL troppo lungo.\n");
+				//wprintf(L"Errore ReadLastTrailer XRefStream: T INT LITERAL too long. \n);
+				//fwprintf(pParams->fpErrors, L"Errore ReadLastTrailer XRefStream: T INT LITERAL too long. \n);
 				return 0;
 			}
 
@@ -2346,8 +2344,8 @@ int ReadLastTrailer(Params *pParams, unsigned char *szInput)
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ReadLastTrailer_FN)
 			myShowErrorMessage(pParams, pParams->szError, 0);
 			#endif
-			//wprintf(L"Errore ReadLastTrailer: atteso 'x' trovato '%c'\n", c);
-			//fwprintf(pParams->fpErrors, L"Errore ReadLastTrailer: atteso 'x' o T_INT_LITERAL. Trovato invece '%c'\n", c);
+			//wprintf(L"Errore ReadLastTrailer: expected 'x' found '%c'\n, c);
+			//fwprintf(pParams->fpErrors, L"Errore ReadLastTrailer: expected 'x' or T INT LITERAL. Found instead '%c'\n", c);
 
 			pszTemp = (char*)szInput + index - 1;
 			pszTemp[index + 144] = '\0';
@@ -2358,7 +2356,7 @@ int ReadLastTrailer(Params *pParams, unsigned char *szInput)
 			myShowErrorMessage(pParams, pParams->szError, 0);
 			#endif
 			//wprintf(L"szInput = <%s>\n", pszTemp);
-			//fwprintf(pParams->fpErrors, L"szInput = <%s>\n", pszTemp);
+			//fwprintf(pParams->fpErrors, L'szInput = <%s>\n, pszTemp);
 
 			return 0;
 		}
@@ -2436,7 +2434,7 @@ int ReadLastTrailer(Params *pParams, unsigned char *szInput)
 	wprintf(L"\nReadLastTrailer: Fin qui tutto OK!\n\n");
 	#endif
 
-	//if ( !trailerbody(pParams) )
+	//if (!trailerbody(pParams) )
 	if ( !ReadTrailerBody(pParams, szInput, index) )
 	{
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ReadLastTrailer_FN)
@@ -2475,8 +2473,8 @@ int ReadSubSectionBody(Params *pParams, unsigned char *szInput, int fromNum, int
 			snprintf(pParams->szError, 8192, "ERROR ReadSubSectionBody: memoria insufficiente per la tabella degli oggetti.\n\n");
 			myShowErrorMessage(pParams, pParams->szError, 1);
 			myShowErrorMessage(pParams, pParams->szError, 0);
-			//wprintf(L"ERROR ReadSubSectionBody: memoria insufficiente per la tabella degli oggetti.\n\n");
-			//fwprintf(pParams->fpErrors,L"ERROR ReadSubSectionBody: memoria insufficiente per la tabella degli oggetti.\n\n");
+			//wprintf(L"ERROR ReadSubSectionBody: insufficient memory for the table of objects. \n\n);
+			//fwprintf(pParams->fpErrors,L"ERROR ReadSubSectionBody: insufficient memory for the table of objects. \n\n);
 			return 0;
 		}
 		for ( x = 0; x < pParams->nObjsTableSizeFromPrescanFile; x++ )
@@ -2611,8 +2609,8 @@ int ReadSubSectionBody(Params *pParams, unsigned char *szInput, int fromNum, int
 			{
 				snprintf(pParams->szError, 8192, "ERRORE ReadSubSectionBody 1: c = '%c', c2 = '%c'\n", c, c2);
 				myShowErrorMessage(pParams, pParams->szError, 1);
-				//wprintf(L"ERRORE ReadSubSectionBody 1: c = '%c', c2 = '%c'\n", c, c2);
-				//fwprintf(pParams->fpErrors, L"ERRORE ReadSubSectionBody 1: c = '%c', c2 = '%c'\n", c, c2);
+				//wprintf(L"ERRORE ReadSubSectionBody 1: c = '%c', c2 = '%c'\n', c, c2);
+				//fwprintf(pParams->fpErrors, L"ERRORE ReadSubSectionBody 1: c = '%c', c2 = '%c'\n'X, c2);
 				return 0;
 			}
 			break;
@@ -2622,16 +2620,16 @@ int ReadSubSectionBody(Params *pParams, unsigned char *szInput, int fromNum, int
 			{
 				snprintf(pParams->szError, 8192, "ERRORE ReadSubSectionBody 2: c = '%c', c2 = '%c'\n", c, c2);
 				myShowErrorMessage(pParams, pParams->szError, 1);
-				//wprintf(L"ERRORE ReadSubSectionBody 2: c = '%c', c2 = '%c'\n", c, c2);
-				//fwprintf(pParams->fpErrors, L"ERRORE ReadSubSectionBody 2: c = '%c', c2 = '%c'\n", c, c2);
+				//wprintf(L"ERRORE ReadSubSectionBody 2: c = '%c', c2 = '%c'\n', c2);
+				//fwprintf(pParams->fpErrors, L"ERRORE ReadSubSectionBody 2: c = '%c', c2 = '%c'\n'X, c2);
 				return 0;
 			}
 			break;
 		default:
 			snprintf(pParams->szError, 8192, "Errore ReadSubSectionBody: atteso spazio trovato '%c'\n", c);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"Errore ReadSubSectionBody: atteso spazio trovato '%c'\n", c);
-			//fwprintf(pParams->fpErrors, L"Errore ReadSubSectionBody: atteso spazio trovato '%c'\n", c);
+			//wprintf(L"Errore ReadSubSectionBody: expected space found '%c'\n", c);
+			//fwprintf(pParams->fpErrors, L"Errore ReadSubSectionBody: expected space found '%c'\n", c);
 			return 0;
 			break;
 		}
@@ -2657,7 +2655,7 @@ int ReadObjsTable(Params *pParams, unsigned char *szInput)
 	int fromNum;
 	int numObjs;
 
-	// saltiamo "xref"
+	// "xref"
 	index = 4;
 
 	c = szInput[index];
@@ -2885,8 +2883,8 @@ int ReadHeader(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "Errore ReadHeader formato file non valido\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE ReadHeader: formaro file non valido\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE ReadHeader: formato file non valido\n");
+		//wprintf(L"ERRORE ReadHeader: form invalid file\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE ReadHeader: invalid file format\n");
 		return 0;
 	}
 
@@ -2894,8 +2892,8 @@ int ReadHeader(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "Errore ReadHeader formato file non valido\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE ReadHeader: formaro file non valido\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE ReadHeader: formaro file non valido\n");
+		//wprintf(L"ERRORE ReadHeader: form invalid file\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE ReadHeader: form invalid file\n");
 		return 0;
 	}
 
@@ -2903,8 +2901,8 @@ int ReadHeader(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "Errore ReadHeader formato file non valido\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE ReadHeader: formaro file non valido\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE ReadHeader: formaro file non valido\n");
+		//wprintf(L"ERRORE ReadHeader: form invalid file\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE ReadHeader: form invalid file\n");
 		return 0;
 	}
 
@@ -2912,8 +2910,8 @@ int ReadHeader(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "Errore ReadHeader formato file non valido\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE ReadHeader: formaro file non valido\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE ReadHeader: formaro file non valido\n");
+		//wprintf(L"ERRORE ReadHeader: form invalid file\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE ReadHeader: form invalid file\n");
 		return 0;
 	}
 
@@ -2921,8 +2919,8 @@ int ReadHeader(Params *pParams)
 	{
 		snprintf(pParams->szError, 8192, "Errore ReadHeader formato file non valido\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//wprintf(L"ERRORE ReadHeader: formaro file non valido\n");
-		//fwprintf(pParams->fpErrors, L"ERRORE ReadHeader: formaro file non valido\n");
+		//wprintf(L"ERRORE ReadHeader: form invalid file\n");
+		//fwprintf(pParams->fpErrors, L"ERRORE ReadHeader: form invalid file\n");
 		return 0;
 	}
 
@@ -3106,7 +3104,7 @@ int ReadTrailer(Params *pParams)
 
 		snprintf(pParams->szError, 8192, "Errore ReadTrailer: manca l'offset per xref.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//fwprintf(pParams->fpErrors, L"Errore ReadTrailer: manca l'offset per xref.\n");
+		//fwprintf(pParams->fpErrors, L"Errore ReadTrailer: missing the offset for xref. \n);
 		return 0;
 	}
 
@@ -3119,7 +3117,7 @@ int ReadTrailer(Params *pParams)
 
 		snprintf(pParams->szError, 8192, "Errore ReadTrailer: memoria insufficiente.\n");
 		myShowErrorMessage(pParams, pParams->szError, 1);
-		//fwprintf(pParams->fpErrors, L"Errore ReadTrailer: memoria insufficiente.\n");
+		//fwprintf(pParams->fpErrors, L"Errore ReadTrailer: insufficient memory. \n);
 		return 0;
 	}
 
@@ -3217,7 +3215,7 @@ int ReadTrailer(Params *pParams)
 
 		pParams->offsetXRefObjStream = byteOffsetXRef;
 
-		//Il parametro "pParams->nXRefStreamObjNum" viene calcolato nella funzione "ReadLastTrailer".
+		//The "pParams->nXRefStreamObjNum" parameter is calculated in the "ReadLastTrailer" function.
 
 		return retReadLastTrailer;
 	}
@@ -3257,8 +3255,8 @@ int ReadTrailer(Params *pParams)
 		{
 			snprintf(pParams->szError, 8192, "GetLenNextInput errore ReadTrailer: memoria insufficiente.\n");
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"GetLenNextInput errore ReadTrailer: memoria insufficiente.\n");
-			//fwprintf(pParams->fpErrors, L"GetLenNextInput errore ReadTrailer: memoria insufficiente.\n");
+			//wprintf(L"GetLenNextInput ReadTrailer error: insufficient memory. \n);
+			//fwprintf(pParams->fpErrors, L"GetLenNextInput error ReadTrailer: insufficient memory. \n);
 			return 0;
 		}
 
@@ -3329,7 +3327,7 @@ unsigned char GetHexChar(unsigned char c1, unsigned char c2)
 {
 	unsigned char c = '\0';
 
-	//wprintf(L"c1 = '%c' <> c2 = '%c'\n", c1, c2);
+	//wprintf(L"c1 = '%c' < c2 = '%c'\n", c1, c2);
 
 	switch ( c1 )
 	{
@@ -3933,8 +3931,8 @@ void IgnoreStreamChars(Params *pParams)
 			{
 				snprintf(pParams->szError, 8192, "Errore IgnoreStreamChars fseek 1\n");
 				myShowErrorMessage(pParams, pParams->szError, 1);
-				//wprintf(L"Errore IgnoreStreamChars fseek 1\n");
-				//fwprintf(pParams->fpErrors, L"Errore IgnoreStreamChars fseek 1\n");
+				//wprintf(L"Error IgnoreStreamChars fseek 1\n");
+				//fwprintf(pParams->fpErrors, L"Error IgnoreStreamChars fseek 1\n");
 				return;
 			}
 		}
@@ -3944,8 +3942,8 @@ void IgnoreStreamChars(Params *pParams)
 			{
 				snprintf(pParams->szError, 8192, "Errore IgnoreStreamChars fseek 2\n");
 				myShowErrorMessage(pParams, pParams->szError, 1);
-				//wprintf(L"Errore IgnoreStreamChars fseek 2\n");
-				//fwprintf(pParams->fpErrors, L"Errore IgnoreStreamChars fseek 2\n");
+				//wprintf(L"Error IgnoreStreamChars fseek 2\n");
+				//fwprintf(pParams->fpErrors, L"Error IgnoreStreamChars fseek 2\n");
 				return;
 			}
 		}
@@ -3967,8 +3965,8 @@ void IgnoreStreamChars(Params *pParams)
 
 int IsDelimiterChar(unsigned char c)
 {
-    // Mappatura statica pre-calcolata per tutti i 256 possibili byte ASCII.
-    // Sostituisce lo switch riducendo la funzione a un unico accesso istantaneo in memoria O(1).
+    // Pre-calculated static mapping for all 256 possible bytes ASCII.
+    // Replaces the switch by reducing the function to one instant access in memory O(1).
     static const uint8_t DelimiterTable[256] = {
         [' '] = 1, ['\r'] = 1, ['\n'] = 1, ['\f'] = 1, ['\t'] = 1, ['\0'] = 1,
         ['%'] = 2, ['('] = 2, [')'] = 2, ['<'] = 2, ['>'] = 2, 
@@ -4033,7 +4031,7 @@ unsigned char ReadNextChar(Params *pParams)
 			{
 				snprintf(pParams->szError, 8192, "Errore ReadNextChar fseek 2\n");
 				myShowErrorMessage(pParams, pParams->szError, 1);
-				//wprintf(L"Errore ReadNextChar fseek 2\n");
+				//wprintf(L"Error ReadNextChar fseek 2\n");
 				//fwprintf(pParams->fpErrors, L"Errore ReadNextChar fseek 2\n");
 				return 0;
 			}
@@ -4058,7 +4056,7 @@ unsigned char ReadNextChar(Params *pParams)
 		{
 			pParams->myToken.Type = T_EOF;
 			return ' ';
-			//return ' ';
+			//return '';
 		}
 		pParams->blockCurPos = 0;
 	}
@@ -4195,7 +4193,7 @@ void GetNextToken(Params *pParams)
 						}
 					}
 
-					//while ( c == ' ' || c == '\r' || c == '\n' || c == '\t' || c == '\f' ||  c == '\0' )
+					//while (c == ' || c == '\r' | c == '\n' || c == '\t' | c == '\f' | c == '\0' )
 					while ( c == ' ' || c == '\t' || c == '\f' ||  c == '\0' )
 					{
 						c = pParams->pReadNextChar(pParams);
@@ -4278,22 +4276,22 @@ void GetNextToken(Params *pParams)
 							pParams->myToken.Type = T_ERROR;
 							snprintf(pParams->szError, 8192, "Errore GetNextToken: trovato '>' singolo\n");
 							myShowErrorMessage(pParams, pParams->szError, 1);
-							//wprintf(L"Errore GetNextToken: trovato '>' singolo\n");
+							//wprintf(L"Errore GetNextToken: found '>' single\n");
 							return;
 						}
 					}
 				}
-				else if ( '{' == c ) // IGNORIAMO, NON SERVE A UN C.
+				else if ( '{' == c ) // 
 				{
 					pParams->myToken.Type = T_LEFT_CURLY_BRACKET;
 					return;
 				}
-				else if ( '}' == c ) // IGNORIAMO, NON SERVE A UN C.
+				else if ( '}' == c ) // 
 				{
 					pParams->myToken.Type = T_RIGHT_CURLY_BRACKET;
 					return;
 				}
-				else // T_STRING oppure T_KEYWORD
+				else // T STRING or T KEYWORD
 				{
 					nDelimChar = IsDelimiterChar(c);
 
@@ -4301,8 +4299,8 @@ void GetNextToken(Params *pParams)
 					{
 						if ( !(pParams->bStreamState) )
 						{
-							// CORREZIONE: Avanza al carattere successivo prima di ritornare allo switch,
-							// altrimenti lo scanner leggerà sempre lo stesso delimitatore all'infinito.
+							// COURREATE: Advanced to the next character before returning to the switch,
+							// otherwise the scanner will always read the same delimiter to the infinite.
 							c = pParams->pReadNextChar(pParams);
 
 							goto inizioswitch;
@@ -4347,13 +4345,13 @@ void GetNextToken(Params *pParams)
 															pParams->myToken.Type = T_ERROR;
 															snprintf(pParams->szError, 8192, "Errore GetNextToken: la keyword 'stream' dev'essere seguita da '\\r\\n' oppure da '\\n'. Trovato invece '%c'(hex = <%2X>)\n", c, c);
 															myShowErrorMessage(pParams, pParams->szError, 1);
-															//wprintf(L"Errore GetNextToken: la keyword 'stream' dev'essere seguita da '\\r\\n' oppure da '\\n'. Trovato invece '%c'(hex = <%2X>)\n", c, c);
-															//fwprintf(pParams->fpErrors, L"Errore GetNextToken: la keyword 'stream' dev'essere seguita da '\\r\\n' oppure da '\\n'. Trovato invece '%c'(hex = <%2X>)\n", c, c);
+															//wprintf(L"Errore GetNextToken: the keyword 'stream' must be followed by '\\r\\n' or '\\n'. Found instead '%c'(hex = <%2X>)\n", c, c);
+															//fwprintf(pParams->fpErrors, L"Errore GetNextToken: the keyword 'stream' must be followed by '\\r\\n' or '\\n'. Found instead '%c'(hex = <%2X>)\n", c, c);
 															return;
 														}
 
 														pParams->blockCurPos--;
-														//pParams->nNumBytesReadFromCurrentStream--;   // NON DECOMMENTARE; NON ELIMINARE: A FUTURA MEMORIA.
+														//pParams->nNumBytesReadFromCurrentStream--; // DO NOT DECOMMEND; DO NOT ELIMINate: MEMORIA FUTURE.
 														pParams->currentFileOffset--;
 
 														pParams->lexeme[6] = '\0';
@@ -4373,7 +4371,7 @@ void GetNextToken(Params *pParams)
 													else if ( '\n' == c )
 													{
 														pParams->blockCurPos--;
-														//pParams->nNumBytesReadFromCurrentStream--;   // NON DECOMMENTARE; NON ELIMINARE: A FUTURA MEMORIA.
+														//pParams->nNumBytesReadFromCurrentStream--; // DO NOT DECOMMEND; DO NOT ELIMINate: MEMORIA FUTURE.
 														pParams->currentFileOffset--;
 
 														pParams->lexeme[6] = '\0';
@@ -4421,8 +4419,8 @@ void GetNextToken(Params *pParams)
 								pParams->myToken.Type = T_ERROR;
 								snprintf(pParams->szError, 8192, "Errore GetNextToken: la keyword 'stream' dev'essere seguita da '\\r\\n' oppure da '\\n'. Trovato invece '\\r'\n");
 								myShowErrorMessage(pParams, pParams->szError, 1);
-								//wprintf(L"Errore GetNextToken: la keyword 'stream' dev'essere seguita da '\\r\\n' oppure da '\\n'. Trovato invece '\\r'\n");
-								//fwprintf(pParams->fpErrors, L"Errore GetNextToken: la keyword 'stream' dev'essere seguita da '\\r\\n' oppure da '\\n'. Trovato invece '\\r'\n");
+								//wprintf(L"Errore GetNextToken: the keyword 'stream' must be followed by '\\r\\n' or '\\n'. Found instead '\\r'\n');
+								//fwprintf(pParams->fpErrors, L"Errore GetNextToken: the keyword 'stream' must be followed by '\\r\\n' or '\\n'. Found instead '\\r'\n');
 								return;
 							}
 						}
@@ -4431,8 +4429,8 @@ void GetNextToken(Params *pParams)
 							pParams->myToken.Type = T_ERROR;
 							snprintf(pParams->szError, 8192, "Errore GetNextToken: la keyword 'stream' dev'essere seguita da '\\r\\n' oppure da '\\n'. Trovato invece '%c'\n", c);
 							myShowErrorMessage(pParams, pParams->szError, 1);
-							//wprintf(L"Errore GetNextToken: la keyword 'stream' dev'essere seguita da '\\r\\n' oppure da '\\n'. Trovato invece '%c'\n", c);
-							//fwprintf(pParams->fpErrors, L"Errore GetNextToken: la keyword 'stream' dev'essere seguita da '\\r\\n' oppure da '\\n'. Trovato invece '%c'\n", c);
+							//wprintf(L"Errore GetNextToken: the keyword 'stream' must be followed by '\\r\\n' or '\\n'. Found instead '%c'\n", c);
+							//fwprintf(pParams->fpErrors, L"Errore GetNextToken: the keyword 'stream' must be followed by '\\r\\n' or '\\n'. Found instead '%c'\n", c);
 							return;
 						}
 
@@ -4850,7 +4848,7 @@ void GetNextToken(Params *pParams)
 											return;
 										}
 										break;
-									// INIZIO T
+									// T
 									case 'T':
 										if ( 'f' == pParams->lexeme[1] )
 										{
@@ -4936,7 +4934,7 @@ void GetNextToken(Params *pParams)
 											return;
 										}
 										break;
-									// FINE T
+									// END
 									case 'W':
 										if ( '*' == pParams->lexeme[1] )
 										{
@@ -5260,8 +5258,8 @@ void GetNextToken(Params *pParams)
 					pParams->myToken.Type = T_ERROR;
 					snprintf(pParams->szError, 8192, "Errore GetNextToken: numero esadecimale errato.\n");
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"Errore GetNextToken: numero esadecimale errato.\n");
-					//fwprintf(pParams->fpErrors, L"Errore GetNextToken: numero esadecimale errato.\n");
+					//wprintf(L"Error GetNextToken: wrong hexadecimal number. \n);
+					//fwprintf(pParams->fpErrors, L"Errore GetNextToken: wrong hexadecimal number. \n);
 					return;
 				}
 				break;
@@ -5277,8 +5275,8 @@ void GetNextToken(Params *pParams)
 					pParams->myToken.Type = T_ERROR;
 					snprintf(pParams->szError, 8192, "Errore GetNextToken: numero esadecimale errato.\n");
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"Errore GetNextToken: numero esadecimale errato.\n");
-					//fwprintf(pParams->fpErrors, L"Errore GetNextToken: numero esadecimale errato.\n");
+					//wprintf(L"Error GetNextToken: wrong hexadecimal number. \n);
+					//fwprintf(pParams->fpErrors, L"Errore GetNextToken: wrong hexadecimal number. \n);
 					return;
 				}
 				break;
@@ -5298,8 +5296,8 @@ void GetNextToken(Params *pParams)
 						pParams->lexeme[k++] = c;
 					}
 
-					// PDF 32000-1, 7.3.4.2: le parentesi bilanciate non precedute da '\'
-					// fanno parte della stringa. nStackStringOpenParen vale 1 dopo la '(' iniziale.
+					// PDF 32000-1, 7.3.4.2: Balanced brackets not preceded by '\'
+					// They're part of the string. nStackStringOpenParen is worth 1 after the initial '('.
 					int bNestedParen = 0;
 					if ( c == '(' )
 					{
@@ -5360,7 +5358,7 @@ void GetNextToken(Params *pParams)
 							unsigned char num1;
 							unsigned char num2;
 
-							if ( pParams->bHasCodeSpaceTwoByte && !pParams->bHasCodeSpaceOneByte ) // CODE SPACE RANGE TWO BYTES ONLY.
+							if ( pParams->bHasCodeSpaceTwoByte && !pParams->bHasCodeSpaceOneByte ) // 
 							{
 								#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_PrintStrings_HEXADECIMAL)
 								wprintf(L"\nEHI!!! SIAMO NEL CODE SPACE RANGE TWO BYTES ONLY.\n");
@@ -5410,7 +5408,7 @@ void GetNextToken(Params *pParams)
 										}
 									}
 
-									if ( u >= pParams->nCurrentFontCodeSpacesNum ) // CID NON TROVATO NEL CODE SPACE RANGE
+									if ( u >= pParams->nCurrentFontCodeSpacesNum ) // 
 									{
 										pParams->myCID = 0xFFFD;
 									}
@@ -5437,7 +5435,7 @@ void GetNextToken(Params *pParams)
 									w++;
 								}
 							}
-							else if ( pParams->bHasCodeSpaceTwoByte && pParams->bHasCodeSpaceOneByte ) // CODE SPACE RANGE ONE AND TWO BYTES.
+							else if ( pParams->bHasCodeSpaceTwoByte && pParams->bHasCodeSpaceOneByte ) // 
 							{
 								#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_PrintStrings_HEXADECIMAL)
 								wprintf(L"\nEHI!!! SIAMO NEL CODE SPACE RANGE ONE AND TWO BYTES.\n");
@@ -5478,13 +5476,13 @@ void GetNextToken(Params *pParams)
 											break;
 										}
 									}
-									if ( u >= pParams->nCurrentFontCodeSpacesNum ) // CID ONE BYTE NON TROVATO NEL CODE SPACE RANGE
+									if ( u >= pParams->nCurrentFontCodeSpacesNum ) // 
 									{
 										#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_PrintStrings_HEXADECIMAL)
 										wprintf(L"\tCID %u(hex: %X) NON TROVATO NEL CODE SPACE RANGE ONE BYTE. CONSUMO UN ALTRO BYTE.\n", pParams->myCID, pParams->myCID);
 										#endif
 									}
-									else // CID ONE BYTE TROVATO NEL CODE SPACE RANGE
+									else // 
 									{
 										pParams->pEncodingString[w] = pParams->myCID;
 										pParams->pUtf8String[w] = pParams->pCurrentEncodingArray[pParams->myCID];
@@ -5536,7 +5534,7 @@ void GetNextToken(Params *pParams)
 										}
 									}
 
-									if ( u >= pParams->nCurrentFontCodeSpacesNum ) // CID NON TROVATO NEL CODE SPACE RANGE
+									if ( u >= pParams->nCurrentFontCodeSpacesNum ) // 
 									{
 										pParams->myCID = 0xFFFD;
 									}
@@ -5563,7 +5561,7 @@ void GetNextToken(Params *pParams)
 									w++;
 								}
 							}
-							else if ( !pParams->bHasCodeSpaceTwoByte && pParams->bHasCodeSpaceOneByte ) // CODE SPACE RANGE ONE BYTE ONLY.
+							else if ( !pParams->bHasCodeSpaceTwoByte && pParams->bHasCodeSpaceOneByte ) // 
 							{
 								#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_PrintStrings_HEXADECIMAL)
 								wprintf(L"\nEHI!!! SIAMO NEL CODE SPACE RANGE ONE BYTE ONLY.\n");
@@ -5604,7 +5602,7 @@ void GetNextToken(Params *pParams)
 										}
 									}
 
-									if ( u >= pParams->nCurrentFontCodeSpacesNum ) // CID NON TROVATO NEL CODE SPACE RANGE
+									if ( u >= pParams->nCurrentFontCodeSpacesNum ) // 
 									{
 										pParams->myCID = 0xFFFD;
 									}
@@ -5758,10 +5756,10 @@ void GetNextToken(Params *pParams)
 				}
 				break;
 			case S8:
-				// Backslash + CR: continuazione di riga (PDF 32000-1, 7.3.4.2).
-				// Se dopo il CR c'e' un LF (CRLF) lo consumiamo; altrimenti il
-				// carattere letto appartiene alla stringa e va rielaborato
-				// normalmente da S6 (puo' essere un altro escape '\', un ')' ecc.).
+				// Backslash + CR: line continuation (PDF 32000-1, 7.3.4.2).
+				// If after the CR there is an LF (CRLF) we consume it; otherwise the
+				// read character belongs to the string and should be reworked
+				// normally from S6 (can be another escape '\', a ')' etc.).
 				if ( c != '\n' )
 				{
 					pParams->blockCurPos--;
@@ -5778,7 +5776,7 @@ void GetNextToken(Params *pParams)
 				}
 				else
 				{
-					// retract: il carattere che chiude l'escape ottale breve va rielaborato da S6
+					// retract: the character that closes the short optical escape should be reworked by S6
 					pParams->blockCurPos--;
 					pParams->nNumBytesReadFromCurrentStream--;
 					pParams->currentFileOffset--;
@@ -5786,15 +5784,15 @@ void GetNextToken(Params *pParams)
 					{
 						if ( bOctalOverflow )
 						{
-							state = S6; // ignora
+							state = S6; // I don't know.
 						}
 						else
 						{
 							pParams->myToken.Type = T_ERROR;
 							snprintf(pParams->szError, 8192, "Errore GetNextToken: numero ottale errato.\n");
 							myShowErrorMessage(pParams, pParams->szError, 1);
-							//wprintf(L"Errore GetNextToken: numero ottale errato.\n");
-							//fwprintf(pParams->fpErrors, L"Errore GetNextToken: numero ottale errato.\n");
+							//wprintf(L"Errore GetNextToken: wrong octal number. \n);
+							//fwprintf(pParams->fpErrors, L"Errore GetNextToken: wrong octal number. \n);
 							return;
 						}
 					}
@@ -5826,15 +5824,15 @@ void GetNextToken(Params *pParams)
 					{
 						if ( bOctalOverflow )
 						{
-							state = S6; // ignora
+							state = S6; // I don't know.
 						}
 						else
 						{
 							pParams->myToken.Type = T_ERROR;
 							snprintf(pParams->szError, 8192, "Errore GetNextToken: numero ottale errato.\n");
 							myShowErrorMessage(pParams, pParams->szError, 1);
-							//wprintf(L"Errore GetNextToken: numero ottale errato.\n");
-							//fwprintf(pParams->fpErrors, L"Errore GetNextToken: numero ottale errato.\n");
+							//wprintf(L"Errore GetNextToken: wrong octal number. \n);
+							//fwprintf(pParams->fpErrors, L"Errore GetNextToken: wrong octal number. \n);
 							return;
 						}
 					}
@@ -5860,7 +5858,7 @@ void GetNextToken(Params *pParams)
 				}
 				else
 				{
-					// retract: il carattere che chiude l'escape ottale breve va rielaborato da S6
+					// retract: the character that closes the short optical escape should be reworked by S6
 					pParams->blockCurPos--;
 					pParams->nNumBytesReadFromCurrentStream--;
 					pParams->currentFileOffset--;
@@ -5868,15 +5866,15 @@ void GetNextToken(Params *pParams)
 					{
 						if ( bOctalOverflow )
 						{
-							state = S6; // ignora
+							state = S6; // I don't know.
 						}
 						else
 						{
 							pParams->myToken.Type = T_ERROR;
 							snprintf(pParams->szError, 8192, "Errore GetNextToken: numero ottale errato.\n");
 							myShowErrorMessage(pParams, pParams->szError, 1);
-							//wprintf(L"Errore GetNextToken: numero ottale errato.\n");
-							//fwprintf(pParams->fpErrors, L"Errore GetNextToken: numero ottale errato.\n");
+							//wprintf(L"Errore GetNextToken: wrong octal number. \n);
+							//fwprintf(pParams->fpErrors, L"Errore GetNextToken: wrong octal number. \n);
 							return;
 						}
 					}
@@ -6084,7 +6082,7 @@ void GetNextToken(Params *pParams)
 
 					if ( pParams->bReadingActualTextValue )
 					{
-						// ActualText: conserva i byte originali senza decodifica CID.
+						// ActualText: retains original bytes without CID decoding.
 						pParams->lexemeTemp[z] = '\0';
 						memcpy(pParams->lexeme, pParams->lexemeTemp, z);
 						pParams->lexeme[z] = '\0';
@@ -6095,24 +6093,24 @@ void GetNextToken(Params *pParams)
 					}
 					else if ( FONT_SUBTYPE_Type0 == pParams->nCurrentFontSubtype )
 					{
-						// Type0: decodifica i byte in lexemeTemp e copiali in lexeme.
-						// Cosi' myToken.vString contiene i byte REALI (es. <82 E0 82 CC>)
-						// e non l'ASCII esadecimale "82E082CC...".
+						// Type0: Decode bytes in lexemeTemp and copy them to lexeme.
+						// So myToken. vString contains REAL bytes (e.g. <82 E0 82 CC>)
+						// and not the hexadecimal ASCII "82E082CC...".
 						ManageTypeZeroHexString(pParams, z);
 
 						memcpy(pParams->lexeme, pParams->lexemeTemp, z);
 						pParams->lexeme[z] = '\0';
-						pParams->myToken.vStringLen = z;   // lunghezza in BYTE reali
+						pParams->myToken.vStringLen = z;   // length in real BYTE
 					}
 					else
 					{
-						// Non-Type0: lexeme contiene la stringa ASCII hex.
-						// Termina tutti i buffer come faceva il codice originale.
+						// Non-Type0: lexeme contains the ASCII hex string.
+						// Finish all buffers like the original code.
 						pParams->lexemeTemp[z] = '\0';
 						pParams->pEncodingString[z] = L'\0';
 						pParams->pUtf8String[z] = L'\0';
 						pParams->lexeme[k] = '\0';
-						pParams->myToken.vStringLen = k;   // lunghezza in CIFRE hex
+						pParams->myToken.vStringLen = k;   // length in CIFRE hex
 					}
 
 					pParams->myToken.Type = T_STRING_HEXADECIMAL;
@@ -6134,8 +6132,8 @@ void GetNextToken(Params *pParams)
 					pParams->myToken.Type = T_ERROR;
 					snprintf(pParams->szError, 8192, "Errore GetNextToken: numero esadecimale errato. Carattere non valido -> codice decimale = %u\n", (unsigned int)c);
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"Errore GetNextToken: numero esadecimale errato. Carattere non valido -> codice decimale = %u\n", (unsigned int)c);
-					//fwprintf(pParams->fpErrors, L"Errore GetNextToken: numero esadecimale errato. Carattere non valido -> codice decimale = %u\n", (unsigned int)c);
+					//wprintf(L"Error GetNextToken: wrong hexadecimal number. Not valid character -> decimal code = %u\n", (unsigned int)c);
+					//fwprintf(pParams->fpErrors, L"Errore GetNextToken: wrong hexadecimal number. Not valid character -> decimal code = %u\n", (unsigned int)c);
 
 					c = pParams->pReadNextChar(pParams);
 
@@ -6157,8 +6155,8 @@ void GetNextToken(Params *pParams)
 			pParams->myToken.Type = T_ERROR;
 			snprintf(pParams->szError, 8192, "Errore GetNextToken: lexeme troppo lungo(> %d byte)\n", MAX_STRING_LENTGTH_IN_CONTENT_STREAM);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"Errore GetNextToken: lexeme troppo lungo(> %d byte)\n", MAX_STRING_LENTGTH_IN_CONTENT_STREAM);
-			//fwprintf(pParams->fpErrors, L"Errore GetNextToken: lexeme troppo lungo(> %d byte)\n", MAX_STRING_LENTGTH_IN_CONTENT_STREAM);
+			//wprintf(L)Errore GetNextToken: lexeme too long(> %d byte)\n", MAX STRING LENTGTH IN CONTENT STREAM);
+			//fwprintf(pParams->fpErrors, L"Error GetNextToken: lexeme too long(> %d byte)\n", MAX STRING LENTGTH IN CONTENT STREAM);
 			return;
 		}
 	}
@@ -6178,7 +6176,7 @@ int ManageTypeZeroHexString(Params *pParams, int lenCurrLexeme)
 	unsigned char num1;
 	unsigned char num2;
 
-	if ( pParams->bHasCodeSpaceTwoByte && !pParams->bHasCodeSpaceOneByte ) // CODE SPACE RANGE TWO BYTES ONLY.
+	if ( pParams->bHasCodeSpaceTwoByte && !pParams->bHasCodeSpaceOneByte ) // 
 	{
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_PrintStrings_HEXADECIMAL)
 		wprintf(L"\nEHI!!! SIAMO NEL CODE SPACE RANGE TWO BYTES ONLY.\n");
@@ -6229,9 +6227,9 @@ int ManageTypeZeroHexString(Params *pParams, int lenCurrLexeme)
 				}
 			}
 
-			if ( u >= pParams->nCurrentFontCodeSpacesNum ) // CID NON TROVATO NEL CODE SPACE RANGE
+			if ( u >= pParams->nCurrentFontCodeSpacesNum ) // 
 			{
-				// Effettuare qui la ricerca nel NOTDEF CODE SPACE RANGE
+				// Search here in NOTDEF CODE SPACE RANGE
 
 				#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_PrintStrings_HEXADECIMAL)
 				wprintf(L"\tCID %u(hex: %X) NON TROVATO NEL CODE SPACE RANGE.\n", pParams->myCID, pParams->myCID);
@@ -6269,7 +6267,7 @@ int ManageTypeZeroHexString(Params *pParams, int lenCurrLexeme)
 			w++;
 		}
 	}
-	else if ( pParams->bHasCodeSpaceTwoByte && pParams->bHasCodeSpaceOneByte ) // CODE SPACE RANGE ONE AND TWO BYTES.
+	else if ( pParams->bHasCodeSpaceTwoByte && pParams->bHasCodeSpaceOneByte ) // 
 	{
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_PrintStrings_HEXADECIMAL)
 		wprintf(L"\nEHI!!! SIAMO NEL CODE SPACE RANGE ONE AND TWO BYTES.\n");
@@ -6278,7 +6276,7 @@ int ManageTypeZeroHexString(Params *pParams, int lenCurrLexeme)
 		w = 0;
 		for ( z = 0; z < k; z++ )
 		{
-			// ALL'INIZIO ESTRAIAMO UN SOLO BYTE E CERCHIAMO NEL ONE BYTE CODE SPACE RANGE:
+			// 
 			num1 = pParams->lexemeTemp[z];
 			z++;
 
@@ -6308,15 +6306,15 @@ int ManageTypeZeroHexString(Params *pParams, int lenCurrLexeme)
 					break;
 				}
 			}
-			if ( u >= pParams->nCurrentFontCodeSpacesNum ) // CID ONE BYTE NON TROVATO NEL CODE SPACE RANGE
+			if ( u >= pParams->nCurrentFontCodeSpacesNum ) // 
 			{
-				// Effettuare qui la ricerca nel NOTDEF CODE SPACE RANGE
+				// Search here in NOTDEF CODE SPACE RANGE
 
 				#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_PrintStrings_HEXADECIMAL)
 				wprintf(L"\tCID %u(hex: %X) NON TROVATO NEL CODE SPACE RANGE ONE BYTE. CONSUMO UN ALTRO BYTE.\n", pParams->myCID, pParams->myCID);
 				#endif
 			}
-			else // CID ONE BYTE TROVATO NEL CODE SPACE RANGE
+			else // 
 			{
 				pParams->pEncodingString[w] = pParams->myCID;
 				pParams->pUtf8String[w] = pParams->pCurrentEncodingArray[pParams->myCID];
@@ -6329,7 +6327,7 @@ int ManageTypeZeroHexString(Params *pParams, int lenCurrLexeme)
 				continue;
 			}
 
-			// PRELEVIAMO UN ALTRO BYTE E CERCHIAMO NEL TWO BYTES CODE SPACE RANGE:
+			// 
 			if ( z < k )
 				num2 = pParams->lexemeTemp[z];
 			else
@@ -6365,9 +6363,9 @@ int ManageTypeZeroHexString(Params *pParams, int lenCurrLexeme)
 				}
 			}
 
-			if ( u >= pParams->nCurrentFontCodeSpacesNum ) // CID NON TROVATO NEL CODE SPACE RANGE
+			if ( u >= pParams->nCurrentFontCodeSpacesNum ) // 
 			{
-				// Effettuare qui la ricerca nel NOTDEF CODE SPACE RANGE
+				// Search here in NOTDEF CODE SPACE RANGE
 
 				pParams->myCID = 0xFFFD;
 			}
@@ -6394,7 +6392,7 @@ int ManageTypeZeroHexString(Params *pParams, int lenCurrLexeme)
 			w++;
 		}
 	}
-	else if ( !pParams->bHasCodeSpaceTwoByte && pParams->bHasCodeSpaceOneByte ) // CODE SPACE RANGE ONE BYTE ONLY.
+	else if ( !pParams->bHasCodeSpaceTwoByte && pParams->bHasCodeSpaceOneByte ) // 
 	{
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_PrintStrings_HEXADECIMAL)
 		wprintf(L"\nEHI!!! SIAMO NEL CODE SPACE RANGE ONE BYTE ONLY.\n");
@@ -6431,9 +6429,9 @@ int ManageTypeZeroHexString(Params *pParams, int lenCurrLexeme)
 				}
 			}
 
-			if ( u >= pParams->nCurrentFontCodeSpacesNum ) // CID NON TROVATO NEL CODE SPACE RANGE
+			if ( u >= pParams->nCurrentFontCodeSpacesNum ) // 
 			{
-				// Effettuare qui la ricerca nel NOTDEF CODE SPACE RANGE
+				// Search here in NOTDEF CODE SPACE RANGE
 
 				pParams->myCID = 0xFFFD;
 			}
@@ -6566,8 +6564,8 @@ void GetNextTokenLengthObj(Params *pParams)
 						pParams->myTokenLengthObj.Type = T_ERROR;
 						snprintf(pParams->szError, 8192, "Errore GetNextTokenLengthObj: atteso T_INT_LITERAL\n");
 						myShowErrorMessage(pParams, pParams->szError, 1);
-						//wprintf(L"Errore GetNextTokenLengthObj: atteso T_INT_LITERAL\n");
-						//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLengthObj: atteso T_INT_LITERAL\n");
+						//wprintf(L"Errore GetNextTokenLengthObj: expected T INT LITERAL\n");
+						//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLengthObj: expected T INT LITERAL\n");
 						return;
 					}
 
@@ -6590,8 +6588,8 @@ void GetNextTokenLengthObj(Params *pParams)
 					pParams->myTokenLengthObj.Type = T_ERROR;
 					snprintf(pParams->szError, 8192, "Errore GetNextTokenLengthObj: atteso T_KW_OBJ\n");
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"Errore GetNextTokenLengthObj: atteso T_KW_OBJ\n");
-					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLengthObj: atteso T_KW_OBJ\n");
+					//wprintf(L"Errore GetNextTokenLengthObj: expected T KW OBJ\n");
+					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLengthObj: expected T KW OBJ\n");
 					return;
 				}
 				break;
@@ -6609,8 +6607,8 @@ void GetNextTokenLengthObj(Params *pParams)
 					pParams->myTokenLengthObj.Type = T_ERROR;
 					snprintf(pParams->szError, 8192, "Errore GetNextTokenLengthObj: atteso T_KW_OBJ\n");
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"Errore GetNextTokenLengthObj: atteso T_KW_OBJ\n");
-					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLengthObj: atteso T_KW_OBJ\n");
+					//wprintf(L"Errore GetNextTokenLengthObj: expected T KW OBJ\n");
+					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLengthObj: expected T KW OBJ\n");
 					return;
 				}
 				break;
@@ -6624,8 +6622,8 @@ void GetNextTokenLengthObj(Params *pParams)
 					pParams->myTokenLengthObj.Type = T_ERROR;
 					snprintf(pParams->szError, 8192, "Errore GetNextTokenLengthObj: atteso T_KW_ENDOBJ\n");
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"Errore GetNextTokenLengthObj: atteso T_KW_ENDOBJ\n");
-					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLengthObj: atteso T_KW_ENDOBJ\n");
+					//wprintf(L"Errore GetNextTokenLengthObj: expected T KW ENDOBJ\n");
+					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLengthObj: expected T KW ENDOBJ\n");
 					return;
 				}
 				break;
@@ -6639,8 +6637,8 @@ void GetNextTokenLengthObj(Params *pParams)
 					pParams->myTokenLengthObj.Type = T_ERROR;
 					snprintf(pParams->szError, 8192, "Errore GetNextTokenLengthObj: atteso T_KW_ENDOBJ\n");
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"Errore GetNextTokenLengthObj: atteso T_KW_ENDOBJ\n");
-					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLengthObj: atteso T_KW_ENDOBJ\n");
+					//wprintf(L"Errore GetNextTokenLengthObj: expected T KW ENDOBJ\n");
+					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLengthObj: expected T KW ENDOBJ\n");
 					return;
 				}
 				break;
@@ -6654,8 +6652,8 @@ void GetNextTokenLengthObj(Params *pParams)
 					pParams->myTokenLengthObj.Type = T_ERROR;
 					snprintf(pParams->szError, 8192, "Errore GetNextTokenLengthObj: atteso T_KW_ENDOBJ\n");
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"Errore GetNextTokenLengthObj: atteso T_KW_ENDOBJ\n");
-					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLengthObj: atteso T_KW_ENDOBJ\n");
+					//wprintf(L"Errore GetNextTokenLengthObj: expected T KW ENDOBJ\n");
+					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLengthObj: expected T KW ENDOBJ\n");
 					return;
 				}
 				break;
@@ -6669,8 +6667,8 @@ void GetNextTokenLengthObj(Params *pParams)
 					pParams->myTokenLengthObj.Type = T_ERROR;
 					snprintf(pParams->szError, 8192, "Errore GetNextTokenLengthObj: atteso T_KW_ENDOBJ\n");
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"Errore GetNextTokenLengthObj: atteso T_KW_OBJ\n");
-					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLengthObj: atteso T_KW_ENDOBJ\n");
+					//wprintf(L"Errore GetNextTokenLengthObj: expected T KW OBJ\n");
+					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLengthObj: expected T KW ENDOBJ\n");
 					return;
 				}
 				break;
@@ -6688,8 +6686,8 @@ void GetNextTokenLengthObj(Params *pParams)
 					pParams->myTokenLengthObj.Type = T_ERROR;
 					snprintf(pParams->szError, 8192, "Errore GetNextTokenLengthObj: atteso T_KW_ENDOBJ\n");
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"Errore GetNextTokenLengthObj: atteso T_KW_OBJ\n");
-					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLengthObj: atteso T_KW_ENDOBJ\n");
+					//wprintf(L"Errore GetNextTokenLengthObj: expected T KW OBJ\n");
+					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLengthObj: expected T KW ENDOBJ\n");
 					return;
 				}
 				break;
@@ -6706,8 +6704,8 @@ void GetNextTokenLengthObj(Params *pParams)
 			pParams->myTokenLengthObj.Type = T_ERROR;
 			snprintf(pParams->szError, 8192, "Errore GetNextTokenLength: lexeme troppo lungo(> %d byte)\n", MAX_STRING_LENTGTH_IN_CONTENT_STREAM);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"Errore GetNextTokenLength: lexeme troppo lungo(> %d byte)\n", MAX_STRING_LENTGTH_IN_CONTENT_STREAM);
-			//fwprintf(pParams->fpErrors, L"Errore GetNextTokenLength: lexeme troppo lungo(> %d byte)\n", MAX_STRING_LENTGTH_IN_CONTENT_STREAM);
+			//wprintf(L)Errore GetNextTokenLength: lexeme too long(> %d byte)\n", MAX STRING LENTGTH IN CONTENT STREAM);
+			//fwprintf(pParams->fpErrors, L"Error GetNextTokenLength: lexeme too long(> %d byte)\n", MAX STRING LENTGTH IN CONTENT STREAM);
 			return;
 		}
 	} // FINE -> While ( 1 )
@@ -6745,7 +6743,7 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 {
 	States state = S0;
 	unsigned char c = 0;
-	unsigned char c1 = 0, c2 = 0; // warning autoconf
+	unsigned char c1 = 0, c2 = 0; // warning autoconflict
 	unsigned char cOctal = 0;
 	unsigned char cHexadecimal = 0;
 	int k = 0;
@@ -6863,17 +6861,17 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 						return;
 					}
 				}
-				else if ( '{' == c ) // IGNORIAMO, NON SERVE A UN C.
+				else if ( '{' == c ) // 
 				{
 					pParams->myToken.Type = T_LEFT_CURLY_BRACKET;
 					return;
 				}
-				else if ( '}' == c ) // IGNORIAMO, NON SERVE A UN C.
+				else if ( '}' == c ) // 
 				{
 					pParams->myToken.Type = T_RIGHT_CURLY_BRACKET;
 					return;
 				}
-				else // T_STRING oppure T_KEYWORD
+				else // T STRING or T KEYWORD
 				{
 					nDelimChar = IsDelimiterChar(c);
 
@@ -7161,8 +7159,8 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 					pParams->myToken.Type = T_ERROR;
 					snprintf(pParams->szError, 8192, "Errore GetNextTokenFromToUnicodeStream: numero esadecimale errato.\n");
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"Errore GetNextTokenFromToUnicodeStream: numero esadecimale errato.\n");
-					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenFromToUnicodeStream: numero esadecimale errato.\n");
+					//wprintf(L"Error GetNextTokenFromToUnicodeStream: wrong hexadecimal number. \n);
+					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenFromToUnicodeStream: wrong hexadecimal number. \n);
 					return;
 				}
 				break;
@@ -7178,8 +7176,8 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 					pParams->myToken.Type = T_ERROR;
 					snprintf(pParams->szError, 8192, "Errore GetNextTokenFromToUnicodeStream: numero esadecimale errato.\n");
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"Errore GetNextTokenFromToUnicodeStream: numero esadecimale errato.\n");
-					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenFromToUnicodeStream: numero esadecimale errato.\n");
+					//wprintf(L"Error GetNextTokenFromToUnicodeStream: wrong hexadecimal number. \n);
+					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenFromToUnicodeStream: wrong hexadecimal number. \n);
 					return;
 				}
 				break;
@@ -7210,7 +7208,7 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 							#endif
 							return;
 						}
-						// Altrimenti e' una ')' annidata: un solo POP (gia' fatto sopra).
+						// Otherwise it's a ')' nested: only one POP (yes' done above).
 					}
 
 					if ( c == '(' )
@@ -7300,10 +7298,10 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 				}
 				break;
 			case S8:
-				// Backslash + CR: continuazione di riga. Vedi il commento nella
-				// copia di GetNextToken: il carattere dopo il CR (se non e' LF)
-				// va rielaborato da S6, non aggiunto alla stringa.
-				// Qui si legge da myBlockToUnicode: il retract riguarda solo
+				// Backslash + CR: line continuation. See comment in
+				// copy of GetNextToken: character after CR (if not LF)
+				// must be reworked by S6, not added to the string.
+				// Here you read from myBlockToUnicode: the retract only concerns
 				// blockCurPosToUnicode.
 				if ( c != '\n' )
 				{
@@ -7319,21 +7317,21 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 				}
 				else
 				{
-					// retract: il carattere che chiude l'escape ottale breve va rielaborato da S6
+					// retract: the character that closes the short optical escape should be reworked by S6
 					pParams->blockCurPosToUnicode--;
 					if ( !GetOctalChar(c1, '\0', '\0', &cOctal, &bOctalOverflow) )
 					{
 						if ( bOctalOverflow )
 						{
-							state = S6; // ignora
+							state = S6; // I don't know.
 						}
 						else
 						{
 							pParams->myToken.Type = T_ERROR;
 							snprintf(pParams->szError, 8192, "Errore GetNextTokenFromToUnicodeStream: numero ottale errato.\n");
 							myShowErrorMessage(pParams, pParams->szError, 1);
-							//wprintf(L"Errore GetNextTokenFromToUnicodeStream: numero ottale errato.\n");
-							//fwprintf(pParams->fpErrors, L"Errore GetNextTokenFromToUnicodeStream: numero ottale errato.\n");
+							//wprintf(L"Errore GetNextTokenFromToUnicodeStream: wrong octal number. \n);
+							//fwprintf(pParams->fpErrors, L"Errore GetNextTokenFromToUnicodeStream: wrong octal number. \n);
 							return;
 						}
 					}
@@ -7356,15 +7354,15 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 					{
 						if ( bOctalOverflow )
 						{
-							state = S6; // ignora
+							state = S6; // I don't know.
 						}
 						else
 						{
 							pParams->myToken.Type = T_ERROR;
 							snprintf(pParams->szError, 8192, "Errore GetNextTokenFromToUnicodeStream: numero ottale errato.\n");
 							myShowErrorMessage(pParams, pParams->szError, 1);
-							//wprintf(L"Errore GetNextTokenFromToUnicodeStream: numero ottale errato.\n");
-							//fwprintf(pParams->fpErrors, L"Errore GetNextTokenFromToUnicodeStream: numero ottale errato.\n");
+							//wprintf(L"Errore GetNextTokenFromToUnicodeStream: wrong octal number. \n);
+							//fwprintf(pParams->fpErrors, L"Errore GetNextTokenFromToUnicodeStream: wrong octal number. \n);
 							return;
 						}
 					}
@@ -7381,21 +7379,21 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 				}
 				else
 				{
-					// retract: il carattere che chiude l'escape ottale breve va rielaborato da S6
+					// retract: the character that closes the short optical escape should be reworked by S6
 					pParams->blockCurPosToUnicode--;
 					if ( !GetOctalChar(c1, c2, '\0', &cOctal, &bOctalOverflow) )
 					{
 						if ( bOctalOverflow )
 						{
-							state = S6; // ignora
+							state = S6; // I don't know.
 						}
 						else
 						{
 							pParams->myToken.Type = T_ERROR;
 							snprintf(pParams->szError, 8192, "Errore GetNextTokenFromToUnicodeStream: numero ottale errato.\n");
 							myShowErrorMessage(pParams, pParams->szError, 1);
-							//wprintf(L"Errore GetNextTokenFromToUnicodeStream: numero ottale errato.\n");
-							//fwprintf(pParams->fpErrors, L"Errore GetNextTokenFromToUnicodeStream: numero ottale errato.\n");
+							//wprintf(L"Errore GetNextTokenFromToUnicodeStream: wrong octal number. \n);
+							//fwprintf(pParams->fpErrors, L"Errore GetNextTokenFromToUnicodeStream: wrong octal number. \n);
 							return;
 						}
 					}
@@ -7590,8 +7588,8 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 					pParams->myToken.Type = T_ERROR;
 					snprintf(pParams->szError, 8192, "Errore GetNextTokenFromToUnicodeStream: numero esadecimale errato. Carattere non valido -> codice decimale = %u\n", (unsigned int)c);
 					myShowErrorMessage(pParams, pParams->szError, 1);
-					//wprintf(L"Errore GetNextTokenFromToUnicodeStream: numero esadecimale errato. Carattere non valido -> codice decimale = %u\n", (unsigned int)c);
-					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenFromToUnicodeStream: numero esadecimale errato. Carattere non valido -> codice decimale = %u\n", (unsigned int)c);
+					//wprintf(L"Error GetNextTokenFromToUnicodeStream: wrong hexadecimal number. Not valid character -> decimal code = %u\n", (unsigned int)c);
+					//fwprintf(pParams->fpErrors, L"Errore GetNextTokenFromToUnicodeStream: wrong hexadecimal number. Not valid character -> decimal code = %u\n", (unsigned int)c);
 
 					c = ReadNextCharFromToUnicodeStream(pParams);
 
@@ -7611,8 +7609,8 @@ void GetNextTokenFromToUnicodeStream(Params *pParams)
 			pParams->myToken.Type = T_ERROR;
 			snprintf(pParams->szError, 8192, "Errore GetNextTokenFromToUnicodeStream: lexeme troppo lungo(> %d byte)\n", MAX_STRING_LENTGTH_IN_CONTENT_STREAM);
 			myShowErrorMessage(pParams, pParams->szError, 1);
-			//wprintf(L"Errore GetNextTokenFromToUnicodeStream: lexeme troppo lungo(> %d byte)\n", MAX_STRING_LENTGTH_IN_CONTENT_STREAM);
-			//fwprintf(pParams->fpErrors, L"Errore GetNextTokenFromToUnicodeStream: lexeme troppo lungo(> %d byte)\n", MAX_STRING_LENTGTH_IN_CONTENT_STREAM);
+			//wprintf(L)Errore GetNextTokenFromToUnicodeStream: lexeme too long(> %d byte)\n", MAX STRING LENTGTH IN CONTENT STREAM);
+			//fwprintf(pParams->fpErrors, L"Error GetNextTokenFromToUnicodeStream: lexeme too long(> %d byte)\n", MAX STRING LENTGTH IN CONTENT STREAM);
 			return;
 		}
 	}
@@ -7627,7 +7625,7 @@ void GetNextTokenFromToUnicodeStreamFast(Params *pParams)
     int pos = pParams->blockCurPosToUnicode;
     int k = 0;
 
-    // Salta gli spazi bianchi iniziali direttamente in RAM
+    // Skip the initial white spaces directly into RAM
     while (pos < max_len && (buf[pos] == ' ' || buf[pos] == '\r' || buf[pos] == '\n' || buf[pos] == '\t' || buf[pos] == '\f' || buf[pos] == '\0')) {
         pos++;
     }
@@ -7640,7 +7638,7 @@ void GetNextTokenFromToUnicodeStreamFast(Params *pParams)
 
     unsigned char c = buf[pos++];
 
-    // Identifica i numeri letterali istantaneamente
+    // Identify literary numbers instantly
     if ((c >= '0' && c <= '9') || c == '-' || c == '+') {
         pParams->lexeme[k++] = c;
         while (pos < max_len && ((buf[pos] >= '0' && buf[pos] <= '9') || buf[pos] == '.')) {
@@ -7658,7 +7656,7 @@ void GetNextTokenFromToUnicodeStreamFast(Params *pParams)
         return;
     }
 
-    // Identifica le stringhe esadecimali dei font (<AAAA>) senza cicli di stato
+    // Identifies hexadecimal font strings (<AAAA>) without state cycles
     if (c == '<') {
         if (pos < max_len && buf[pos] == '<') {
             pParams->myToken.Type = T_DICT_BEGIN;
@@ -7679,7 +7677,7 @@ void GetNextTokenFromToUnicodeStreamFast(Params *pParams)
         return;
     }
 
-    // Accumula i nomi delle macro dei font (es. begincodespacerange)
+    // Accumulate font macro names (e.g. begincodespacerange)
     pParams->lexeme[k++] = c;
     while (pos < max_len && buf[pos] != ' ' && buf[pos] != '\r' && buf[pos] != '\n' && buf[pos] != '<' && buf[pos] != '>' && buf[pos] != '[' && buf[pos] != ']') {
         pParams->lexeme[k++] = buf[pos++];

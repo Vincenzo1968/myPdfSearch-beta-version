@@ -6805,12 +6805,17 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 								//if ( pParams->nCurrentGsObjFontObjNum > 0 )
 								//	nCurrFontObjRef = pParams->nCurrentGsObjFontObjNum;
 
-								pParams->pCurrFontGlyphsWidths = pParams->myObjsTable[nTemp]->pGlyphsWidths;
+								// nTemp e' l'oggetto GS (ExtGState), non il font: i dati del font stanno
+								// nell'oggetto nCurrentGsObjFontObjNum. Il font corrente e' cambiato, quindi
+								// aggiorno anche la cache dell'ultimo font parsato (altrimenti un successivo
+								// 'Tf' sullo stesso font dell'ultima volta verrebbe saltato a torto).
+								pParams->nLastParsedFontObjNum = (int)pParams->nCurrentGsObjFontObjNum;
+								pParams->pCurrFontGlyphsWidths = pParams->myObjsTable[pParams->nCurrentGsObjFontObjNum]->pGlyphsWidths;
 								//pParams->dCurrFontSpaceWidth = pParams->myObjsTable[nTemp]->pGlyphsWidths->dFontSpaceWidth/1000.0;
-								pParams->dCurrFontSpaceWidth = pParams->myObjsTable[nTemp]->pGlyphsWidths->dFontSpaceWidth;
+								pParams->dCurrFontSpaceWidth = pParams->pCurrFontGlyphsWidths->dFontSpaceWidth;
 
 								#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ManageContent_FN) || defined(MYDEBUG_PRINT_ON_ManageContent_FN_ShowGsSelected) || defined(MYDEBUG_PRINT_DECODED_CONTENT_TOKENS)
-								wprintf(L"\tFONT %d 0 R -> dCurrFontSpaceWidth -> %f; FontSize = %f\n", nTemp, pParams->dCurrFontSpaceWidth, pParams->dsTextState.Tfs);
+								wprintf(L"\tFONT %d 0 R -> dCurrFontSpaceWidth -> %f; FontSize = %f\n", (int)pParams->nCurrentGsObjFontObjNum, pParams->dCurrFontSpaceWidth, pParams->dsTextState.Tfs);
 								wprintf(L"\tTextState      -> Tc = %f; Tw = %f; Th = %f; Tl = %f; Tfs = %f; Trise = %f\n",
 										pParams->dsTextState.Tc,
 										pParams->dsTextState.Tw,
@@ -17423,6 +17428,9 @@ int gsobjbody(Params *pParams)
 				return 0;
 			}
 
+			// Passa oltre la dimensione del font: il token successivo deve essere ']'
+			GetNextToken(pParams);
+
 			#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_GSOBJ)
 			wprintf(L"gsobjbody -> ");
 			PrintToken(&(pParams->myToken), ' ', ' ', 1);
@@ -17430,6 +17438,15 @@ int gsobjbody(Params *pParams)
 
 			if ( !match(pParams, T_QCPAREN, "gsobjbody") )
 				return 0;
+
+			// match() ha gia' letto il token successivo a ']': lo esamino qui e riparto dal ciclo,
+			// senza il GetNextToken in fondo, che altrimenti salterebbe ad es. il '>>' di chiusura.
+			if ( T_DICT_BEGIN == pParams->myToken.Type )
+				countOpen++;
+			else if ( T_DICT_END == pParams->myToken.Type )
+				countOpen--;
+
+			continue;
 		}
 		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_PARSE_GSOBJ)
 		else
@@ -19114,6 +19131,7 @@ int contentfontobj(Params *pParams)
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontLmWidth = 0.0;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->dFontUmWidth = 0.0;
 	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->WritingMode = WRITING_MODE_HORIZONTAL;
+	pParams->myObjsTable[pParams->nCurrentParsingFontObjNum]->pGlyphsWidths->DW = 1.0; // default del PDF (1000/1000); i font Type0 lo reimpostano
 
 	pParams->nCurrFontWritingMode = WRITING_MODE_HORIZONTAL;
 

@@ -844,6 +844,10 @@ typedef struct tagParams
 	uint32_t nObjsTableSizeFromPrescanFile;
 
 	int nStackStringOpenParen;
+	int nFileErrorCount;    // errori scritti nel file di log durante l'elaborazione del file corrente
+	int nFileWarningCount;  // warning (messaggi che iniziano con "WARNING") scritti nel file di log per il file corrente
+	int bShowErrors;        // opzione --show_errors: mostra a video (stderr) il numero di errori per file
+	int bShowWarnings;      // opzione --show_warnings: mostra a video (stderr) il numero di warning per file
 	MyNumStackList_t myNumStack;
 	char szCurrKeyName[MAX_STRLEN];
 	char szCurrResourcesKeyName[MAX_STRLEN];

@@ -428,6 +428,10 @@ void PrintHelpCommandLine(void)
 	wprintf(L"'-o, --outputfile' (optional)        Specifies the output file\n");
 	wprintf(L"   Arguments for option '-o, --outputfile': exactly 1(string)\n");
 	wprintf(L"\n");
+	wprintf(L"'--show_errors' (optional)           For each file, print on screen (stderr) the number of parsing errors written to the errors log file\n");
+	wprintf(L"\n");
+	wprintf(L"'--show_warnings' (optional)         For each file, print on screen (stderr) the number of parsing warnings written to the errors log file\n");
+	wprintf(L"\n");
 }
 
 void PrintVersionInfo(void)
@@ -864,6 +868,16 @@ int myParseOption(Params *pParams, char *pszOption)
 		else if ( wcsncmp(szName, L"sortglyphsbyrow", MAX_LEN_STR) == 0 )
 		{
 			pParams->nSortGlyphs = SORT_GLYPHS_BY_ROW;
+			goto uscita;
+		}
+		else if ( wcsncmp(szName, L"show_errors", MAX_LEN_STR) == 0 )
+		{
+			pParams->bShowErrors = 1;
+			goto uscita;
+		}
+		else if ( wcsncmp(szName, L"show_warnings", MAX_LEN_STR) == 0 )
+		{
+			pParams->bShowWarnings = 1;
 			goto uscita;
 		}
 		else if ( wcsncmp(szName, L"extracttextfrom", MAX_LEN_STR) == 0 )

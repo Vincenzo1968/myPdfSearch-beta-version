@@ -279,6 +279,17 @@ int myShowErrorMessage(Params *pParams, const char *szMsg, int bPrintToErrorFile
 {
 	if ( bPrintToErrorFile )
 	{
+		// Convenzione del log: i messaggi che iniziano con "WARNING" (eventualmente
+		// preceduti da spazi o a-capo) sono warning; tutti gli altri sono errori.
+		const char *pMsg = szMsg;
+		while ( *pMsg == '\n' || *pMsg == '\r' || *pMsg == ' ' || *pMsg == '\t' )
+			pMsg++;
+
+		if ( strncmp(pMsg, "WARNING", 7) == 0 )
+			pParams->nFileWarningCount++;
+		else
+			pParams->nFileErrorCount++;
+
 		if ( !MakeAndOpenErrorsFile(pParams, 1) )
 			return 0;
 

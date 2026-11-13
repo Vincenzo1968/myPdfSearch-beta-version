@@ -106,6 +106,21 @@ mypdfsearch --extracttextfrom="/path/to/document.pdf" --sortglyphsbyrow
 
 Without `--sortglyphsbyrow`, text is selected according to the order in which glyphs appear in the PDF content.
 
+### Show parsing errors and warnings on screen
+
+Parsing problems are always written to the log file `AAA_mypdfsearch_parsing_errors.txt`, created in the current directory. By default nothing is printed on screen about them. Use `--show_errors` and/or `--show_warnings` to get, for each file, a one-line summary on the standard error stream (stderr) with the number of errors and/or warnings found:
+
+```sh
+mypdfsearch --path="/path/to/pdf-directory" --words="word1 word2" --show_errors --show_warnings
+```
+
+```text
+ERRORI (2) durante l'elaborazione di '/path/to/broken.pdf' (dettagli in AAA_mypdfsearch_parsing_errors.txt)
+WARNING (1) durante l'elaborazione di '/path/to/odd.pdf' (dettagli in AAA_mypdfsearch_parsing_errors.txt)
+```
+
+The summaries go to stderr, so they do not mix with the extracted text on stdout. The exit code is not affected by these options.
+
 For the complete and current list of options, run `mypdfsearch --help`.
 
 ## Validation and Robustness

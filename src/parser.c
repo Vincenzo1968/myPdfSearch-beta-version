@@ -2420,6 +2420,10 @@ int Parse(Params *pParams, FilesList* myFilesList)
 		strncpy(pParams->szFileName, n->myFileName, len + 1);
 		#endif
 
+		// Contatori di errori/warning del file corrente (per --show_errors / --show_warnings)
+		pParams->nFileErrorCount = 0;
+		pParams->nFileWarningCount = 0;
+
 		if ( pParams->fp != NULL )
 		{
 			fclose(pParams->fp);
@@ -2704,6 +2708,18 @@ int Parse(Params *pParams, FilesList* myFilesList)
 		//#endif
 
 successivo:
+
+		// Riepilogo a video (su stderr), solo se richiesto da riga di comando.
+		if ( pParams->bShowErrors && pParams->nFileErrorCount > 0 )
+		{
+			fprintf(stderr, "ERRORI (%d) durante l'elaborazione di '%s' (dettagli in AAA_mypdfsearch_parsing_errors.txt)\n",
+					pParams->nFileErrorCount, pParams->szFileName);
+		}
+		if ( pParams->bShowWarnings && pParams->nFileWarningCount > 0 )
+		{
+			fprintf(stderr, "WARNING (%d) durante l'elaborazione di '%s' (dettagli in AAA_mypdfsearch_parsing_errors.txt)\n",
+					pParams->nFileWarningCount, pParams->szFileName);
+		}
 
 //**********************************************************************************************************************************
 		if ( pParams->myObjsTable != NULL )

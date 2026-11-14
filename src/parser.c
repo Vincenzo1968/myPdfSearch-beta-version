@@ -3130,8 +3130,152 @@ uscita:
 	return retValue;
 }
 
-//#define MYDEBUG PRINT ON MATCH 1
+int match(Params *pParams, TokenTypeEnum ExpectedToken, char *pszFunctionName)
+{
+	int retValue = 1;
+	char szError[1024];
 
+	if ( pParams->myToken.Type == ExpectedToken )
+	{
+		GetNextToken(pParams);
+	}
+	else
+	{
+		int objNum = -1;
+		int objGen = -1;
+		int bValidObj = 0;
+
+		retValue = 0;
+		
+		#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_MATCH)
+		snprintf(szError, 1024, "\nDEBUG FUNZIONE match: nCurrentParsingObj = %u, nObjsTableSizeFromPrescanFile = %u\n", pParams->nCurrentParsingObj, pParams->nObjsTableSizeFromPrescanFile);
+		myShowErrorMessage(pParams, szError, 1);
+		#endif
+
+		if ( NULL != pParams &&
+		     NULL != pParams->myObjsTable &&
+		     pParams->nCurrentParsingObj < pParams->nObjsTableSizeFromPrescanFile &&
+		     NULL != pParams->myObjsTable[pParams->nCurrentParsingObj] )
+		//if ( NULL != pParams &&
+		//     NULL != pParams->myObjsTable &&
+		//     pParams->nCurrentParsingObj >= 0 &&
+		//     (uint32_t)pParams->nCurrentParsingObj < pParams->nObjsTableSizeFromPrescanFile &&
+		//     NULL != pParams->myObjsTable[pParams->nCurrentParsingObj] )
+		{
+			objNum = pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Number;
+			objGen = pParams->myObjsTable[pParams->nCurrentParsingObj]->Obj.Generation;
+			bValidObj = 1;
+		}
+
+		if ( NULL != pszFunctionName )
+		{
+			snprintf(szError, 1024, "\nERROR(OBJ num = %d, gen = %d): FUNZIONE match(richiamata dalla funzione '%s' -> errore di sintassi: Atteso token n° %d, trovato token n° %d\n", objNum, objGen, pszFunctionName, ExpectedToken, pParams->myToken.Type);
+			myShowErrorMessage(pParams, szError, 1);
+		}
+		else
+		{
+			snprintf(szError, 1024, "\nERROR(OBJ num = %d, gen = %d): FUNZIONE match -> errore di sintassi: Atteso token n° %d, trovato token n° %d\n", objNum, objGen, ExpectedToken, pParams->myToken.Type);
+			myShowErrorMessage(pParams, szError, 1);
+		}
+
+		if ( bValidObj )
+		{
+			PrintThisObject(pParams, pParams->nCurrentParsingObj, 0, 0, pParams->fpErrors);
+		}
+	}
+
+#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_MATCH)
+
+	if ( 0 == retValue )
+		wprintf(L"Token atteso : ");
+
+	wprintf(L"MATCH ");
+	switch ( ExpectedToken )
+	{
+		case T_ERROR:
+			wprintf(L"T_ERROR");
+			break;
+		case T_UNKNOWN:
+			wprintf(L"T_UNKNOWN");
+			break;
+		case  T_EOF:
+			wprintf(L"T_EOF");
+			break;
+		case T_STRING:
+			wprintf(L"T_STRING");
+			break;
+		case T_STRING_LITERAL:
+			wprintf(L"T_STRING_LITERAL");
+			break;
+		case T_STRING_HEXADECIMAL:
+			wprintf(L"T_STRING_HEXADECIMAL");
+			break;
+		case T_NAME:
+			wprintf(L"T_NAME");
+			break;
+		case T_INT_LITERAL:
+			wprintf(L"T_INT_LITERAL");
+			break;
+		case T_REAL_LITERAL:
+			wprintf(L"T_REAL_LITERAL");
+			break;
+		case T_OPAREN:		// '('
+			wprintf(L"T_OPAREN");
+			break;
+		case T_CPAREN:		// ')'
+			wprintf(L"T_CPAREN");
+			break;
+		case T_QOPAREN:		// '['
+			wprintf(L"T_QOPAREN");
+			break;
+		case T_QCPAREN:		// ']'
+			wprintf(L"T_QCPAREN");
+			break;
+		case T_DICT_BEGIN:   // "<<"
+			wprintf(L"T_DICT_BEGIN");
+			break;
+		case T_DICT_END:     // ">>"
+			wprintf(L"T_DICT_END");
+			break;
+		case T_KW_NULL:
+			wprintf(L"T_KW_NULL");
+			break;
+		case T_KW_OBJ:
+			wprintf(L"T_KW_OBJ");
+			break;
+		case T_KW_ENDOBJ:
+			wprintf(L"T_KW_ENDOBJ");
+			break;
+		case T_KW_STREAM:
+			wprintf(L"T_KW_STREAM");
+			break;
+		case T_KW_ENDSTREAM:
+			wprintf(L"T_KW_ENDSTREAM");
+			break;
+		case T_KW_FALSE:
+			wprintf(L"T_KW_FALSE");
+			break;
+		case T_KW_TRUE:
+			wprintf(L"T_KW_TRUE");
+			break;
+		case T_KW_R:
+			wprintf(L"T_KW_R");
+			break;
+		default:
+			break;
+	}
+
+	if ( 0 == retValue )
+		wprintf(L" <> Token trovato : ");
+
+	PrintToken(&(pParams->myToken), '\n', '\n', 1);
+
+#endif
+
+	return retValue;
+}
+
+/*
 int match(Params *pParams, TokenTypeEnum ExpectedToken, char *pszFunctionName)
 {
 	int retValue = 1;
@@ -3253,6 +3397,7 @@ int match(Params *pParams, TokenTypeEnum ExpectedToken, char *pszFunctionName)
 
 	return retValue;
 }
+*/
 
 int matchLengthObj(Params *pParams, TokenTypeEnum ExpectedToken, char *pszFunctionName)
 {

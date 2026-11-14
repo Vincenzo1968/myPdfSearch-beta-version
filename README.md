@@ -121,6 +121,14 @@ WARNING (1) durante l'elaborazione di '/path/to/odd.pdf' (dettagli in AAA_mypdfs
 
 The summaries go to stderr, so they do not mix with the extracted text on stdout. The exit code is not affected by these options.
 
+### Exit status
+
+| Code | Meaning |
+|------|---------|
+| `0` | All files were processed without errors (PDF files skipped because they need a password are not counted as errors). |
+| `1` | Fatal error or invalid command line. |
+| `2` | At least one file could not be processed; the remaining files were processed anyway. |
+
 For the complete and current list of options, run `mypdfsearch --help`.
 
 ## Validation and Robustness

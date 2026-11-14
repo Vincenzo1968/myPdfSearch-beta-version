@@ -72,6 +72,12 @@ make clean
 #include "parser.h"
 #include "myUnicodeNFC.h"
 
+// Exit codes:
+//   0 (EXIT_SUCCESS)  all files processed without errors
+//   1 (EXIT_FAILURE)  fatal error or invalid command line
+//   2                 at least one file could not be processed (the others have been processed anyway)
+#define MYPDFSEARCH_EXIT_FILE_ERRORS 2
+
 //#if !defined(_WIN64) && !defined(_WIN32)
 //#include <sys/sysinfo.h>
 //#endif
@@ -2071,7 +2077,8 @@ int main(int argc, char **argv)
 	SetOnUserPasswordCallback(&myParams, MyConsolePasswordCallback);
 
 	//Parse(&myParams, myFilesList, 0);
-	Parse(&myParams, myFilesList);
+	if ( !Parse(&myParams, myFilesList) )
+		retValue = MYPDFSEARCH_EXIT_FILE_ERRORS;
 
 uscita:
 

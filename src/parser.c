@@ -5290,6 +5290,8 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 	int nTJStackTop = -1;
 
 	pParams->nCurrentPageNum = nPageNumber;
+	
+	pParams->nLastParsedFontObjNum = -1;
 
 	pParams->cLastChar = L' ';
 	pParams->cLastCharEncoding = 0;

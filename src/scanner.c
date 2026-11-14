@@ -2932,6 +2932,56 @@ int ReadHeader(Params *pParams)
 	return 1;
 }
 
+// Il buffer del trailer viene trattato come stringa C: un byte NUL incorporato (ad esempio dentro
+// una stringa letterale binaria di /ID, che il PDF consente) ne troncherebbe il contenuto.
+// Sostituiamo ogni NUL con la sequenza di escape ottale \000, che in una stringa letterale PDF
+// rappresenta lo stesso byte. Restituisce il nuovo buffer (liberando il vecchio), oppure NULL
+// (dopo aver liberato il vecchio) se la memoria non basta. *pLen e' aggiornato.
+static unsigned char *EscapeNulBytesInTrailerBuffer(unsigned char *szInput, int *pLen)
+{
+	int i;
+	int j;
+	int nNul = 0;
+	unsigned char *pNew;
+
+	for ( i = 0; i < *pLen; i++ )
+	{
+		if ( '\0' == szInput[i] )
+			nNul++;
+	}
+
+	if ( 0 == nNul )
+		return szInput;
+
+	pNew = (unsigned char*)malloc((size_t)(*pLen) + 3 * (size_t)nNul + 1);
+	if ( NULL == pNew )
+	{
+		free(szInput);
+		return NULL;
+	}
+
+	for ( i = 0, j = 0; i < *pLen; i++ )
+	{
+		if ( '\0' == szInput[i] )
+		{
+			pNew[j++] = '\\';
+			pNew[j++] = '0';
+			pNew[j++] = '0';
+			pNew[j++] = '0';
+		}
+		else
+		{
+			pNew[j++] = szInput[i];
+		}
+	}
+	pNew[j] = '\0';
+
+	free(szInput);
+	*pLen = j;
+
+	return pNew;
+}
+
 int ReadTrailer(Params *pParams)
 {
 	//int dimFile = 0;
@@ -3125,6 +3175,13 @@ int ReadTrailer(Params *pParams)
 
 	bytereads = fread(szInput, 1, dimInput, pParams->fp);
 	*(szInput + bytereads) = '\0';
+	szInput = EscapeNulBytesInTrailerBuffer(szInput, &bytereads);
+	if ( NULL == szInput )
+	{
+		snprintf(pParams->szError, 8192, "Errore ReadTrailer: memoria insufficiente.\n");
+		myShowErrorMessage(pParams, pParams->szError, 1);
+		return 0;
+	}
 
 	#if defined(MYDEBUG_PRINT_ALL) || defined(MYDEBUG_PRINT_ON_ReadTrailer_FN)
 	wprintf(L"bytereads = %d\n\n", bytereads);
@@ -3272,6 +3329,13 @@ int ReadTrailer(Params *pParams)
 
 		bytereads = fread(szInput, 1, dimInput, pParams->fp);
 		*(szInput + bytereads) = '\0';
+	szInput = EscapeNulBytesInTrailerBuffer(szInput, &bytereads);
+	if ( NULL == szInput )
+	{
+		snprintf(pParams->szError, 8192, "Errore ReadTrailer: memoria insufficiente.\n");
+		myShowErrorMessage(pParams, pParams->szError, 1);
+		return 0;
+	}
 
 		//wprintf(L"\nszInput = <%s>\n", szInput);
 		//wprintf(L"dimInput = %d\n", dimInput);

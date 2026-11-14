@@ -2135,6 +2135,7 @@ int Parse(Params *pParams, FilesList* myFilesList)
 	pParams->fpErrors = NULL;
 
 	pParams->myBlock = NULL;
+	pParams->nMyBlockSize = 0;
 	pParams->fp = NULL;
 
 	pParams->myBlockToUnicode = NULL;
@@ -2320,6 +2321,7 @@ int Parse(Params *pParams, FilesList* myFilesList)
 	}
 
 	pParams->myBlock = (unsigned char *)malloc(sizeof(unsigned char) * BLOCK_SIZE);
+	pParams->nMyBlockSize = ( NULL != pParams->myBlock ) ? BLOCK_SIZE : 0;
 	if ( !(pParams->myBlock) )
 	{
 		snprintf(pParams->szError, 8192, "ERRORE Parse 3: Memoria insufficiente.\n\n");
@@ -2900,6 +2902,7 @@ uscita:
 	{
 		free(pParams->myBlock);
 		pParams->myBlock = NULL;
+	pParams->nMyBlockSize = 0;
 	}
 
 	if ( pParams->myBlockLengthObj != NULL )
@@ -5348,7 +5351,9 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 	{
 		qui_dopo_push:
 
-		if ( pParams->myStreamsStack[pParams->nStreamsStackTop].DecodedStreamSize > nBlockSize )
+		nBlockSize = pParams->nMyBlockSize;   // dimensione reale del buffer: altre funzioni possono averlo riallocato
+
+		if ( pParams->myStreamsStack[pParams->nStreamsStackTop].DecodedStreamSize >= nBlockSize )
 		{
 			for ( x = 2; nBlockSize <= pParams->myStreamsStack[pParams->nStreamsStackTop].DecodedStreamSize ; x++ )
 				nBlockSize += BLOCK_SIZE;
@@ -5357,6 +5362,7 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 				free(pParams->myBlock);
 
 			pParams->myBlock = (unsigned char *)malloc(sizeof(unsigned char) * nBlockSize);
+			pParams->nMyBlockSize = ( NULL != pParams->myBlock ) ? nBlockSize : 0;
 			if ( !(pParams->myBlock) )
 			{
 				snprintf(pParams->szError, 8192, "ERRORE ManageDecodedContent: Memoria insufficiente.\n\n");
@@ -8887,7 +8893,7 @@ int LoadFirstBlock(Params *pParams, int objNum, const char *pszFunctionName)
 {
 	int retValue = 1;
 
-	unsigned long int nBlockSize = BLOCK_SIZE;
+	unsigned long int nBlockSize = pParams->nMyBlockSize;   // dimensione reale del buffer pParams->myBlock
 	unsigned long int x = 0;
 
 	unsigned char c = 0;
@@ -8910,7 +8916,7 @@ int LoadFirstBlock(Params *pParams, int objNum, const char *pszFunctionName)
 		{
 			pParams->pReadNextChar = ReadNextCharFromStmObjStream;
 
-			if ( pParams->myObjsTable[objNum]->lenDirectFontResourceString > nBlockSize )
+			if ( pParams->myObjsTable[objNum]->lenDirectFontResourceString >= nBlockSize )
 			{
 				for ( x = 2; nBlockSize <= pParams->myObjsTable[objNum]->lenDirectFontResourceString; x++ )
 					nBlockSize += BLOCK_SIZE;
@@ -8919,6 +8925,7 @@ int LoadFirstBlock(Params *pParams, int objNum, const char *pszFunctionName)
 					free(pParams->myBlock);
 
 				pParams->myBlock = (unsigned char *)malloc(sizeof(unsigned char) * nBlockSize);
+				pParams->nMyBlockSize = ( NULL != pParams->myBlock ) ? nBlockSize : 0;
 				if ( !(pParams->myBlock) )
 				{
 					snprintf(pParams->szError, 8192, "ERRORE LoadFirstBlock(%s): malloc failed for pParams->myBlock.\n\n", pszFunctionName);
@@ -8944,7 +8951,7 @@ int LoadFirstBlock(Params *pParams, int objNum, const char *pszFunctionName)
 		{
 			pParams->pReadNextChar = ReadNextCharFromStmObjStream;
 
-			if ( pParams->myObjsTable[objNum]->lenDirectGsResourceString > nBlockSize )
+			if ( pParams->myObjsTable[objNum]->lenDirectGsResourceString >= nBlockSize )
 			{
 				for ( x = 2; nBlockSize <= pParams->myObjsTable[objNum]->lenDirectGsResourceString; x++ )
 					nBlockSize += BLOCK_SIZE;
@@ -8953,6 +8960,7 @@ int LoadFirstBlock(Params *pParams, int objNum, const char *pszFunctionName)
 					free(pParams->myBlock);
 
 				pParams->myBlock = (unsigned char *)malloc(sizeof(unsigned char) * nBlockSize);
+				pParams->nMyBlockSize = ( NULL != pParams->myBlock ) ? nBlockSize : 0;
 				if ( !(pParams->myBlock) )
 				{
 					snprintf(pParams->szError, 8192, "ERRORE LoadFirstBlock(%s): malloc failed for pParams->myBlock.\n\n", pszFunctionName);
@@ -9040,15 +9048,16 @@ int LoadFirstBlock(Params *pParams, int objNum, const char *pszFunctionName)
 
 		newStreamLength += lenTemp2;
 
-		if ( newStreamLength > nBlockSize )
+		if ( newStreamLength >= nBlockSize )
 		{
-			for ( x = 2; nBlockSize <= pParams->myObjsTable[objNum]->Obj.StreamLength; x++ )
+			for ( x = 2; nBlockSize <= newStreamLength; x++ )
 				nBlockSize += BLOCK_SIZE;
 
 			if ( NULL != pParams->myBlock )
 				free(pParams->myBlock);
 
 			pParams->myBlock = (unsigned char *)malloc(sizeof(unsigned char) * nBlockSize);
+			pParams->nMyBlockSize = ( NULL != pParams->myBlock ) ? nBlockSize : 0;
 			if ( !(pParams->myBlock) )
 			{
 				snprintf(pParams->szError, 8192, "ERRORE LoadFirstBlock(%s): malloc failed for pParams->myBlock.\n\n", pszFunctionName);

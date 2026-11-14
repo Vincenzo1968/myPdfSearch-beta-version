@@ -698,6 +698,7 @@ typedef struct tagParams
 	int countArrayScope;
 
 	unsigned char *myBlock;
+	unsigned long int nMyBlockSize;   // dimensione reale, in byte, del buffer myBlock (0 se non allocato)
 	int blockLen;
 	int blockCurPos;
 

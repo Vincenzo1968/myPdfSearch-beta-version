@@ -8,7 +8,7 @@ MyPdfSearch is a command-line program written in C. It can extract text from PDF
 
 **Beta release — version 1.0.0**
 
-MyPdfSearch is under active development. MyPdfSearch is under active development. PDF parsing, text extraction, font and character-encoding support, and the handling of complex document structures are still being improved. Some PDF files may not yet be processed correctly.
+MyPdfSearch is under active development. PDF parsing, text extraction, font and character-encoding support, and the handling of complex document structures are still being improved. Some PDF files may not yet be processed correctly.
 
 MyPdfSearch is a text parser, not a PDF page renderer. It does not reproduce the original visual layout of a page. The reading order of text in complex layouts (for example, newspapers with multiple columns, mixed text and images, or unusual writing modes) may require further improvement. It is not an OCR application, so image-only pages without an embedded text layer cannot be read as text.
 

@@ -9236,6 +9236,153 @@ void myTreeTraversePostOrderLeafOnly(Tree *head, Params *pParams)
 	}
 }
 
+// Legge l'oggetto objNum (in chiaro o compresso in un object stream) e, se e' un array di riferimenti
+// indiretti ("N G obj [ a 0 R b 0 R ... ] endobj"), li copia in *ppRefs (da liberare con free).
+// Restituisce 1 se l'oggetto e' un array, 0 se non lo e' (per esempio uno stream), -1 se e' un
+// array malformato o troppo lungo per il primo blocco letto.
+static int GetIndirectArrayRefs(Params *pParams, int objNum, int **ppRefs, int *pnRefs)
+{
+	const unsigned char *p;
+	const unsigned char *pEnd;
+	int nCap;
+	int *pRefs;
+	int nRefs = 0;
+	int nNum;
+	int nGen;
+
+	*ppRefs = NULL;
+	*pnRefs = 0;
+
+	if ( objNum < 1 || (uint32_t)objNum >= pParams->nObjsTableSizeFromPrescanFile )
+		return 0;
+
+	pParams->nObjToParse = objNum;
+
+	if ( !LoadFirstBlock(pParams, objNum, "GetIndirectArrayRefs") )
+		return 0;
+
+	p = pParams->myBlock;
+	pEnd = pParams->myBlock + pParams->blockLen;
+
+	#define SKIP_WS() while ( p < pEnd && (*p == ' ' || *p == '\n' || *p == '\r' || *p == '\t' || *p == '\f' || *p == '\b' || *p == '\0') ) p++
+	#define SKIP_INT(n) { if ( p >= pEnd || *p < '0' || *p > '9' ) return -1; n = 0; while ( p < pEnd && *p >= '0' && *p <= '9' ) { if ( n < 100000000 ) n = n * 10 + (*p - '0'); p++; } }
+
+	// "N G obj"
+	SKIP_WS();
+	if ( p >= pEnd || *p < '0' || *p > '9' )
+		return 0;
+	SKIP_INT(nNum);
+	SKIP_WS();
+	if ( p >= pEnd || *p < '0' || *p > '9' )
+		return 0;
+	SKIP_INT(nGen);
+	SKIP_WS();
+	if ( pEnd - p < 3 || p[0] != 'o' || p[1] != 'b' || p[2] != 'j' )
+		return 0;
+	p += 3;
+	SKIP_WS();
+
+	if ( p >= pEnd || *p != '[' )
+		return 0;
+	p++;
+
+	nCap = (int)(pEnd - p) / 4 + 1;
+	pRefs = (int*)malloc(sizeof(int) * (size_t)nCap);
+	if ( NULL == pRefs )
+		return -1;
+
+	for ( ;; )
+	{
+		SKIP_WS();
+		if ( p >= pEnd )
+		{
+			free(pRefs);
+			return -1;
+		}
+		if ( ']' == *p )
+			break;
+
+		if ( nRefs >= nCap )
+		{
+			free(pRefs);
+			return -1;
+		}
+
+		if ( *p < '0' || *p > '9' )
+		{
+			free(pRefs);
+			return -1;
+		}
+		SKIP_INT(nNum);   // la prima cifra e' gia' stata verificata sopra: il 'return' del macro non scatta
+		SKIP_WS();
+		if ( p >= pEnd || *p < '0' || *p > '9' )
+		{
+			free(pRefs);
+			return -1;
+		}
+		SKIP_INT(nGen);
+		SKIP_WS();
+		if ( p >= pEnd || 'R' != *p )
+		{
+			free(pRefs);
+			return -1;
+		}
+		p++;
+
+		pRefs[nRefs++] = nNum;
+	}
+
+	#undef SKIP_WS
+	#undef SKIP_INT
+
+	*ppRefs = pRefs;
+	*pnRefs = nRefs;
+
+	return 1;
+}
+
+// Elabora una voce di /Contents: uno stream di contenuto, oppure un array indiretto di stream
+// (anche di array annidati), che viene espanso nell'ordine in cui compare.
+// Restituisce 1 se tutto e' andato bene; altrimenti 0 e *pnFailedObj e' l'oggetto che ha fallito.
+static int ParseContentsEntry(Params *pParams, int objNum, int nDepth, int *pnFailedObj)
+{
+	int *pRefs = NULL;
+	int nRefs = 0;
+	int nRet;
+	int i;
+
+	if ( nDepth < 8 )
+	{
+		nRet = GetIndirectArrayRefs(pParams, objNum, &pRefs, &nRefs);
+		if ( 1 == nRet )
+		{
+			for ( i = 0; i < nRefs; i++ )
+			{
+				if ( !ParseContentsEntry(pParams, pRefs[i], nDepth + 1, pnFailedObj) )
+				{
+					free(pRefs);
+					return 0;
+				}
+			}
+			free(pRefs);
+			return 1;
+		}
+		else if ( nRet < 0 )
+		{
+			*pnFailedObj = objNum;
+			return 0;
+		}
+	}
+
+	if ( !ParseStreamObject(pParams, objNum) )
+	{
+		*pnFailedObj = objNum;
+		return 0;
+	}
+
+	return 1;
+}
+
 int ParseObject(Params *pParams, int objNum)
 {
 	int retValue = 1;
@@ -9753,21 +9900,25 @@ int ParseObject(Params *pParams, int objNum)
 
 		while ( myintqueuelist_Dequeue(&(pParams->pPagesArray[nInt].queueContentsObjRefs), &numObjQueueContent) )
 		{
-			if ( !ParseStreamObject(pParams, numObjQueueContent) )
+			int nFailedContentObj = numObjQueueContent;
+
+			if ( !ParseContentsEntry(pParams, numObjQueueContent, 0, &nFailedContentObj) )
 			{
+				numObjQueueContent = nFailedContentObj;
+
 				snprintf(pParams->szError, 8192, "ERRORE ParseStreamObject streamobj number %d\n", numObjQueueContent);
 				myShowErrorMessage(pParams, pParams->szError, 1);
 				//wprintf(L"ERRORE ParseStreamObject streamobj number %d\n", numObjQueueContent);
 				//fwprintf(pParams->fpErrors, L"ERRORE ParseStreamObject streamobj number %d\n", numObjQueueContent);
 
-				snprintf(pParams->szError, 8192, "ECCO L'OGGETTO Y:\n");
+				snprintf(pParams->szError, 8192, "INIZIO DUMP DELL'OGGETTO CHE HA FALLITO:\n");
 				myShowErrorMessage(pParams, pParams->szError, 1);
 				//wprintf(L"ECCO L'OGGETTO Y:\n");
 				//fwprintf(pParams->fpErrors, L"ECCO L'OGGETTO Y:\n");
 
 				PrintThisObject(pParams, numObjQueueContent, 0, 0, pParams->fpErrors);
 
-				snprintf(pParams->szError, 8192, "FINE OGGETTO Y:\n");
+				snprintf(pParams->szError, 8192, "FINE DUMP DELL'OGGETTO CHE HA FALLITO.\n");
 				myShowErrorMessage(pParams, pParams->szError, 1);
 				//wprintf(L"OGGETTO Y:\n");
 				//fwprintf(pParams->fpErrors, L'FINE OGGETTO Y:\n");

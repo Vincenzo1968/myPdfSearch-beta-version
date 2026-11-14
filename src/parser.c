@@ -3130,6 +3130,131 @@ uscita:
 	return retValue;
 }
 
+// Nome simbolico del tipo di token (per i messaggi di errore)
+static const char *GetTokenTypeName(int nType)
+{
+	switch ( nType )
+	{
+		case T_ERROR: return "T_ERROR";
+		case T_UNKNOWN: return "T_UNKNOWN";
+		case T_EOF: return "T_EOF";
+		case T_STRING: return "T_STRING";
+		case T_STRING_LITERAL: return "T_STRING_LITERAL";
+		case T_STRING_HEXADECIMAL: return "T_STRING_HEXADECIMAL";
+		case T_NAME: return "T_NAME";
+		case T_INT_LITERAL: return "T_INT_LITERAL";
+		case T_REAL_LITERAL: return "T_REAL_LITERAL";
+		case T_OPAREN: return "T_OPAREN";
+		case T_CPAREN: return "T_CPAREN";
+		case T_QOPAREN: return "T_QOPAREN";
+		case T_QCPAREN: return "T_QCPAREN";
+		case T_DICT_BEGIN: return "T_DICT_BEGIN";
+		case T_DICT_END: return "T_DICT_END";
+		case T_KW_NULL: return "T_KW_NULL";
+		case T_KW_OBJ: return "T_KW_OBJ";
+		case T_KW_ENDOBJ: return "T_KW_ENDOBJ";
+		case T_KW_STREAM: return "T_KW_STREAM";
+		case T_KW_ENDSTREAM: return "T_KW_ENDSTREAM";
+		case T_KW_FALSE: return "T_KW_FALSE";
+		case T_KW_TRUE: return "T_KW_TRUE";
+		case T_KW_R: return "T_KW_R";
+		case T_LEFT_CURLY_BRACKET: return "T_LEFT_CURLY_BRACKET";
+		case T_RIGHT_CURLY_BRACKET: return "T_RIGHT_CURLY_BRACKET";
+		case T_VOID_STRING: return "T_VOID_STRING";
+		case T_CONTENT_LQUOTE: return "T_CONTENT_LQUOTE";
+		case T_CONTENT_RQUOTE: return "T_CONTENT_RQUOTE";
+		case T_CONTENT_OP_BI: return "T_CONTENT_OP_BI";
+		case T_CONTENT_OP_ID: return "T_CONTENT_OP_ID";
+		case T_CONTENT_OP_EI: return "T_CONTENT_OP_EI";
+		case T_CONTENT_OP_begincodespacerange: return "T_CONTENT_OP_begincodespacerange";
+		case T_CONTENT_OP_endcodespacerange: return "T_CONTENT_OP_endcodespacerange";
+		case T_CONTENT_OP_beginbfchar: return "T_CONTENT_OP_beginbfchar";
+		case T_CONTENT_OP_endbfchar: return "T_CONTENT_OP_endbfchar";
+		case T_CONTENT_OP_beginbfrange: return "T_CONTENT_OP_beginbfrange";
+		case T_CONTENT_OP_endbfrange: return "T_CONTENT_OP_endbfrange";
+		case T_CONTENT_OP_begincidchar: return "T_CONTENT_OP_begincidchar";
+		case T_CONTENT_OP_endcidchar: return "T_CONTENT_OP_endcidchar";
+		case T_CONTENT_OP_begincidrange: return "T_CONTENT_OP_begincidrange";
+		case T_CONTENT_OP_endcidrange: return "T_CONTENT_OP_endcidrange";
+		case T_CONTENT_OP_beginnotdefrange: return "T_CONTENT_OP_beginnotdefrange";
+		case T_CONTENT_OP_endnotdefrange: return "T_CONTENT_OP_endnotdefrange";
+		case T_CONTENT_OP_beginnotdefchar: return "T_CONTENT_OP_beginnotdefchar";
+		case T_CONTENT_OP_endnotdefchar: return "T_CONTENT_OP_endnotdefchar";
+		case T_CONTENT_OP_usecmap: return "T_CONTENT_OP_usecmap";
+		case T_CONTENT_OP_BT: return "T_CONTENT_OP_BT";
+		case T_CONTENT_OP_ET: return "T_CONTENT_OP_ET";
+		case T_CONTENT_OP_TD: return "T_CONTENT_OP_TD";
+		case T_CONTENT_OP_Td: return "T_CONTENT_OP_Td";
+		case T_CONTENT_OP_Tm: return "T_CONTENT_OP_Tm";
+		case T_CONTENT_OP_TSTAR: return "T_CONTENT_OP_TSTAR";
+		case T_CONTENT_OP_Tj: return "T_CONTENT_OP_Tj";
+		case T_CONTENT_OP_TJ: return "T_CONTENT_OP_TJ";
+		case T_CONTENT_OP_SINGLEQUOTE: return "T_CONTENT_OP_SINGLEQUOTE";
+		case T_CONTENT_OP_DOUBLEQUOTE: return "T_CONTENT_OP_DOUBLEQUOTE";
+		case T_CONTENT_OP_Tc: return "T_CONTENT_OP_Tc";
+		case T_CONTENT_OP_Tw: return "T_CONTENT_OP_Tw";
+		case T_CONTENT_OP_Tz: return "T_CONTENT_OP_Tz";
+		case T_CONTENT_OP_TL: return "T_CONTENT_OP_TL";
+		case T_CONTENT_OP_Ts: return "T_CONTENT_OP_Ts";
+		case T_CONTENT_OP_Tr: return "T_CONTENT_OP_Tr";
+		case T_CONTENT_OP_Tf: return "T_CONTENT_OP_Tf";
+		case T_CONTENT_OP_Do: return "T_CONTENT_OP_Do";
+		case T_CONTENT_OP_cm: return "T_CONTENT_OP_cm";
+		case T_CONTENT_OP_q: return "T_CONTENT_OP_q";
+		case T_CONTENT_OP_Q: return "T_CONTENT_OP_Q";
+		case T_CONTENT_OP_MP: return "T_CONTENT_OP_MP";
+		case T_CONTENT_OP_DP: return "T_CONTENT_OP_DP";
+		case T_CONTENT_OP_BMC: return "T_CONTENT_OP_BMC";
+		case T_CONTENT_OP_BDC: return "T_CONTENT_OP_BDC";
+		case T_CONTENT_OP_EMC: return "T_CONTENT_OP_EMC";
+		case T_CONTENT_OP_BX: return "T_CONTENT_OP_BX";
+		case T_CONTENT_OP_EX: return "T_CONTENT_OP_EX";
+		case T_CONTENT_OP_w: return "T_CONTENT_OP_w";
+		case T_CONTENT_OP_J: return "T_CONTENT_OP_J";
+		case T_CONTENT_OP_j: return "T_CONTENT_OP_j";
+		case T_CONTENT_OP_M: return "T_CONTENT_OP_M";
+		case T_CONTENT_OP_d: return "T_CONTENT_OP_d";
+		case T_CONTENT_OP_ri: return "T_CONTENT_OP_ri";
+		case T_CONTENT_OP_i: return "T_CONTENT_OP_i";
+		case T_CONTENT_OP_gs: return "T_CONTENT_OP_gs";
+		case T_CONTENT_OP_m: return "T_CONTENT_OP_m";
+		case T_CONTENT_OP_l: return "T_CONTENT_OP_l";
+		case T_CONTENT_OP_c: return "T_CONTENT_OP_c";
+		case T_CONTENT_OP_v: return "T_CONTENT_OP_v";
+		case T_CONTENT_OP_y: return "T_CONTENT_OP_y";
+		case T_CONTENT_OP_h: return "T_CONTENT_OP_h";
+		case T_CONTENT_OP_re: return "T_CONTENT_OP_re";
+		case T_CONTENT_OP_S: return "T_CONTENT_OP_S";
+		case T_CONTENT_OP_s: return "T_CONTENT_OP_s";
+		case T_CONTENT_OP_f: return "T_CONTENT_OP_f";
+		case T_CONTENT_OP_F: return "T_CONTENT_OP_F";
+		case T_CONTENT_OP_fSTAR: return "T_CONTENT_OP_fSTAR";
+		case T_CONTENT_OP_B: return "T_CONTENT_OP_B";
+		case T_CONTENT_OP_BSTAR: return "T_CONTENT_OP_BSTAR";
+		case T_CONTENT_OP_b: return "T_CONTENT_OP_b";
+		case T_CONTENT_OP_bSTAR: return "T_CONTENT_OP_bSTAR";
+		case T_CONTENT_OP_n: return "T_CONTENT_OP_n";
+		case T_CONTENT_OP_W: return "T_CONTENT_OP_W";
+		case T_CONTENT_OP_WSTAR: return "T_CONTENT_OP_WSTAR";
+		case T_CONTENT_OP_d0: return "T_CONTENT_OP_d0";
+		case T_CONTENT_OP_d1: return "T_CONTENT_OP_d1";
+		case T_CONTENT_OP_CS: return "T_CONTENT_OP_CS";
+		case T_CONTENT_OP_cs: return "T_CONTENT_OP_cs";
+		case T_CONTENT_OP_SC: return "T_CONTENT_OP_SC";
+		case T_CONTENT_OP_SCN: return "T_CONTENT_OP_SCN";
+		case T_CONTENT_OP_sc: return "T_CONTENT_OP_sc";
+		case T_CONTENT_OP_scn: return "T_CONTENT_OP_scn";
+		case T_CONTENT_OP_G: return "T_CONTENT_OP_G";
+		case T_CONTENT_OP_g: return "T_CONTENT_OP_g";
+		case T_CONTENT_OP_RG: return "T_CONTENT_OP_RG";
+		case T_CONTENT_OP_rg: return "T_CONTENT_OP_rg";
+		case T_CONTENT_OP_K: return "T_CONTENT_OP_K";
+		case T_CONTENT_OP_k: return "T_CONTENT_OP_k";
+		case T_CONTENT_OP_sh: return "T_CONTENT_OP_sh";
+		default: return "?";
+	}
+}
+
 int match(Params *pParams, TokenTypeEnum ExpectedToken, char *pszFunctionName)
 {
 	int retValue = 1;
@@ -3169,12 +3294,12 @@ int match(Params *pParams, TokenTypeEnum ExpectedToken, char *pszFunctionName)
 
 		if ( NULL != pszFunctionName )
 		{
-			snprintf(szError, 1024, "\nERROR(OBJ num = %d, gen = %d): FUNZIONE match(richiamata dalla funzione '%s' -> errore di sintassi: Atteso token n° %d, trovato token n° %d\n", objNum, objGen, pszFunctionName, ExpectedToken, pParams->myToken.Type);
+			snprintf(szError, 1024, "\nERROR(OBJ num = %d, gen = %d): FUNZIONE match(richiamata dalla funzione '%s' -> errore di sintassi: Atteso token n° %d -> (%s), trovato token n° %d -> (%s)\n", objNum, objGen, pszFunctionName, ExpectedToken, GetTokenTypeName(ExpectedToken), pParams->myToken.Type, GetTokenTypeName(pParams->myToken.Type));
 			myShowErrorMessage(pParams, szError, 1);
 		}
 		else
 		{
-			snprintf(szError, 1024, "\nERROR(OBJ num = %d, gen = %d): FUNZIONE match -> errore di sintassi: Atteso token n° %d, trovato token n° %d\n", objNum, objGen, ExpectedToken, pParams->myToken.Type);
+			snprintf(szError, 1024, "\nERROR(OBJ num = %d, gen = %d): FUNZIONE match -> errore di sintassi: Atteso token n° %d -> (%s), trovato token n° %d -> (%s)\n", objNum, objGen, ExpectedToken, GetTokenTypeName(ExpectedToken), pParams->myToken.Type, GetTokenTypeName(pParams->myToken.Type));
 			myShowErrorMessage(pParams, szError, 1);
 		}
 
@@ -6651,13 +6776,13 @@ int ManageDecodedContentText(Params *pParams, int nPageNumber)
 										//wprintf(L"ERRORE ManageDecodedContent ParseStreamXObject.\n");
 										//fwprintf(pParams->fpErrors, L"ERRORE ManageDecodedContent ParseStreamXObject.\n");
 
-										snprintf(pParams->szError, 8192, "\n***** ECCO LO SCHIFO:\n");
+										snprintf(pParams->szError, 8192, "\n***** INIZIO DUMP DELL'OGGETTO NON VALIDO:\n");
 										myShowErrorMessage(pParams, pParams->szError, 1);
 										//I'm sorry.
-										//fwprintf(pParams->fpErrors, L"\n***** ECCO LO SCHIFO:\n");
+										//fwprintf(pParams->fpErrors, L"\n***** INIZIO DUMP DELL'OGGETTO NON VALIDO:\n");
 										PrintThisObject(pParams, nTemp, 0, 0, pParams->fpErrors);
 
-										snprintf(pParams->szError, 8192, "\n***** FINE DELLO SCHIFO:\n");
+										snprintf(pParams->szError, 8192, "\n***** FINE DUMP DELL'OGGETTO NON VALIDO:\n");
 										myShowErrorMessage(pParams, pParams->szError, 1);
 										//wprintf(L"\n****
 										//fwprintf(pParams->fpErrors, L"\n****
@@ -14650,9 +14775,9 @@ int pagetreearrayobjs(Params *pParams)
 				//fwprintf(pParams->fpErrors, L"Errore parsing pagetreearrayobjs: not valid token: %d\n, pParams->myToken.Type);
 				PrintToken(&(pParams->myToken), '\0', ' ', 1);
 
-				fwprintf(pParams->fpErrors, L"\n***** ECCO L'OGGETTO SCHIFOSO:\n");
+				fwprintf(pParams->fpErrors, L"\n***** INIZIO DUMP DELL'OGGETTO NON VALIDO:\n");
 				PrintThisObject(pParams, pParams->nCurrentParsingObj, 0, 0, pParams->fpErrors);
-				fwprintf(pParams->fpErrors, L"\n***** FINE OGGETTO SCHIFOSO.\n");
+				fwprintf(pParams->fpErrors, L"\n***** FINE DUMP DELL'OGGETTO NON VALIDO.\n");
 
 				return 0;
 			}

@@ -3964,22 +3964,7 @@ int VlRbtOnTraverseFunc(void* pCurrNode)
 
 	// A Bengal combined sign should not start a new word.
 	// For other characters the normal estimate of the spaces from the coordinates remains active.
-	//(pMyData->c!= L' && prevChar!= L' && prevChar!= L'\0' && !bAtLineStart &&!IsIndicCombiningMark(pMyData->c) & !IsIndicCombiningMark(prevChar) )
-	//If (pMyData->c!= The ' && prevChar!= The ' && prevChar!= The \0' && !bAtLineStart && !IsIndicVirama(prevChar) )
-	// Un virama indico (es. U+09CD '্' in bengalese) lega sempre la consonante
-	// precedente a quella successiva: non può mai esserci uno spazio dopo di esso.
-	int bPrevIsVirama =
-		(prevChar == 0x09CD) || // Bengalese
-		(prevChar == 0x094D) || // Devanagari
-		(prevChar == 0x0A4D) || // Gurmukhi
-		(prevChar == 0x0ACD) || // Gujarati
-		(prevChar == 0x0B4D) || // Oriya
-		(prevChar == 0x0BCD) || // Tamil
-		(prevChar == 0x0C4D) || // Telugu
-		(prevChar == 0x0CCD) || // Kannada
-		(prevChar == 0x0D4D);   // Malayalam
-
-	if ( pMyData->c != L' ' && prevChar != L' ' && prevChar != L'\0' && !bAtLineStart && !bActualTextBengaliCombiningMark && !bPrevIsVirama )
+	if ( pMyData->c != L' ' && prevChar != L' ' && prevChar != L'\0' && !bAtLineStart && !bActualTextBengaliCombiningMark )
 	{
 		if ( bPrevCJK != bCurrCJK )
 		{
